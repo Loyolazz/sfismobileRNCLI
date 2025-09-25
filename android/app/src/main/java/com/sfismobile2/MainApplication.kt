@@ -41,6 +41,10 @@ class MainApplication : Application(), ReactApplication {
   override fun onCreate() {
     super.onCreate()
     setupUnsafeSsl()
+
+    if (BuildConfig.DEBUG) {
+      OkHttpClientProvider.setOkHttpClientFactory(InsecureOkHttpClientFactory())
+    }
     loadReactNative(this)
   }
 
