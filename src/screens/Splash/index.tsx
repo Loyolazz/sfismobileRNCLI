@@ -97,7 +97,7 @@ export default function Splash() {
     return (
         <SafeAreaView style={safeAreaStyles.root}>
             <AnimatedImageBackground
-                source={require("../../assets/background/fundo-release.png")}
+                source={require("../../../assets/background/fundo-release.png")}
                 resizeMode="cover"
                 style={[styles.background, { transform: [{ scale: bgScale }] }]}
             >
@@ -111,7 +111,7 @@ export default function Splash() {
                 <View style={styles.center}>
                     <View style={styles.logoGlow} />
                     <Animated.Image
-                        source={require("../../assets/icon/logo-navbar@1,5x.png")}
+                        source={require("../../../assets/icon/logo-navbar@1,5x.png")}
                         resizeMode="contain"
                         style={[
                             styles.logo,

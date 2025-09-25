@@ -27,8 +27,8 @@ import theme from "@/theme";
 import appInfo from "../../../package.json";
 import styles from "./styles";
 
-const BG = require("../../assets/background/fundo-release.png");
-const LOGO = require("../../assets/logo.png");
+const BG = require("../../../assets/background/fundo-release.png");
+const LOGO = require("../../../assets/logo.png");
 
 export default function LoginScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

@@ -21,7 +21,7 @@ type Props = DrawerContentComponentProps & {
 export default function CustomDrawerContent({ onLogout, ...props }: Props) {
     const [user, setUser] = useState<Servidor | null>(null);
 
-    const logoAntaq = require('@/assets/icon/logo-navbar.png');
+    const logoAntaq = require('../../assets/icon/logo-navbar.png');
 
     useEffect(() => {
         let mounted = true;
