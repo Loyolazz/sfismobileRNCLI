@@ -38,13 +38,14 @@ function explainAxiosError(err: unknown, tag = "ERR") {
   }
 }
 
-async function axiosSoapPost(action: string, xmlBody: string): Promise<string> {
+async function axiosSoapPost(action: string, xmlBody: string, signal?: AbortSignal): Promise<string> {
   try {
     const r = await axios.post<string>(SERVICE_URL, xmlBody, {
       transformRequest: v => v,
       transitional: { forcedJSONParsing: false },
       responseType: "text",
       timeout: 30000,
+      signal,
       headers: {
         "Content-Type": `application/soap+xml; charset=utf-8; action="http://tempori.org/${action}"`,
         "Accept": "application/soap+xml",
@@ -60,6 +61,7 @@ async function axiosSoapPost(action: string, xmlBody: string): Promise<string> {
         transitional: { forcedJSONParsing: false },
         responseType: "text",
         timeout: 30000,
+        signal,
         headers: {
           "Content-Type": "text/xml; charset=utf-8",
           "SOAPAction": `"http://tempori.org/${action}"`,
@@ -88,11 +90,11 @@ function pick<T = any>(obj: any, paths: string[]): T | undefined {
   return undefined;
 }
 
-export async function soapRequest(action: string, params?: Record<string, any>, p0?: { signal: AbortSignal; }) {
+export async function soapRequest(action: string, params?: Record<string, any>, options?: { signal?: AbortSignal; }) {
   const xml = buildEnvelope(action, params);
   console.log("[SOAP] body >>>\n", xml);
 
-  const raw = await axiosSoapPost(action, xml);
+  const raw = await axiosSoapPost(action, xml, options?.signal);
   console.log("[SOAP] raw(xml) <<<\n", (raw || "").slice(0, 800));
 
   const parsed = parser.parse(raw);
