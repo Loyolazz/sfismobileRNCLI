@@ -1,97 +1,146 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# SFIS Mobile
 
-# Getting Started
+Este repositório contém o aplicativo mobile da SFIS construído com React Native e TypeScript. Este README documenta como preparar o ambiente, executar o projeto localmente e gerar um pacote APK para distribuição interna.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 📄 Visão geral do projeto
+- **Framework**: React Native (CLI)
+- **Linguagem**: TypeScript
+- **Gerenciador de pacotes**: npm
+- **Plataformas**: Android e iOS
 
-## Step 1: Start Metro
+## 📝 Pré-requisitos
+Certifique-se de ter os seguintes softwares instalados:
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+1. **Node.js 18 LTS** ou superior e **npm** (instalado junto com o Node).
+2. **Java Development Kit (JDK) 17** para builds Android.
+3. **Android Studio** (ou apenas o Android SDK e emuladores), com as seguintes dependências instaladas:
+   - Android SDK Platform 34 (Android 14) ou a plataforma alvo do projeto.
+   - Android SDK Build-Tools 34.0.0 ou mais recente.
+   - Android Emulator (opcional, apenas se for usar emulador).
+4. **Watchman** (macOS) para melhor desempenho de hot reload.
+5. **CocoaPods** (apenas macOS) para builds iOS: `sudo gem install cocoapods`.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+> 📊 **Dica**: Use o guia oficial da React Native para preparar seu ambiente se estiver configurando tudo pela primeira vez: https://reactnative.dev/docs/environment-setup
 
-```sh
-# Using npm
+## 🔍 Configurações iniciais
+1. Instale as dependências JavaScript:
+   ```bash
+   npm install
+   ```
+2. Crie um arquivo `.env` (se necessário) com as variáveis do projeto. Consulte a equipe caso haja um modelo.
+3. (Opcional) Execute `npm audit fix` para corrigir eventuais vulnerabilidades menores.
+
+## 🔄 Executar o app em desenvolvimento
+### 1. Inicie o Metro Bundler
+```bash
 npm start
-
-# OR using Yarn
-yarn start
 ```
+Deixe essa aba do terminal aberta. O Metro é o empacotador que compila o JavaScript em tempo real.
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+### 2. Executar no Android
+Em uma nova aba do terminal:
+```bash
 npm run android
+```
+Isso irá:
+- Compilar o aplicativo.
+- Instalar a versão debug no dispositivo/emulador conectado.
+- Abrir o app automaticamente.
 
-# OR using Yarn
-yarn android
+> 📢 Certifique-se de ter um emulador Android ativo ou um dispositivo físico com **depuração USB** habilitada.
+
+### 3. Executar no iOS (somente macOS)
+1. Instale as dependências nativas:
+   ```bash
+   cd ios
+   bundle install        # apenas na primeira vez
+   bundle exec pod install
+   cd ..
+   ```
+2. Com o Metro rodando, execute:
+   ```bash
+   npm run ios
+   ```
+
+## 🛠 Scripts úteis
+- `npm run lint`: verifica padrões de código.
+- `npm test`: executa testes unitários (Jest).
+- `npm run android -- --variant=release`: gera um build release diretamente pelo React Native CLI.
+
+## 💻 Gerar APK release (Android)
+Para distribuir internamente via APK, siga estes passos:
+
+1. **Gerar/instalar a keystore** (uma única vez):
+   ```bash
+   keytool -genkeypair -v -storetype PKCS12 -keystore android/app/sfis-release-key.keystore \
+     -alias sfisrelease -keyalg RSA -keysize 2048 -validity 10000
+   ```
+   Guarde a senha e adicione a keystore ao `.gitignore`. Compartilhe a senha somente com pessoas autorizadas.
+
+2. **Configurar as credenciais** em `android/gradle.properties` (crie se não existir):
+   ```properties
+   SFIS_RELEASE_STORE_FILE=sfis-release-key.keystore
+   SFIS_RELEASE_KEY_ALIAS=sfisrelease
+   SFIS_RELEASE_STORE_PASSWORD=sua_senha
+   SFIS_RELEASE_KEY_PASSWORD=sua_senha
+   ```
+
+3. **Atualizar** `android/app/build.gradle` (se ainda não estiver configurado) adicionando dentro de `android { signingConfigs { ... } }`:
+   ```gradle
+   signingConfigs {
+       release {
+           if (project.hasProperty("SFIS_RELEASE_STORE_FILE")) {
+               storeFile file(SFIS_RELEASE_STORE_FILE)
+               storePassword SFIS_RELEASE_STORE_PASSWORD
+               keyAlias SFIS_RELEASE_KEY_ALIAS
+               keyPassword SFIS_RELEASE_KEY_PASSWORD
+           }
+       }
+   }
+
+   buildTypes {
+       release {
+           signingConfig signingConfigs.release
+           minifyEnabled false
+           shrinkResources false
+           proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+       }
+   }
+   ```
+
+4. **Gerar o APK**:
+   ```bash
+   cd android
+   ./gradlew assembleRelease
+   ```
+
+5. O APK será criado em `android/app/build/outputs/apk/release/app-release.apk`. Copie esse arquivo para o local desejado e distribua.
+
+> 💬 **Nota**: Para publicar na Play Store, é recomendado gerar um **Android App Bundle (AAB)** usando `./gradlew bundleRelease`.
+
+## 📦 Gerar IPA (iOS)
+Para distribuição iOS é necessário ter uma conta Apple Developer e um Mac. Em linhas gerais:
+1. Abra `ios/SFISMobile.xcworkspace` no Xcode.
+2. Configure o `Signing & Capabilities` com o time da SFIS.
+3. Selecione o esquema `Release` e um dispositivo genérico iOS.
+4. Em **Product > Archive**, gere o artefato.
+5. Use o **Organizer** do Xcode para exportar um `.ipa` para distribuição interna ou enviar para a App Store Connect.
+
+## 📂 Estrutura de pastas (resumo)
+```
+.
+├── App.tsx              # Ponto de entrada principal
+├── src/                 # Código-fonte do aplicativo
+├── assets/              # Imagens e fontes
+├── android/             # Projeto nativo Android
+├── ios/                 # Projeto nativo iOS
+├── __tests__/           # Testes unitários (Jest)
+└── package.json         # Configurações e scripts do npm
 ```
 
-### iOS
+## 💬 Suporte
+- Use o Slack/Teams interno para dúvidas rápidas.
+- Crie issues neste repositório para bugs ou melhorias.
+- Documente decisões arquiteturais importantes e mantenha este README atualizado.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Bom desenvolvimento! 💪
