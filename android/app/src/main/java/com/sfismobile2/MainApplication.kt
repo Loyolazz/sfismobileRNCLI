@@ -43,7 +43,7 @@ class MainApplication : Application(), ReactApplication {
     setupUnsafeSsl()
 
     if (BuildConfig.DEBUG) {
-      OkHttpClientProvider.setOkHttpClientFactory(InsecureOkHttpClientFactory())
+      //OkHttpClientProvider.setOkHttpClientFactory(InsecureOkHttpClientFactory())
     }
     loadReactNative(this)
   }
