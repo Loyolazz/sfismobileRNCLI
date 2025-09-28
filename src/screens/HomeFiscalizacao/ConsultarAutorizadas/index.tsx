@@ -1,12 +1,11 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { type TextStyle } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
-import Icon from '@/components/Icon';
 import theme from '@/theme';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
-import homeStyles from '../styles';
+import HeaderBackButton from '../components/HeaderBackButton';
 
 import ConsultarAutorizadasMenu from './MenuScreen';
 import CnpjRazao from './CnpjRazao';
@@ -16,9 +15,29 @@ import Instalacao from './Instalacao';
 
 const Stack = createNativeStackNavigator<ConsultarAutorizadasStackParamList>();
 
+const headerTitleStyle = {
+  fontSize: 18,
+  fontWeight: '600',
+} satisfies Pick<TextStyle, 'fontSize' | 'fontWeight'>;
+
+const baseScreenOptions: NativeStackNavigationOptions = {
+  headerStyle: { backgroundColor: theme.colors.primaryDark },
+  headerTitleStyle,
+  headerTintColor: theme.colors.surface,
+  headerTitleAlign: 'center',
+};
+
+const createHeaderLeft = (onPress: () => void): NativeStackNavigationOptions['headerLeft'] =>
+  () => <HeaderBackButton onPress={onPress} />;
+
 export default function ConsultarAutorizadasNavigator(): React.JSX.Element {
   return (
-    <Stack.Navigator screenOptions={({ navigation }) => screenOptions(navigation)}>
+    <Stack.Navigator
+      screenOptions={({ navigation }): NativeStackNavigationOptions => ({
+        ...baseScreenOptions,
+        headerLeft: createHeaderLeft(() => navigation.goBack()),
+      })}
+    >
       <Stack.Screen name="Menu" component={ConsultarAutorizadasMenu} options={{ headerShown: false }} />
       <Stack.Screen name="CnpjRazao" component={CnpjRazao} options={{ title: 'Por CNPJ / Razão Social' }} />
       <Stack.Screen name="Modalidade" component={Modalidade} options={{ title: 'Por Modalidade' }} />
@@ -26,27 +45,5 @@ export default function ConsultarAutorizadasNavigator(): React.JSX.Element {
       <Stack.Screen name="Instalacao" component={Instalacao} options={{ title: 'Por Instalação' }} />
     </Stack.Navigator>
   );
-}
-
-function screenOptions(
-  navigation: NativeStackNavigationProp<ConsultarAutorizadasStackParamList>,
-) {
-  return {
-    headerStyle: { backgroundColor: theme.colors.primaryDark },
-    headerTitleStyle: { fontSize: 18, fontWeight: '600' },
-    headerTintColor: theme.colors.surface,
-    headerTitleAlign: 'center' as const,
-    headerLeft: () => (
-      <Pressable
-        onPress={() => navigation.goBack()}
-        accessibilityRole="button"
-        accessibilityLabel="Voltar"
-        style={homeStyles.headerButton}
-        hitSlop={8}
-      >
-        <Icon name="arrow-back" size={24} color={theme.colors.surface} />
-      </Pressable>
-    ),
-  };
 }
 
