@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable } from 'react-native';
 import {
-    createDrawerNavigator,
-    DrawerContentComponentProps,
-    DrawerNavigationOptions,
-    DrawerNavigationProp,
+  createDrawerNavigator,
+  DrawerContentComponentProps,
+  DrawerNavigationOptions,
+  DrawerNavigationProp,
 } from '@react-navigation/drawer';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useCallback } from 'react';
@@ -33,159 +33,188 @@ import homeStyles from './styles';
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
 const makeDrawerIcon =
-    (name: React.ComponentProps<typeof Icon>['name']) =>
-        ({ color, size }: { color: string; size: number }) => (
-            <Icon name={name} color={color} size={size} />
-        );
+  (name: React.ComponentProps<typeof Icon>['name']) =>
+  ({ color, size }: { color: string; size: number }) =>
+    <Icon name={name} color={color} size={size} />;
 
 const defaultScreenOptions = ({
-    navigation,
+  navigation,
 }: {
-    navigation: DrawerNavigationProp<DrawerParamList>;
+  navigation: DrawerNavigationProp<DrawerParamList>;
 }): DrawerNavigationOptions => ({
-    headerStyle: { backgroundColor: theme.colors.primaryDark },
-    headerTitleStyle: { fontSize: 18, fontWeight: '600' },
-    headerTitleAlign: 'center',
-    drawerActiveTintColor: theme.colors.primaryDark,
-    headerLeft: () => (
-        <Pressable
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar"
-            style={homeStyles.headerButton}
-            hitSlop={8}
-        >
-            <Icon name="arrow-back" size={24} color={theme.colors.surface} />
-        </Pressable>
-    ),
-    swipeEnabled: false,
+  headerStyle: { backgroundColor: theme.colors.primaryDark },
+  headerTitleStyle: { fontSize: 18, fontWeight: '600' },
+  headerTitleAlign: 'center',
+  drawerActiveTintColor: theme.colors.primaryDark,
+  headerLeft: () => (
+    <Pressable
+      onPress={() => navigation.goBack()}
+      accessibilityRole="button"
+      accessibilityLabel="Voltar"
+      style={homeStyles.headerButton}
+      hitSlop={8}
+    >
+      <Icon name="arrow-back" size={24} color={theme.colors.surface} />
+    </Pressable>
+  ),
+  swipeEnabled: false,
 });
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HomeDrawer'>;
 
 export default function HomeFiscalizacao({ route, navigation }: Props) {
-    const { showReleases } = route.params ?? {};
-    const handleLogout = useCallback(() => {
-        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-    }, [navigation]);
+  const { showReleases } = route.params ?? {};
+  const handleLogout = useCallback(() => {
+    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+  }, [navigation]);
 
-    const renderDrawerContent = useCallback(
-        (props: DrawerContentComponentProps) => (
-            <CustomDrawerContent {...props} onLogout={handleLogout} />
-        ),
-        [handleLogout],
-    );
+  const renderDrawerContent = useCallback(
+    (props: DrawerContentComponentProps) => (
+      <CustomDrawerContent {...props} onLogout={handleLogout} />
+    ),
+    [handleLogout],
+  );
 
-    return (
-        <Drawer.Navigator screenOptions={defaultScreenOptions} drawerContent={renderDrawerContent}>
-            <Drawer.Screen
-                name="Home"
-                component={HomeScreen}
-                initialParams={{ showReleases }}
-                options={{
-                    headerShown: false,
-                    swipeEnabled: true,
-                    drawerIcon: makeDrawerIcon('home'),
-                    drawerLabel: 'Início',
-                }}
-            />
+  return (
+    <Drawer.Navigator
+      screenOptions={defaultScreenOptions}
+      drawerContent={renderDrawerContent}
+    >
+      <Drawer.Screen
+        name="Home"
+        component={HomeScreen}
+        initialParams={{ showReleases }}
+        options={{
+          headerShown: false,
+          swipeEnabled: true,
+          drawerIcon: makeDrawerIcon('home'),
+          drawerLabel: 'Início',
+        }}
+      />
 
-            <Drawer.Screen
-                name="MinhasFiscalizacoes"
-                component={MinhasFiscalizacoes}
-                options={{
-                    title: 'Minhas Fiscalizações',
-                    drawerIcon: makeDrawerIcon('assignment'),
-                    drawerItemStyle: { display: 'none' },
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
-            <Drawer.Screen
-                name="FiscalizacaoRotina"
-                component={FiscalizacaoRotina}
-                options={{
-                    title: 'Fiscalizações de Rotina',
-                    drawerIcon: makeDrawerIcon('sync'),
-                    drawerItemStyle: { display: 'none' },
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
-            <Drawer.Screen
-                name="ConsultarAutorizadas"
-                component={ConsultarAutorizadas}
-                options={{
-                    title: 'Consultar Autorizadas',
-                    drawerIcon: makeDrawerIcon('search'),
-                    drawerItemStyle: { display: 'none' },
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
+      <Drawer.Screen
+        name="MinhasFiscalizacoes"
+        component={MinhasFiscalizacoes}
+        options={{
+          title: 'Minhas Fiscalizações',
+          drawerIcon: makeDrawerIcon('assignment'),
+          drawerItemStyle: { display: 'none' },
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="FiscalizacaoRotina"
+        component={FiscalizacaoRotina}
+        options={{
+          title: 'Fiscalizações de Rotina',
+          drawerIcon: makeDrawerIcon('sync'),
+          drawerItemStyle: { display: 'none' },
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="ConsultarAutorizadas"
+        component={ConsultarAutorizadas}
+        options={{
+          title: 'Consultar Autorizadas',
+          drawerIcon: makeDrawerIcon('search'),
+          drawerItemStyle: { display: 'none' },
+          headerTintColor: theme.colors.surface,
+        }}
+      />
 
-            {/* Itens exibidos no Drawer */}
-            <Drawer.Screen
-                name="RelatorioUsuario"
-                component={RelatorioUsuario}
-                options={{
-                    title: 'Relatório do Usuário',
-                    drawerIcon: makeDrawerIcon('description'),
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
-            <Drawer.Screen
-                name="Antaq"
-                component={Antaq}
-                options={{
-                    title: 'A ANTAQ',
-                    drawerIcon: makeDrawerIcon('info'),
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
-            <Drawer.Screen
-                name="Tutorial"
-                component={Tutorial}
-                options={{
-                    title: 'Tutorial',
-                    drawerIcon: makeDrawerIcon('menu-book'),
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
-            <Drawer.Screen
-                name="NovidadesVersao"
-                component={NovidadesVersao}
-                options={{
-                    title: 'Novidades da Versão',
-                    drawerIcon: makeDrawerIcon('newReleases'),
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
-            <Drawer.Screen
-                name="SituacaoServico"
-                component={SituacaoServico}
-                options={{
-                    title: 'Situação do Serviço',
-                    drawerIcon: makeDrawerIcon('wifi'),
-                    headerTintColor: theme.colors.surface,
-                }}
-            />
+      {/* Itens exibidos no Drawer */}
+      <Drawer.Screen
+        name="RelatorioUsuario"
+        component={RelatorioUsuario}
+        options={{
+          title: 'Relatório do Usuário',
+          drawerIcon: makeDrawerIcon('description'),
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="Antaq"
+        component={Antaq}
+        options={{
+          title: 'A ANTAQ',
+          drawerIcon: makeDrawerIcon('info'),
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="Tutorial"
+        component={Tutorial}
+        options={{
+          title: 'Tutorial',
+          drawerIcon: makeDrawerIcon('menu-book'),
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="NovidadesVersao"
+        component={NovidadesVersao}
+        options={{
+          title: 'Novidades da Versão',
+          drawerIcon: makeDrawerIcon('newReleases'),
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="SituacaoServico"
+        component={SituacaoServico}
+        options={{
+          title: 'Situação do Serviço',
+          drawerIcon: makeDrawerIcon('wifi'),
+          headerTintColor: theme.colors.surface,
+        }}
+      />
 
-            {/* Rotas ocultas */}
-            <Drawer.Screen name="EmAndamento"
-                           component={EmAndamento}
-                           options={{ drawerItemStyle: { display: 'none' } }} />
-            <Drawer.Screen name="PainelEmpresas"
-                           component={PainelEmpresas}
-                           options={{ drawerItemStyle: { display: 'none' } }} />
-            <Drawer.Screen name="EsquemasOperacionais"
-                           component={EsquemasOperacionais}
-                           options={{ drawerItemStyle: { display: 'none' } }} />
-            <Drawer.Screen name="ServicosNaoAutorizados"
-                           component={ServicosNaoAutorizados}
-                           options={{ drawerItemStyle: { display: 'none' } }} />
-            <Drawer.Screen name="Notificacoes"
-                           component={Notificacoes}
-                           options={{
-                               headerShown: false,
-                               drawerItemStyle: { display: 'none' } }} />
-        </Drawer.Navigator>
-    );
+      <Drawer.Screen
+        name="EmAndamento"
+        component={EmAndamento}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'EmAndamento',
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="PainelEmpresas"
+        component={PainelEmpresas}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Painel Empresas',
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="EsquemasOperacionais"
+        component={EsquemasOperacionais}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Esquema Operacionais',
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+      <Drawer.Screen
+        name="ServicosNaoAutorizados"
+        component={ServicosNaoAutorizados}
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'ServicosNaoAutorizados',
+          headerTintColor: theme.colors.surface,
+      }}
+      />
+      <Drawer.Screen
+        name="Notificacoes"
+        component={Notificacoes}
+        options={{
+          headerShown: false,
+          drawerItemStyle: { display: 'none' },
+          headerTintColor: theme.colors.surface,
+        }}
+      />
+    </Drawer.Navigator>
+  );
 }

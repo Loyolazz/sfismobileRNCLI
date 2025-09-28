@@ -11,6 +11,6 @@ export default function SituacaoServico() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center',backgroundColor: '#fff'  },
   title: { fontSize: 18, color: '#0F3C52' },
 });

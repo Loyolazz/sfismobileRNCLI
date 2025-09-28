@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus, DrawerNavigationProp } from '@react-navigation/drawer';
-
 import HomeHeader from './components/HomeHeader';
 import TileGrid from './components/TileGrid';
 import { loadSession } from '@/services/session';
