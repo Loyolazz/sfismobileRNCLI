@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ https://mts0.googleapis.com/ 'unsafe-inline' 'unsafe-eval'">
+
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+</head>
+<body ng-app="app">
+    <div ng-controller="MainCtrl">
+
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a onclick="window.history.back()" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Embarcações Encontradas </a>
+            </nav>
+        </div>
+
+        <div class="fixed">
+            <p id="data-qtd" class="titulo"></p>
+            <p class="detalhe-info">
+                A pesquisa "{{filtro}}".
+                Escolha uma embarcação para visualizar a empresa.
+            </p>
+        </div>
+
+        <div class="app">
+            <div class="lista-empresa">
+                <div class="collection" ng-repeat="embarcacao in embarcacoes">
+
+                    <a ng-click="detalhar(embarcacao);" class="collection-item avatar">
+                        <img src="img/icon-embarca.png" alt="" class="circle">
+                        <span class="title">{{embarcacao.NoEmbarcacao}}</span>
+                        <p class="detalhe"> IMO: {{embarcacao.NRCapitania}} </p>
+                        <p class="detalhe"> Tipo:  {{embarcacao.TipoEmbarcacao}} </p>
+                        <div ng-if="embarcacao.DTTermino">
+                            <p class="detalhe"> Autorização de <b>{{embarcacao.DTInicio}}</b> até <b>{{embarcacao.DTTermino}}</b>
+                        </div>
+                        <div ng-if="!embarcacao.DTTermino">
+                            <p class="detalhe"> Incluida a frota em: <b>{{embarcacao.DTInicio}}</b>
+                        </div>
+
+                        <div class="empresa-ativa-right"> <img src="img/status-atividade.png">  {{embarcacao.STHomologacao}} </div>
+                        </p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="preloader" class="preloader-wrapper big active">
+        <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div><div class="gap-patch">
+                <div class="circle"></div>
+            </div><div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script src="js/angular.min.js"></script>
+    <script src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/gestor_bd.js"></script>
+    <script src="js/empresa.listarEmbarcacoes.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+</body>
+</html>
+

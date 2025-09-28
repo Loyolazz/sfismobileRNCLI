@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ https://mts0.googleapis.com/ 'unsafe-inline' 'unsafe-eval'">
+
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+    <title>Empresa Geo</title>
+
+</head>
+<body ng-app="app">
+    <div ng-controller="MainCtrl">
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a onclick="window.history.back()" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Localização Geográfica </a>
+                <ul id="nav-mobile" class="right">
+                    <li>
+                        <a href="#"><i class="material-icons" ng-click="iniciarFiscalizacao()">assignment</i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div>
+
+            <p class="empresa"><b> {{empresa.NORazaoSocial}} </b></p>
+            <p class="autorizacao"> &nbsp CNPJ:<b> {{empresa.NRInscricao}} </b></p>
+            <p class="autorizacao"> &nbsp Endereço: <b> {{empresa.DSEndereco}}</b> </p>
+            <p class="autorizacao"> &nbsp Modalidade: <b> {{empresa.Modalidade}}</b> </p>
+
+        </div>
+        <div class="linha"></div>
+        <p class="info"> &nbsp Localização Geográfica </p>
+        <div class="linha"></div>
+        <div class="app">
+
+
+            <div id="deviceready" class="blink"> </div>
+            <div id="mapa"></div>
+
+
+        </div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="js/empresa.geo.js"></script>
+    <script src="js/util.js"></script>
+    <script type="text/javascript" src="js/gestor_bd.js"></script>
+
+</body>
+</html>
