@@ -1,4 +1,4 @@
-import {StyleSheet, Dimensions, type ColorValue, Platform} from 'react-native';
+import {StyleSheet, Dimensions, Platform} from 'react-native';
 import theme from '@/theme';
 
 const { width } = Dimensions.get('window');
@@ -6,14 +6,14 @@ const { width } = Dimensions.get('window');
 export const GAP = (theme?.spacing?.md as number) ?? 16;
 export const CARD_SIZE = Math.floor((width - GAP * 3) / 2);
 
-export const CARD_GRADIENT: readonly [ColorValue, ColorValue] = [
+export const CARD_GRADIENT: [string, string] = [
     theme?.colors?.primaryDark ?? '#0A2647',
     theme?.colors?.primary ?? '#1E3A59',
 ];
 
-export const DRAWER_BANNER_GRADIENT: readonly [ColorValue, ColorValue] = [
-    theme?.colors?.primaryDark ?? '#0A2647',
-    theme?.colors?.primary ?? '#1E3A59',
+export const DRAWER_BANNER_GRADIENT: [string, string] = [
+  theme?.colors?.primaryDark ?? '#0A2647',
+  theme?.colors?.primary ?? '#1E3A59',
 ];
 
 const styles = StyleSheet.create({

@@ -52,7 +52,8 @@ export default function CustomDrawerContent({ onLogout, ...props }: Props) {
     const matriculaNum = user?.NRMatricula ?? (user as any)?.NRMatriculaServidor;
     const matricula = matriculaNum ? `Matrícula ${matriculaNum}` : '';
 
-    return (
+
+  return (
         <SafeAreaView style={styles.drawerSafe}>
             <DrawerContentScrollView
                 {...props}

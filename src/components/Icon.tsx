@@ -35,6 +35,7 @@ const icons = {
   visibility: require('../../assets/new_icons/visibility_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   'visibility-off': require('../../assets/new_icons/visibility_off_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   wifi: require('../../assets/new_icons/wifi_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
+  'lock': require('../../assets/new_icons/lock_48dp_E3E3E3_FILL0_wght400_GRAD0_opsz48.png')
 } as const;
 
 export type IconName =
