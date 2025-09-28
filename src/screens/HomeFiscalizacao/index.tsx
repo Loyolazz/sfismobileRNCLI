@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { type TextStyle } from 'react-native';
 import {
   createDrawerNavigator,
   DrawerContentComponentProps,
@@ -28,7 +28,7 @@ import Tutorial from './Tutorial';
 import NovidadesVersao from './NovidadesVersao';
 import SituacaoServico from './SituacaoServico';
 import Notificacoes from './Notificacoes';
-import homeStyles from './styles';
+import HeaderBackButton from './components/HeaderBackButton';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -37,26 +37,24 @@ const makeDrawerIcon =
   ({ color, size }: { color: string; size: number }) =>
     <Icon name={name} color={color} size={size} />;
 
+const headerTitleStyle = {
+  fontSize: 18,
+  fontWeight: '600',
+} satisfies Pick<TextStyle, 'fontSize' | 'fontWeight'>;
+
+const createHeaderLeft = (onPress: () => void): DrawerNavigationOptions['headerLeft'] =>
+  () => <HeaderBackButton onPress={onPress} />;
+
 const defaultScreenOptions = ({
   navigation,
 }: {
   navigation: DrawerNavigationProp<DrawerParamList>;
 }): DrawerNavigationOptions => ({
   headerStyle: { backgroundColor: theme.colors.primaryDark },
-  headerTitleStyle: { fontSize: 18, fontWeight: '600' },
+  headerTitleStyle,
   headerTitleAlign: 'center',
   drawerActiveTintColor: theme.colors.primaryDark,
-  headerLeft: () => (
-    <Pressable
-      onPress={() => navigation.goBack()}
-      accessibilityRole="button"
-      accessibilityLabel="Voltar"
-      style={homeStyles.headerButton}
-      hitSlop={8}
-    >
-      <Icon name="arrow-back" size={24} color={theme.colors.surface} />
-    </Pressable>
-  ),
+  headerLeft: createHeaderLeft(() => navigation.goBack()),
   swipeEnabled: false,
 });
 
