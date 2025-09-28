@@ -52,11 +52,14 @@ export async function buscarEmpresasCnpjRazao(termo: string): Promise<Empresa[]>
 }
 
 // --------- NOVO: BUSCA AUTORIZAÇÕES (igual ao Cordova)
-export async function buscarEmpresasAutorizadas(
-    termo: string,
-    modalidade: string = ''
-): Promise<Empresa[]> {
-  const payload: any = { cnpjRazaosocial: termo, modalidade };
+type FiltroAutorizadas = {
+  cnpjRazaosocial?: string;
+  modalidade?: string;
+  embarcacao?: string;
+  instalacao?: string;
+};
+
+async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise<Empresa[]> {
   const parsed = await soapRequest('ConsultarEmpresasAutorizadas', payload);
   const result = extractSoapResult(parsed, 'ConsultarEmpresasAutorizadas');
 
@@ -67,8 +70,23 @@ export async function buscarEmpresasAutorizadas(
   return list.map(mapEmpresaAutorizadaLikeCordova);
 }
 
+export async function buscarEmpresasAutorizadas(
+    termo: string,
+    modalidade: string = ''
+): Promise<Empresa[]> {
+  return consultarEmpresasAutorizadas({ cnpjRazaosocial: termo, modalidade });
+}
+
 export async function consultarPorModalidade(modalidade: string): Promise<Empresa[]> {
-  return buscarEmpresasAutorizadas('', modalidade);
+  return consultarEmpresasAutorizadas({ modalidade });
+}
+
+export async function consultarPorEmbarcacao(embarcacao: string): Promise<Empresa[]> {
+  return consultarEmpresasAutorizadas({ embarcacao });
+}
+
+export async function consultarPorInstalacao(instalacao: string): Promise<Empresa[]> {
+  return consultarEmpresasAutorizadas({ instalacao });
 }
 
 /* --------------------------------- mappers -------------------------------- */
