@@ -29,6 +29,7 @@ import NovidadesVersao from './NovidadesVersao';
 import SituacaoServico from './SituacaoServico';
 import Notificacoes from './Notificacoes';
 import HeaderBackButton from './components/HeaderBackButton';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/core';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -113,13 +114,21 @@ export default function HomeFiscalizacao({ route, navigation }: Props) {
       <Drawer.Screen
         name="ConsultarAutorizadas"
         component={ConsultarAutorizadas}
-        options={{
-          title: 'Consultar Autorizadas',
-          drawerIcon: makeDrawerIcon('search'),
-          drawerItemStyle: { display: 'none' },
-          headerTintColor: theme.colors.surface,
+        options={({ route: drawerRoute }) => {
+          const focusedRoute =
+            getFocusedRouteNameFromRoute(drawerRoute) ?? 'Menu';
+          const showDrawerHeader = focusedRoute === 'Menu';
+
+          return {
+            title: 'Consultar Autorizadas',
+            drawerIcon: makeDrawerIcon('search'),
+            drawerItemStyle: { display: 'none' },
+            headerTintColor: theme.colors.surface,
+            headerShown: showDrawerHeader,
+          };
         }}
       />
+
 
       {/* Itens exibidos no Drawer */}
       <Drawer.Screen
