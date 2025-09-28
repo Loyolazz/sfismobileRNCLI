@@ -7,7 +7,7 @@ export const releases: Release[] = [
   {
     versao: 'Versão 1.2.11',
     novidades: [
-      'Possibilidade de cadastro de fiscalização de rotina a partir do menu Serviços Não Autorizado;',
+      'Possibilidade de cadastro de fiscalização de rotina a partir do menu Serviços Não Autorizados;',
       'Habilitação da seleção do coordenador da equipe de fiscalização;',
       'Vinculação do processo no SEI à unidade do coordenador da equipe.'
     ],
