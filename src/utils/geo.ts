@@ -1,5 +1,23 @@
 const directionRegex = /[NSEOWnseow]$/;
 
+const directionMap: Record<string, 'N' | 'S' | 'E' | 'O'> = {
+  N: 'N',
+  NORTE: 'N',
+  NORTH: 'N',
+  S: 'S',
+  SUL: 'S',
+  SOUTH: 'S',
+  E: 'E',
+  ESTE: 'E',
+  EAST: 'E',
+  L: 'E',
+  LESTE: 'E',
+  O: 'O',
+  OESTE: 'O',
+  WEST: 'O',
+  W: 'O',
+};
+
 function normalizeDecimal(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return trimmed;
@@ -16,6 +34,22 @@ function normalizeDecimal(value: string): string {
   return `${sign}${normalized}`;
 }
 
+function corrigirLatLong(valor: string): string {
+  const trimmed = valor.trim();
+  if (!trimmed) return trimmed;
+  const sign = trimmed.startsWith('-') ? trimmed[0] : '';
+  const unsigned = sign ? trimmed.slice(1) : trimmed;
+  const partes = unsigned.split('.');
+  if (partes.length === 0) {
+    return trimmed;
+  }
+  const [inteiro, ...fracao] = partes;
+  if (fracao.length === 0) {
+    return `${sign}${inteiro}`;
+  }
+  return `${sign}${inteiro}.${fracao.join('')}`;
+}
+
 function convertDMSToDD(degrees: number, minutes: number, seconds: number, direction: string): number {
   let dd = degrees + minutes / 60 + seconds / 3600;
   if (/[SWO]/i.test(direction)) {
@@ -24,32 +58,73 @@ function convertDMSToDD(degrees: number, minutes: number, seconds: number, direc
   return dd;
 }
 
-function parseDms(input: string): number | null {
-  const cleaned = input
-    .replace(/º/g, '°')
-    .replace(/\s+/g, '')
-    .replace(/,/g, '.');
-  const parts = cleaned.split(/[^0-9A-Za-z.]+/).filter(Boolean);
-  if (parts.length < 3) return null;
+function guessDirectionFromSuffix(cleaned: string): 'N' | 'S' | 'E' | 'O' | '' {
+  const suffix = cleaned.match(/(NORTE|NORTH|SUL|SOUTH|LESTE|ESTE|EAST|OESTE|WEST|[NSEOWL])$/i);
+  if (!suffix) {
+    if (directionRegex.test(cleaned)) {
+      return cleaned.slice(-1).toUpperCase() as 'N' | 'S' | 'E' | 'O';
+    }
+    return '';
+  }
+  const token = suffix[0].toUpperCase();
+  const mapped = directionMap[token as keyof typeof directionMap];
+  if (mapped) {
+    return mapped;
+  }
+  return token.slice(-1) as 'N' | 'S' | 'E' | 'O';
+}
 
-  let direction = '';
-  const dirIndex = parts.findIndex((part) => /^[NSEOWnseow]$/.test(part));
-  let numbers: string[] = parts;
-  if (dirIndex >= 0) {
-    direction = parts[dirIndex].toUpperCase();
-    numbers = parts.filter((_, index) => index !== dirIndex);
-  } else if (directionRegex.test(cleaned)) {
-    direction = cleaned.slice(-1).toUpperCase();
+function parseDms(input: string): number | null {
+  const normalized = input
+    .replace(/º/g, '°')
+    .replace(/,/g, '.')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized) return null;
+
+  const cleaned = normalized.replace(/\s+/g, '');
+
+  const rawParts = normalized.split(/[^0-9A-Za-z.]+/).filter(Boolean);
+  if (!rawParts.length) return null;
+
+  let direction: 'N' | 'S' | 'E' | 'O' | '' = '';
+  const numericParts: string[] = [];
+
+  for (const part of rawParts) {
+    const upper = part.toUpperCase();
+    const mapped = directionMap[upper as keyof typeof directionMap];
+    if (mapped) {
+      direction = mapped;
+      continue;
+    }
+    if (/^-?\d+(?:\.\d+)?$/.test(part)) {
+      numericParts.push(part);
+    }
   }
 
-  const [degStr, minStr, ...rest] = numbers;
-  const secStr = rest.length >= 2 ? `${rest[0]}.${rest[1]}` : rest[0];
+  if (!direction) {
+    direction = guessDirectionFromSuffix(cleaned);
+  }
+
+  if (numericParts.length === 0) {
+    return null;
+  }
+
+  const [degStr = '0', minStr = '0', ...rest] = numericParts;
+  const secondsParts = rest.length ? rest : ['0'];
+  const [secBase, ...secFraction] = secondsParts;
+  const secStr = secFraction.length ? `${secBase}.${secFraction.join('')}` : secBase;
 
   const degrees = Number(degStr);
   const minutes = Number(minStr);
-  const seconds = Number((secStr ?? '0').replace(/,/g, '.'));
+  const seconds = Number(secStr);
 
   if (![degrees, minutes, seconds].every((n) => Number.isFinite(n))) {
+    return null;
+  }
+
+  if (!direction) {
     return null;
   }
 
@@ -57,9 +132,15 @@ function parseDms(input: string): number | null {
 }
 
 function parseDecimal(input: string): number | null {
-  const normalized = normalizeDecimal(input);
+  const base = input
+    .replace(/º/g, '')
+    .replace(/°/g, '')
+    .replace(/,/g, '.');
+
+  const normalized = normalizeDecimal(base);
   if (!normalized) return null;
-  const value = Number(normalized);
+  const corrigido = corrigirLatLong(normalized);
+  const value = Number(corrigido);
   return Number.isFinite(value) ? value : null;
 }
 
