@@ -13,6 +13,7 @@ import Modalidade from './Modalidade';
 import Embarcacao from './Embarcacao';
 import Instalacao from './Instalacao';
 import Detalhes from './Detalhes';
+import Mapa from './Mapa';
 
 const Stack = createNativeStackNavigator<ConsultarAutorizadasStackParamList>();
 
@@ -45,6 +46,7 @@ export default function ConsultarAutorizadasNavigator(): React.JSX.Element {
       <Stack.Screen name="Embarcacao" component={Embarcacao} options={{ title: 'Por Embarcação' }} />
       <Stack.Screen name="Instalacao" component={Instalacao} options={{ title: 'Por Instalação' }} />
       <Stack.Screen name="Detalhes" component={Detalhes} options={{ title: 'Detalhes da Empresa' }} />
+      <Stack.Screen name="Mapa" component={Mapa} options={{ title: 'Mapa da Instalação' }} />
     </Stack.Navigator>
   );
 }
