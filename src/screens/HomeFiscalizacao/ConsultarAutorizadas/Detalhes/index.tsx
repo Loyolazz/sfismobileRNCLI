@@ -118,7 +118,7 @@ export default function Detalhes(): React.JSX.Element {
                 <Text style={styles.mapButtonText}>Visualizar mapa da instalação</Text>
               </Pressable>
               <Text style={styles.mapHelper}>
-                O mapa utiliza a API Google Maps v3.53. Sempre que você o abre conectado, uma imagem atualizada fica salva para uso offline.
+                O mapa utiliza a API Google Maps v3.53 com cópia offline para fiscalizações em áreas sem conectividade.
               </Text>
             </>
           ) : null}

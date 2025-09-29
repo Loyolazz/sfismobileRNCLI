@@ -117,6 +117,7 @@ function pickTerminal(
   const primeiroComCoordenadas = buscarIndice((item) => temCoordenadasValidas(item));
   if (primeiroComCoordenadas >= 0) return primeiroComCoordenadas;
 
+
   return 0;
 }
 
@@ -242,6 +243,7 @@ export default function MapaInstalacao(): React.JSX.Element {
             if (lista.length > 0) {
               await salvarInstalacoesCache(NRInscricao, lista);
               cacheAtual = await carregarInstalacoesCache(NRInscricao);
+
               origem = 'online';
             }
           } catch (err) {
@@ -261,7 +263,6 @@ export default function MapaInstalacao(): React.JSX.Element {
         }
 
         if (!ativo) return;
-
         setOnline(conectado);
         setInstalacoes(lista);
         setFonteDados(origem);
@@ -294,6 +295,7 @@ export default function MapaInstalacao(): React.JSX.Element {
     NORazaoSocialInstalacao,
     NRInscricaoInstalacao,
   ]);
+
 
   const terminalSelecionado = useMemo<InstalacaoPortuaria | null>(() => {
     if (selecionada < 0) return null;
