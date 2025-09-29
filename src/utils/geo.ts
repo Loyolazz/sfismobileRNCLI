@@ -143,13 +143,25 @@ function parseDecimal(input: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-export function parseCoordenada(raw?: string | null): number | null {
-  if (!raw) return null;
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  if (/[°º'"NSEOWnseow]/.test(trimmed)) {
-    const dms = parseDms(trimmed);
-    if (dms != null) return dms;
+export function parseCoordenada(valor?: string | number | null): number | null {
+  if (valor == null) return null;
+
+  let str = String(valor).trim();
+
+  // Casos inválidos comuns vindos do legado
+  if (str === "" || str === "---" || str === "0" || str.toLowerCase() === "null" || str.toLowerCase() === "undefined") {
+    return null;
   }
-  return parseDecimal(trimmed);
+
+  // Troca vírgula decimal por ponto
+  str = str.replace(",", ".");
+
+  const num = Number(str);
+  if (isNaN(num)) return null;
+
+  // Validar range básico (latitude <= 90, longitude <= 180) — quem chama decide qual é qual
+  if (Math.abs(num) > 180) return null;
+
+  return num;
 }
+

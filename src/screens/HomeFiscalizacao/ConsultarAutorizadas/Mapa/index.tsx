@@ -63,6 +63,18 @@ const normalizeCodigo = (value?: string) => {
   return removeDiacritics(value).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 };
 
+// ---- Fallback por Geocodificação (quando não houver lat/lng) ----
+function montarQueryGeocode(opts: {
+  titulo?: string | null | undefined;
+  municipio?: string | null | undefined;
+  uf?: string | null | undefined;
+}) {
+  const partes = [opts.titulo, opts.municipio, opts.uf]
+    .map(v => (v ?? '').toString().trim())
+    .filter(Boolean);
+  return partes.join(', ');
+}
+
 const temCoordenadasValidas = (instalacao: InstalacaoPortuaria): boolean =>
   parseCoordenada(instalacao.latitude) != null && parseCoordenada(instalacao.longitude) != null;
 
@@ -95,18 +107,23 @@ function pickTerminal(
 
   const tentaPorPreferencia = (exigirCoordenadas: boolean) =>
     buscarIndice((item) => {
-      if (exigirCoordenadas && !temCoordenadasValidas(item)) {
-        return false;
-      }
+      if (exigirCoordenadas && !temCoordenadasValidas(item)) return false;
+
       const nome = normalizeTexto(item.nome);
       const local = normalizeTexto(item.localizacao);
-      const codigo = normalizeCodigo(item.cdInstalacaoPortuaria) || normalizeCodigo(item.cdTerminal);
+      const codigo =
+        normalizeCodigo(item.cdInstalacaoPortuaria) || normalizeCodigo(item.cdTerminal);
 
-      return (
-        candidatosPreferidos.some((alvo) => alvo === nome || alvo === local) ||
-        (codigo && codigosPreferidos.some((alvo) => alvo === codigo))
+      const nomeOuLocalMatch = candidatosPreferidos.some(
+        (alvo) => alvo === nome || alvo === local,
       );
+
+      // Garante boolean (em vez de "" | boolean)
+      const codigoMatch = !!codigo && codigosPreferidos.some((alvo) => alvo === codigo);
+
+      return nomeOuLocalMatch || codigoMatch;
     });
+
 
   const indicePreferidoComCoordenadas = tentaPorPreferencia(true);
   if (indicePreferidoComCoordenadas >= 0) return indicePreferidoComCoordenadas;
@@ -116,7 +133,6 @@ function pickTerminal(
 
   const primeiroComCoordenadas = buscarIndice((item) => temCoordenadasValidas(item));
   if (primeiroComCoordenadas >= 0) return primeiroComCoordenadas;
-
 
   return 0;
 }
@@ -166,9 +182,7 @@ function construirHtmlMapa(info: TerminalInfo, empresa: Empresa): string {
     </style>
     <script type="text/javascript">
       function initMap() {
-        if (!window.google || !window.google.maps) {
-          return;
-        }
+        if (!window.google || !window.google.maps) return;
         var center = { lat: ${info.lat}, lng: ${info.lng} };
         var map = new google.maps.Map(document.getElementById('map'), {
           center: center,
@@ -177,15 +191,60 @@ function construirHtmlMapa(info: TerminalInfo, empresa: Empresa): string {
           gestureHandling: 'greedy'
         });
         var infoWindow = new google.maps.InfoWindow({ content: ${JSON.stringify(infoHtml)} });
-        var marker = new google.maps.Marker({
-          position: center,
-          map: map,
-          title: ${JSON.stringify(titulo)}
-        });
-        marker.addListener('click', function () {
-          infoWindow.open(map, marker);
-        });
+        var marker = new google.maps.Marker({ position: center, map: map, title: ${JSON.stringify(titulo)} });
+        marker.addListener('click', function () { infoWindow.open(map, marker); });
         infoWindow.open(map, marker);
+      }
+    </script>
+    ${onlineScript}
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>`;
+}
+
+// --- NOVO: HTML de fallback que usa Google Geocoder pelo endereço ---
+function construirHtmlMapaGeocode(query: string, infoHtml: string) {
+  const onlineScript = `<script src="${GOOGLE_MAPS_URL}" async defer></script>`;
+  const queryEscapada = JSON.stringify(query);
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <style>
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #map { height: 100%; width: 100%; }
+    </style>
+    <script type="text/javascript">
+      function initMap() {
+        if (!window.google || !window.google.maps) return;
+
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: { lat: -15.793889, lng: -47.882778 }, // Centro do BR enquanto geocodifica
+          zoom: 5,
+          mapTypeId: 'roadmap',
+          gestureHandling: 'greedy'
+        });
+
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: ${queryEscapada} }, function(results, status) {
+          if (status === 'OK' && results && results[0]) {
+            var loc = results[0].geometry.location;
+            map.setCenter(loc);
+            map.setZoom(13);
+
+            var infoWindow = new google.maps.InfoWindow({ content: ${JSON.stringify(infoHtml)} });
+            var marker = new google.maps.Marker({ position: loc, map: map, title: ${queryEscapada} });
+            marker.addListener('click', function () { infoWindow.open(map, marker); });
+            infoWindow.open(map, marker);
+          } else {
+            var el = document.getElementById('map');
+            el.innerHTML = '<div style="padding:16px;font-family:sans-serif;color:#555">Não foi possível localizar o endereço pelo Google Maps Geocoding.</div>';
+          }
+        });
       }
     </script>
     ${onlineScript}
@@ -206,6 +265,8 @@ export default function MapaInstalacao(): React.JSX.Element {
     NORazaoSocial,
     NORazaoSocialInstalacao,
     NRInscricaoInstalacao,
+    NOMunicipio,
+    SGUF,
   } = empresa;
 
   const [instalacoes, setInstalacoes] = useState<InstalacaoPortuaria[]>([]);
@@ -243,7 +304,6 @@ export default function MapaInstalacao(): React.JSX.Element {
             if (lista.length > 0) {
               await salvarInstalacoesCache(NRInscricao, lista);
               cacheAtual = await carregarInstalacoesCache(NRInscricao);
-
               origem = 'online';
             }
           } catch (err) {
@@ -262,6 +322,8 @@ export default function MapaInstalacao(): React.JSX.Element {
           setMensagem('Nenhuma instalação com coordenadas foi encontrada para esta empresa.');
         }
 
+        console.log('Instalações da API:', lista);
+
         if (!ativo) return;
         setOnline(conectado);
         setInstalacoes(lista);
@@ -276,26 +338,13 @@ export default function MapaInstalacao(): React.JSX.Element {
         });
         setSelecionada(indice);
       } finally {
-        if (ativo) {
-          setCarregando(false);
-        }
+        if (ativo) setCarregando(false);
       }
     }
 
     carregar();
-
-    return () => {
-      ativo = false;
-    };
-  }, [
-    Instalacao,
-    Modalidade,
-    NRInscricao,
-    NORazaoSocial,
-    NORazaoSocialInstalacao,
-    NRInscricaoInstalacao,
-  ]);
-
+    return () => { ativo = false; };
+  }, [Instalacao, Modalidade, NRInscricao, NORazaoSocial, NORazaoSocialInstalacao, NRInscricaoInstalacao]);
 
   const terminalSelecionado = useMemo<InstalacaoPortuaria | null>(() => {
     if (selecionada < 0) return null;
@@ -310,10 +359,52 @@ export default function MapaInstalacao(): React.JSX.Element {
     return { terminal: terminalSelecionado, lat: latitude, lng: longitude };
   }, [terminalSelecionado]);
 
+  // Query para geocodificação quando não há coordenadas
+  const queryGeocode = useMemo(() => {
+    const titulo =
+      (terminalSelecionado?.nome ||
+        terminalSelecionado?.localizacao ||
+        Instalacao ||
+        NORazaoSocialInstalacao ||
+        NORazaoSocial);
+    return montarQueryGeocode({
+      titulo,
+      municipio: NOMunicipio,
+      uf: SGUF,
+    });
+  }, [terminalSelecionado, Instalacao, NORazaoSocialInstalacao, NORazaoSocial, NOMunicipio, SGUF]);
+
+  // InfoHtml de fallback (reaproveita o card com o "melhor" terminal)
+  const infoHtmlFallback = useMemo(() => {
+    const fakeTerminal = {
+      ...terminalSelecionado,
+      nome:
+        terminalSelecionado?.nome ||
+        Instalacao ||
+        NORazaoSocialInstalacao ||
+        NORazaoSocial ||
+        'Instalação portuária',
+      localizacao: terminalSelecionado?.localizacao || NOMunicipio || '',
+      endereco: terminalSelecionado?.endereco || '',
+      numero: terminalSelecionado?.numero || '',
+      cidade: terminalSelecionado?.cidade || NOMunicipio || '',
+      estado: terminalSelecionado?.estado || SGUF || '',
+      pais: terminalSelecionado?.pais || 'Brasil',
+      cep: terminalSelecionado?.cep || '',
+    } as any;
+    return construirInfoHtml(fakeTerminal, empresa);
+  }, [terminalSelecionado, empresa, Instalacao, NORazaoSocialInstalacao, NORazaoSocial, NOMunicipio, SGUF]);
+
   const htmlMapa = useMemo(() => {
-    if (!infoTerminal) return null;
-    return construirHtmlMapa(infoTerminal, empresa);
-  }, [empresa, infoTerminal]);
+    if (infoTerminal) {
+      return construirHtmlMapa(infoTerminal, empresa);
+    }
+    // Fallback: sem coordenadas, mas online e com query -> usar geocoding
+    if (online && queryGeocode) {
+      return construirHtmlMapaGeocode(queryGeocode, infoHtmlFallback);
+    }
+    return null;
+  }, [empresa, infoTerminal, online, queryGeocode, infoHtmlFallback]);
 
   const mapsApiKey = useMemo(() => {
     const match = GOOGLE_MAPS_URL.match(/[?&]key=([^&]+)/);
@@ -333,23 +424,17 @@ export default function MapaInstalacao(): React.JSX.Element {
         lng: infoTerminal.lng,
         zoom: GOOGLE_STATIC_DEFAULT_ZOOM,
       });
-      if (ativo) {
-        setSnapshot(existente);
-      }
+      if (ativo) setSnapshot(existente);
     }
     carregarSnapshotLocal();
-    return () => {
-      ativo = false;
-    };
+    return () => { ativo = false; };
   }, [NRInscricao, infoTerminal]);
 
   useEffect(() => {
     let cancelado = false;
     async function atualizarSnapshot() {
       if (!infoTerminal || !mapsApiKey || !online) {
-        if (!cancelado) {
-          setCarregandoSnapshot(false);
-        }
+        if (!cancelado) setCarregandoSnapshot(false);
         return;
       }
       setCarregandoSnapshot(true);
@@ -362,33 +447,23 @@ export default function MapaInstalacao(): React.JSX.Element {
           lng: infoTerminal.lng,
           zoom: GOOGLE_STATIC_DEFAULT_ZOOM,
         });
-        if (!cancelado) {
-          setSnapshot(atualizado);
-        }
+        if (!cancelado) setSnapshot(atualizado);
       } catch (err) {
         if (!cancelado) {
-          const mensagemErro =
-            err instanceof Error ? err.message : 'Não foi possível atualizar o mapa offline.';
+          const mensagemErro = err instanceof Error ? err.message : 'Não foi possível atualizar o mapa offline.';
           setErroSnapshot(mensagemErro);
         }
       } finally {
-        if (!cancelado) {
-          setCarregandoSnapshot(false);
-        }
+        if (!cancelado) setCarregandoSnapshot(false);
       }
     }
     atualizarSnapshot();
-    return () => {
-      cancelado = true;
-    };
+    return () => { cancelado = true; };
   }, [NRInscricao, infoTerminal, mapsApiKey, online]);
 
-  const handleSelecionar = useCallback(
-    (index: number) => {
-      setSelecionada(index);
-    },
-    [],
-  );
+  const handleSelecionar = useCallback((index: number) => {
+    setSelecionada(index);
+  }, []);
 
   const descricaoFonte = useMemo(() => {
     switch (fonteDados) {
@@ -456,9 +531,7 @@ export default function MapaInstalacao(): React.JSX.Element {
         <Text style={styles.fonte}>
           {descricaoFonte}
           {atualizadoEm ? ` • Atualizado em ${atualizadoEm}` : ''}
-          {!mostrarMapaOnline && snapshotAtualizadoEm
-            ? ` • Mapa offline gerado em ${snapshotAtualizadoEm}`
-            : ''}
+          {!mostrarMapaOnline && snapshotAtualizadoEm ? ` • Mapa offline gerado em ${snapshotAtualizadoEm}` : ''}
         </Text>
       </View>
 
@@ -494,6 +567,7 @@ export default function MapaInstalacao(): React.JSX.Element {
         {mostrarMapaOnline ? (
           <WebView originWhitelist={['*']} source={{ html: htmlMapa ?? '' }} style={styles.webview} />
         ) : null}
+
         {!carregando && !mostrarMapaOnline && snapshot ? (
           <View style={styles.snapshotWrapper}>
             <Image
@@ -506,14 +580,18 @@ export default function MapaInstalacao(): React.JSX.Element {
             ) : null}
           </View>
         ) : null}
+
         {!carregando && !mostrarMapaOnline && !snapshot ? (
           <View style={styles.semCoordenadas}>
             <Text style={styles.semCoordenadasTitulo}>Coordenadas indisponíveis</Text>
             <Text style={styles.semCoordenadasDescricao}>
-              Não foi possível interpretar latitude e longitude para a instalação selecionada.
+              {online
+                ? 'A API não retornou coordenadas. Estamos usando dados aproximados ao localizar pelo endereço quando disponíveis.'
+                : 'Sem internet e sem coordenadas da API. Conecte-se para localizar pelo endereço.'}
             </Text>
           </View>
         ) : null}
+
         {carregandoSnapshot ? (
           <View style={styles.snapshotLoader}>
             <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -557,11 +635,7 @@ const styles = StyleSheet.create({
   instalacaoTitulo: { ...theme.typography.body, fontWeight: '600', color: theme.colors.text },
   instalacaoTituloAtivo: { color: theme.colors.primaryDark },
   instalacaoDescricao: { ...theme.typography.caption, color: theme.colors.muted, marginTop: theme.spacing.xs },
-  instalacaoAviso: {
-    ...theme.typography.caption,
-    color: theme.colors.warning,
-    marginTop: theme.spacing.xs,
-  },
+  instalacaoAviso: { ...theme.typography.caption, color: theme.colors.warning, marginTop: theme.spacing.xs },
   mapaWrapper: {
     flex: 1,
     margin: theme.spacing.md,
@@ -612,4 +686,3 @@ const styles = StyleSheet.create({
   },
   snapshotLoaderTexto: { ...theme.typography.caption, color: theme.colors.muted },
 });
-
