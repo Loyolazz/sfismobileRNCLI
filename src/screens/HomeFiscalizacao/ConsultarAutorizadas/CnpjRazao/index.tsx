@@ -2,16 +2,34 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { buscarEmpresasAutorizadas, type Empresa } from '@/api/consultarEmpresas';
 import theme from '@/theme';
 import EmpresaCard from '../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
+import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 
 export default function CnpjRazao() {
+  const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [query, setQuery] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const handleOpenEmpresa = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Detalhes', { empresa });
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Empresa }) => (
+      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+    ),
+    [handleOpenEmpresa],
+  );
 
   const handleSearch = useCallback(async () => {
     const q = query.trim();
@@ -65,7 +83,7 @@ export default function CnpjRazao() {
         <FlatList
             data={data}
             keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
-            renderItem={({ item }) => <EmpresaCard empresa={item} />}
+            renderItem={renderItem}
             contentContainerStyle={emptyListStyle}
             ListEmptyComponent={!loading ? <Text style={styles.empty}>Nenhuma empresa encontrada.</Text> : null}
             ListHeaderComponent={

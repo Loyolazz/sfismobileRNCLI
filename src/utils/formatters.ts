@@ -1,7 +1,11 @@
 export function formatCnpj(raw: string): string {
   const digits = (raw ?? '').replace(/\D/g, '');
-  if (digits.length !== 14) return raw;
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+  if (!digits) return raw ?? '';
+
+  const normalized = digits.length === 14 ? digits : digits.length >= 12 ? digits.padStart(14, '0') : digits;
+  if (normalized.length !== 14) return raw ?? '';
+
+  return `${normalized.slice(0, 2)}.${normalized.slice(2, 5)}.${normalized.slice(5, 8)}/${normalized.slice(8, 12)}-${normalized.slice(12)}`;
 }
 
 export function formatDate(raw?: string): string {

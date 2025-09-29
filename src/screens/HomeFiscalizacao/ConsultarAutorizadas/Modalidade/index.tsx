@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import theme from '@/theme';
-import { consultarPorModalidade, Empresa } from '@/api/consultarEmpresas';
+import { consultarPorModalidade, type Empresa } from '@/api/consultarEmpresas';
 import EmpresaCard from '../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
+import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 
 export default function Modalidade() {
+  const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [query, setQuery] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  const handleOpenEmpresa = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Detalhes', { empresa });
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Empresa }) => (
+      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+    ),
+    [handleOpenEmpresa],
+  );
+
+  const handleSearch = useCallback(async () => {
     if (!hasText(query)) {
       Alert.alert('Atenção', 'Informe a modalidade para prosseguir.');
       return;
@@ -25,7 +44,7 @@ export default function Modalidade() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query]);
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
@@ -53,7 +72,7 @@ export default function Modalidade() {
       <FlatList
         data={data}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
-        renderItem={({ item }) => <EmpresaCard empresa={item} />}
+        renderItem={renderItem}
         ListHeaderComponent={
           data.length > 0 ? (
             <Text style={styles.count}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import type { Empresa } from '@/api/consultarEmpresas';
 import theme from '@/theme';
@@ -7,12 +7,27 @@ import { formatCnpj, formatDate } from '@/utils/formatters';
 
 type Props = {
   empresa: Empresa;
+  onPress?: () => void;
 };
 
-export default function EmpresaCard({ empresa }: Props) {
+export default function EmpresaCard({ empresa, onPress }: Props) {
   const travessia = (empresa.Modalidade ?? '').toLowerCase().includes('travessia');
+  const instrumento =
+    empresa.DescricaoNRInstrumento?.trim() ||
+    (empresa.NRInstrumento ? `Instrumento: ${empresa.NRInstrumento}` : '');
+  const ultimoAditamento = formatDate(empresa.DTAditamento);
   return (
-    <View style={styles.card}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.card,
+        pressed && onPress ? styles.cardPressed : null,
+        !onPress ? styles.cardDisabled : null,
+      ]}
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? `Abrir detalhes da empresa ${empresa.NORazaoSocial}` : undefined}
+    >
       <Text style={styles.title}>{empresa.NORazaoSocial}</Text>
       <Text style={styles.subtitle}>
         CNPJ: {formatCnpj(empresa.NRInscricao)}
@@ -33,13 +48,13 @@ export default function EmpresaCard({ empresa }: Props) {
         </Text>
       )}
 
-      {!!empresa.DescricaoNRInstrumento && (
-        <Text style={styles.row}>{empresa.DescricaoNRInstrumento}</Text>
+      {!!instrumento && (
+        <Text style={styles.row}>{instrumento}</Text>
       )}
 
-      {!!formatDate(empresa.DTAditamento) && (
+      {!!ultimoAditamento && (
         <Text style={styles.row}>
-          Data Último Aditamento: <Text style={styles.emphasis}>{formatDate(empresa.DTAditamento)}</Text>
+          Data Último Aditamento: <Text style={styles.emphasis}>{ultimoAditamento}</Text>
         </Text>
       )}
 
@@ -52,6 +67,12 @@ export default function EmpresaCard({ empresa }: Props) {
       {typeof empresa.QTDEmbarcacao === 'number' && (
         <Text style={styles.row}>
           Embarcações: <Text style={styles.emphasis}>{empresa.QTDEmbarcacao}</Text>
+        </Text>
+      )}
+
+      {!!empresa.AreaPPF && (
+        <Text style={styles.row}>
+          Área PPF: <Text style={styles.emphasis}>{empresa.AreaPPF}</Text>
         </Text>
       )}
 
@@ -72,7 +93,7 @@ export default function EmpresaCard({ empresa }: Props) {
           Razão Social Instalação: <Text style={styles.emphasis}>{empresa.NORazaoSocialInstalacao}</Text>
         </Text>
       )}
-    </View>
+    </Pressable>
   );
 }
 
@@ -82,6 +103,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.background,
     gap: 2,
+    paddingHorizontal: theme.spacing.xs,
+  },
+  cardPressed: {
+    backgroundColor: theme.colors.background,
+    opacity: 0.9,
+  },
+  cardDisabled: {
+    opacity: 0.8,
   },
   title: { fontWeight: '600', color: theme.colors.text },
   subtitle: { color: theme.colors.muted },

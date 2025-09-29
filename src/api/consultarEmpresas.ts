@@ -17,6 +17,7 @@ export type Empresa = {
   DSBairro?: string;
   NRCEP?: string | number;
   QTDEmbarcacao?: number;
+  AreaPPF?: string;
 
   // Campos “explodidos” por autorização (Cordova):
   Modalidade?: string;
@@ -35,6 +36,17 @@ export type Empresa = {
 
   // Pedidos anteriores: manter isto
   isAutoridadePortuaria?: boolean;
+  NomeContato?: string;
+  Email?: string;
+  AutoridadePortuaria?: string;
+  NRResolucao?: string;
+  NRDocumentoSEI?: string;
+  NRTelefone?: string;
+  NORepresentante?: string;
+  EERepresentante?: string;
+  STIntimacaoViaTelefone?: boolean;
+  STIntimacaoViaEmail?: boolean;
+  IDContratoArrendamento?: number;
 
   ListaTipoEmpresa?: TipoEmpresa[] | null;
 };
@@ -111,11 +123,12 @@ function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
   const idInstPort = str(x?.IDTipoInstalacaoPortuaria);
   const isAutoridadePortuaria = !!idInstPort;
 
-  // rótulo do instrumento (no gestor_bd.js o Cordova troca conforme modalidade)
-  const descInstrumento =
-      modalidade?.match(/Cabotagem|Apoio Portuario|Apoio Maritimo/i)
-          ? `Termo de Autorização: ${str(x?.NRInstrumento)}`
-          : `Instrumento: ${str(x?.NRInstrumento)}`;
+  const numeroInstrumento = str(x?.NRInstrumento).trim();
+  const descInstrumento = numeroInstrumento
+    ? modalidade?.match(/Cabotagem|Apoio Portuario|Apoio Maritimo/i)
+      ? `Termo de Autorização: ${numeroInstrumento}`
+      : `Instrumento: ${numeroInstrumento}`
+    : '';
 
   // ícone aproximado do Cordova
   const icone = isAutoridadePortuaria ? 'img/icon-terminal.png' : 'img/icon-embarca.png';
@@ -130,9 +143,10 @@ function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
     DSBairro: str(x?.DSBairro),
     NRCEP: str(x?.NRCEP),
     QTDEmbarcacao: num(x?.QTDEmbarcacao),
+    AreaPPF: str(x?.AreaPPF),
 
     Modalidade: modalidade,
-    NRInstrumento: str(x?.NRInstrumento),
+    NRInstrumento: numeroInstrumento,
     DescricaoNRInstrumento: descInstrumento,
     DTAditamento: str(x?.DTAditamento),
     NRAditamento: str(x?.NRAditamento),
@@ -144,6 +158,17 @@ function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
     icone,
     norma: x?.norma, // se o serviço devolver
     isAutoridadePortuaria,
+    NomeContato: str(x?.NomeContato),
+    Email: str(x?.Email),
+    AutoridadePortuaria: str(x?.AutoridadePortuaria),
+    NRResolucao: str(x?.NRResolucao),
+    NRDocumentoSEI: str(x?.NRDocumentoSEI),
+    NRTelefone: str(x?.NRTelefone),
+    NORepresentante: str(x?.NORepresentante),
+    EERepresentante: str(x?.EERepresentante),
+    STIntimacaoViaTelefone: bool(x?.STIntimacaoViaTelefone),
+    STIntimacaoViaEmail: bool(x?.STIntimacaoViaEmail),
+    IDContratoArrendamento: num(x?.IDContratoArrendamento),
   };
 }
 
@@ -166,4 +191,12 @@ function str(v: any): string {
 function num(v: any): number | undefined {
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
+}
+
+function bool(v: any): boolean | undefined {
+  if (v == null) return undefined;
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v === 1;
+  if (typeof v === 'string') return v.toLowerCase() === 'true' || v === '1';
+  return undefined;
 }
