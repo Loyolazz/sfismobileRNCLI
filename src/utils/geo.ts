@@ -34,12 +34,44 @@ function normalizeDecimal(value: string): string {
   return `${sign}${normalized}`;
 }
 
+function corrigirLatLong(valor: string): string {
+  const trimmed = valor.trim();
+  if (!trimmed) return trimmed;
+  const sign = trimmed.startsWith('-') ? trimmed[0] : '';
+  const unsigned = sign ? trimmed.slice(1) : trimmed;
+  const partes = unsigned.split('.');
+  if (partes.length === 0) {
+    return trimmed;
+  }
+  const [inteiro, ...fracao] = partes;
+  if (fracao.length === 0) {
+    return `${sign}${inteiro}`;
+  }
+  return `${sign}${inteiro}.${fracao.join('')}`;
+}
+
 function convertDMSToDD(degrees: number, minutes: number, seconds: number, direction: string): number {
   let dd = degrees + minutes / 60 + seconds / 3600;
   if (/[SWO]/i.test(direction)) {
     dd *= -1;
   }
   return dd;
+}
+
+function guessDirectionFromSuffix(cleaned: string): 'N' | 'S' | 'E' | 'O' | '' {
+  const suffix = cleaned.match(/(NORTE|NORTH|SUL|SOUTH|LESTE|ESTE|EAST|OESTE|WEST|[NSEOWL])$/i);
+  if (!suffix) {
+    if (directionRegex.test(cleaned)) {
+      return cleaned.slice(-1).toUpperCase() as 'N' | 'S' | 'E' | 'O';
+    }
+    return '';
+  }
+  const token = suffix[0].toUpperCase();
+  const mapped = directionMap[token as keyof typeof directionMap];
+  if (mapped) {
+    return mapped;
+  }
+  return token.slice(-1) as 'N' | 'S' | 'E' | 'O';
 }
 
 function parseDms(input: string): number | null {
@@ -49,50 +81,40 @@ function parseDms(input: string): number | null {
     .replace(/\s+/g, ' ')
     .trim();
 
+  if (!normalized) return null;
+
   const cleaned = normalized.replace(/\s+/g, '');
 
   const rawParts = normalized.split(/[^0-9A-Za-z.]+/).filter(Boolean);
-  if (rawParts.length < 3) return null;
+  if (!rawParts.length) return null;
 
-  let direction = '';
+  let direction: 'N' | 'S' | 'E' | 'O' | '' = '';
   const numericParts: string[] = [];
 
   for (const part of rawParts) {
     const upper = part.toUpperCase();
-    if (directionMap[upper]) {
-      direction = directionMap[upper];
+    const mapped = directionMap[upper as keyof typeof directionMap];
+    if (mapped) {
+      direction = mapped;
       continue;
     }
-    if (/[0-9]/.test(part)) {
+    if (/^-?\d+(?:\.\d+)?$/.test(part)) {
       numericParts.push(part);
     }
   }
 
   if (!direction) {
-    const suffix = cleaned.match(/(NORTE|NORTH|SUL|SOUTH|LESTE|ESTE|EAST|OESTE|WEST|[NSEOWL])$/i);
-    if (suffix) {
-      const mapped = directionMap[suffix[0].toUpperCase() as keyof typeof directionMap];
-      if (mapped) {
-        direction = mapped;
-      } else {
-        direction = suffix[0].slice(-1).toUpperCase();
-      }
-    } else if (directionRegex.test(cleaned)) {
-      direction = cleaned.slice(-1).toUpperCase();
-    }
+    direction = guessDirectionFromSuffix(cleaned);
   }
 
-  if (numericParts.length < 2) {
+  if (numericParts.length === 0) {
     return null;
   }
 
-  const [degStr, minStr, ...rest] = numericParts;
+  const [degStr = '0', minStr = '0', ...rest] = numericParts;
   const secondsParts = rest.length ? rest : ['0'];
-  const secStr =
-    secondsParts.length > 1 && !secondsParts[0].includes('.')
-      ? `${secondsParts[0]}.${secondsParts.slice(1).join('')}`
-      : secondsParts.join('');
-
+  const [secBase, ...secFraction] = secondsParts;
+  const secStr = secFraction.length ? `${secBase}.${secFraction.join('')}` : secBase;
   const degrees = Number(degStr);
   const minutes = Number(minStr);
   const seconds = Number(secStr);
@@ -101,13 +123,23 @@ function parseDms(input: string): number | null {
     return null;
   }
 
+  if (!direction) {
+    return null;
+  }
+
   return convertDMSToDD(degrees, minutes, seconds, direction);
 }
 
 function parseDecimal(input: string): number | null {
-  const normalized = normalizeDecimal(input);
+  const base = input
+    .replace(/º/g, '')
+    .replace(/°/g, '')
+    .replace(/,/g, '.');
+
+  const normalized = normalizeDecimal(base);
   if (!normalized) return null;
-  const value = Number(normalized);
+  const corrigido = corrigirLatLong(normalized);
+  const value = Number(corrigido);
   return Number.isFinite(value) ? value : null;
 }
 

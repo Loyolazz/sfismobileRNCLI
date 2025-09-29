@@ -24,4 +24,9 @@ describe('parseCoordenada', () => {
     expect(longitude).not.toBeNull();
     expect(longitude ?? 0).toBeCloseTo(8.0541666, 4);
   });
+  it('corrige coordenadas decimais com separadores extras', () => {
+    const latitude = parseCoordenada('Latitude -3.123.456');
+    expect(latitude).not.toBeNull();
+    expect(latitude ?? 0).toBeCloseTo(-3.123456, 6);
+  });
 });
