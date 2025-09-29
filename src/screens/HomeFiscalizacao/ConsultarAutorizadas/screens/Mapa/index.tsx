@@ -322,8 +322,6 @@ export default function MapaInstalacao(): React.JSX.Element {
           setMensagem('Nenhuma instalação com coordenadas foi encontrada para esta empresa.');
         }
 
-        console.log('Instalações da API:', lista);
-
         if (!ativo) return;
         setOnline(conectado);
         setInstalacoes(lista);
