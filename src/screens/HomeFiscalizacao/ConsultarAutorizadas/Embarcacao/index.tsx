@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import theme from '@/theme';
-import { consultarPorEmbarcacao, Empresa } from '@/api/consultarEmpresas';
+import { consultarPorEmbarcacao, type Empresa } from '@/api/consultarEmpresas';
 import EmpresaCard from '../components/EmpresaCard';
 import { formatImoCapitania, hasText } from '@/utils/formatters';
+import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 
 export default function Embarcacao() {
+  const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [numero, setNumero] = useState('');
   const [nome, setNome] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  const handleOpenEmpresa = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Detalhes', { empresa });
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Empresa }) => (
+      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+    ),
+    [handleOpenEmpresa],
+  );
+
+  const handleSearch = useCallback(async () => {
     if (!hasText(numero) && !hasText(nome)) {
       Alert.alert('Atenção', 'Informe ao menos um filtro para pesquisar.');
       return;
@@ -32,7 +51,7 @@ export default function Embarcacao() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [nome, numero]);
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
@@ -69,7 +88,7 @@ export default function Embarcacao() {
       <FlatList
         data={data}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
-        renderItem={({ item }) => <EmpresaCard empresa={item} />}
+        renderItem={renderItem}
         ListHeaderComponent={
           data.length > 0 ? (
             <Text style={styles.count}>

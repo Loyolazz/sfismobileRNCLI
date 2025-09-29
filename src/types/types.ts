@@ -27,4 +27,7 @@ export type ConsultarAutorizadasStackParamList = {
     Modalidade: undefined;
     Embarcacao: undefined;
     Instalacao: undefined;
+    Detalhes: {
+        empresa: import('@/api/consultarEmpresas').Empresa;
+    };
 };
