@@ -1,101 +1,21 @@
 // app/(empresa)/CnpjRazao.tsx
 import React, { useState, useCallback, useMemo } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { buscarEmpresasAutorizadas, type Empresa } from '@/api/consultarEmpresas';
 import theme from '@/theme';
-
-type ItemProps = {
-  item: Empresa;
-  formatCnpj: (value: string) => string;
-  formatDate: (value?: string) => string;
-};
-
-function EmpresaItem({ item, formatCnpj, formatDate }: ItemProps) {
-  const travessia = (item.Modalidade ?? '').toLowerCase().includes('travessia');
-  return (
-    <View style={styles.item}>
-      <Text style={styles.itemTitle}>{item.NORazaoSocial}</Text>
-      <Text style={styles.itemSubtitle}>
-        CNPJ: {formatCnpj(item.NRInscricao)}
-        {item.SGUF ? ` • ${item.SGUF}` : ''}
-        {item.NOMunicipio ? ` - ${item.NOMunicipio}` : ''}
-        {item.isAutoridadePortuaria ? ' • Autoridade Portuária' : ''}
-      </Text>
-
-      {!!item.DSEndereco && (
-        <Text style={styles.itemRow}>
-          Endereço: <Text style={styles.bold}>{item.DSEndereco}</Text>
-        </Text>
-      )}
-      {!!item.Modalidade && (
-        <Text style={styles.itemRow}>
-          Modalidade: <Text style={styles.bold}>{item.Modalidade}</Text>
-        </Text>
-      )}
-      {!!item.NRInstrumento && (
-        <Text style={styles.itemRow}>
-          {item.DescricaoNRInstrumento ? item.DescricaoNRInstrumento : `Instrumento: ${item.NRInstrumento}`}
-        </Text>
-      )}
-      {!!formatDate(item.DTAditamento) && (
-        <Text style={styles.itemRow}>
-          Data Último Aditamento: <Text style={styles.bold}>{formatDate(item.DTAditamento)}</Text>
-        </Text>
-      )}
-      {!!item.NRAditamento && (
-        <Text style={styles.itemRow}>
-          Termo: <Text style={styles.bold}>{item.NRAditamento}</Text>
-        </Text>
-      )}
-      {typeof item.QTDEmbarcacao === 'number' && (
-        <Text style={styles.itemRow}>
-          Embarcações: <Text style={styles.bold}>{item.QTDEmbarcacao}</Text>
-        </Text>
-      )}
-
-      {!!item.Instalacao && (
-        <Text style={styles.itemRow}>
-          {travessia ? 'Travessia' : 'Instalação'}: <Text style={styles.bold}>{item.Instalacao}</Text>
-        </Text>
-      )}
-
-      {!!item.NRInscricaoInstalacao && item.NRInscricaoInstalacao !== item.NRInscricao && (
-        <Text style={styles.itemRow}>
-          CNPJ Instalação: <Text style={styles.bold}>{formatCnpj(item.NRInscricaoInstalacao)}</Text>
-        </Text>
-      )}
-      {!!item.NORazaoSocialInstalacao && item.NRInscricaoInstalacao !== item.NRInscricao && (
-        <Text style={styles.itemRow}>
-          Razão Social Instalação: <Text style={styles.bold}>{item.NORazaoSocialInstalacao}</Text>
-        </Text>
-      )}
-    </View>
-  );
-}
+import EmpresaCard from '../components/EmpresaCard';
+import { hasText } from '@/utils/formatters';
 
 export default function CnpjRazao() {
   const [query, setQuery] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const formatCnpj = (raw: string) => {
-    const d = (raw ?? '').replace(/\D/g, '');
-    if (d.length !== 14) return raw;
-    return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
-  };
-
-  const formatDate = (raw?: string) => {
-    if (!raw || raw.startsWith('01/01/1900')) return '';
-    const [dd, mm, rest] = raw.split('/');
-    const [yyyy] = (rest ?? '').split(' ');
-    return `${dd}/${mm}/${yyyy}`;
-  };
-
   const handleSearch = useCallback(async () => {
     const q = query.trim();
-    if (!q) {
+    if (!hasText(q)) {
       Alert.alert('Atenção', 'Digite um CNPJ ou Razão Social.');
       return;
     }
@@ -132,10 +52,10 @@ export default function CnpjRazao() {
             style={({ pressed }) => [
               styles.button,
               (pressed || loading) && styles.buttonPressed,
-              !query.trim() && styles.buttonDisabled,
+              !hasText(query) && styles.buttonDisabled,
             ]}
             onPress={handleSearch}
-            disabled={loading || !query.trim()}
+            disabled={loading || !hasText(query)}
             accessibilityRole="button"
             accessibilityLabel="Pesquisar empresas por CNPJ ou Razão Social"
         >
@@ -145,11 +65,16 @@ export default function CnpjRazao() {
         <FlatList
             data={data}
             keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
-            renderItem={({ item }) => (
-                <EmpresaItem item={item} formatCnpj={formatCnpj} formatDate={formatDate} />
-            )}
+            renderItem={({ item }) => <EmpresaCard empresa={item} />}
             contentContainerStyle={emptyListStyle}
             ListEmptyComponent={!loading ? <Text style={styles.empty}>Nenhuma empresa encontrada.</Text> : null}
+            ListHeaderComponent={
+              data.length > 0 ? (
+                <Text style={styles.count}>{
+                  data.length === 1 ? '1 empresa encontrada.' : `${data.length} empresas encontradas.`
+                }</Text>
+              ) : null
+            }
         />
       </SafeAreaView>
   );
@@ -176,19 +101,13 @@ const styles = StyleSheet.create({
   buttonPressed: { opacity: 0.85 },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { ...theme.typography.button, color: theme.colors.surface },
-
-  item: {
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.background,
-    gap: 2,
-  },
   emptyList: {
     flexGrow: 1,
   },
-  itemTitle: { fontWeight: '600', color: theme.colors.text },
-  itemSubtitle: { color: theme.colors.muted, marginBottom: 2 },
-  itemRow: { color: theme.colors.muted, marginTop: 2 },
-  bold: { color: theme.colors.text, fontWeight: '600' },
   empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.lg },
+  count: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginBottom: theme.spacing.sm,
+  },
 });

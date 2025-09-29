@@ -1,18 +1,31 @@
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import theme from '@/theme';
 import { consultarPorEmbarcacao, Empresa } from '@/api/consultarEmpresas';
+import EmpresaCard from '../components/EmpresaCard';
+import { formatImoCapitania, hasText } from '@/utils/formatters';
 
 export default function Embarcacao() {
-  const [query, setQuery] = useState('');
+  const [numero, setNumero] = useState('');
+  const [nome, setNome] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
+    if (!hasText(numero) && !hasText(nome)) {
+      Alert.alert('Atenção', 'Informe ao menos um filtro para pesquisar.');
+      return;
+    }
     try {
       setLoading(true);
-      const result = await consultarPorEmbarcacao(query);
+      const primary = hasText(numero) ? numero : nome;
+      let result = await consultarPorEmbarcacao(primary);
+
+      if (result.length === 0 && hasText(numero) && hasText(nome)) {
+        result = await consultarPorEmbarcacao(nome);
+      }
+
       setData(result);
     } catch {
       Alert.alert('Erro', 'Não foi possível consultar empresas');
@@ -25,23 +38,45 @@ export default function Embarcacao() {
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <Text style={styles.label}>Informe a Embarcação</Text>
       <TextInput
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Embarcação"
+        value={numero}
+        onChangeText={(text) => setNumero(formatImoCapitania(text))}
+        placeholder="IMO / Número Capitania"
+        autoCapitalize="characters"
+        autoCorrect={false}
         style={styles.input}
+        editable={!loading}
       />
-      <Pressable style={styles.button} onPress={handleSearch} disabled={loading}>
+      <TextInput
+        value={nome}
+        onChangeText={setNome}
+        placeholder="Nome da embarcação"
+        autoCapitalize="characters"
+        autoCorrect={false}
+        style={styles.input}
+        editable={!loading}
+      />
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (pressed || loading) && styles.buttonPressed,
+          !hasText(numero) && !hasText(nome) && styles.buttonDisabled,
+        ]}
+        onPress={handleSearch}
+        disabled={loading || (!hasText(numero) && !hasText(nome))}
+      >
         <Text style={styles.buttonText}>{loading ? 'Pesquisando...' : 'Pesquisar'}</Text>
       </Pressable>
       <FlatList
         data={data}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.itemTitle}>{item.NORazaoSocial}</Text>
-            <Text style={styles.itemSubtitle}>CNPJ: {item.NRInscricao}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => <EmpresaCard empresa={item} />}
+        ListHeaderComponent={
+          data.length > 0 ? (
+            <Text style={styles.count}>
+              {data.length === 1 ? '1 empresa encontrada.' : `${data.length} empresas encontradas.`}
+            </Text>
+          ) : null
+        }
         ListEmptyComponent={!loading ? (
           <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
         ) : null}
@@ -67,9 +102,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.md,
   },
+  buttonPressed: { opacity: 0.85 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { ...theme.typography.button },
-  item: { paddingVertical: theme.spacing.sm, borderBottomWidth: 1, borderBottomColor: theme.colors.background },
-  itemTitle: { fontWeight: '600', color: theme.colors.text },
-  itemSubtitle: { color: theme.colors.muted },
   empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
+  count: { ...theme.typography.caption, color: theme.colors.muted, marginBottom: theme.spacing.sm },
 });
