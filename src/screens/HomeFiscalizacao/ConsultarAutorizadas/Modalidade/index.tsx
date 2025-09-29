@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import { TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import theme from '@/theme';
 import { consultarPorModalidade, Empresa } from '@/api/consultarEmpresas';
+import EmpresaCard from '../components/EmpresaCard';
+import { hasText } from '@/utils/formatters';
 
 export default function Modalidade() {
   const [query, setQuery] = useState('');
@@ -10,6 +12,10 @@ export default function Modalidade() {
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
+    if (!hasText(query)) {
+      Alert.alert('Atenção', 'Informe a modalidade para prosseguir.');
+      return;
+    }
     try {
       setLoading(true);
       const result = await consultarPorModalidade(query);
@@ -28,20 +34,33 @@ export default function Modalidade() {
         value={query}
         onChangeText={setQuery}
         placeholder="Modalidade"
+        autoCapitalize="words"
+        autoCorrect={false}
         style={styles.input}
+        editable={!loading}
       />
-      <Pressable style={styles.button} onPress={handleSearch} disabled={loading}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (pressed || loading) && styles.buttonPressed,
+          !hasText(query) && styles.buttonDisabled,
+        ]}
+        onPress={handleSearch}
+        disabled={loading || !hasText(query)}
+      >
         <Text style={styles.buttonText}>{loading ? 'Pesquisando...' : 'Pesquisar'}</Text>
       </Pressable>
       <FlatList
         data={data}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.itemTitle}>{item.NORazaoSocial}</Text>
-            <Text style={styles.itemSubtitle}>CNPJ: {item.NRInscricao}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => <EmpresaCard empresa={item} />}
+        ListHeaderComponent={
+          data.length > 0 ? (
+            <Text style={styles.count}>
+              {data.length === 1 ? '1 empresa encontrada.' : `${data.length} empresas encontradas.`}
+            </Text>
+          ) : null
+        }
         ListEmptyComponent={!loading ? (
           <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
         ) : null}
@@ -67,9 +86,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.md,
   },
+  buttonPressed: { opacity: 0.85 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { ...theme.typography.button },
-  item: { paddingVertical: theme.spacing.sm, borderBottomWidth: 1, borderBottomColor: theme.colors.background },
-  itemTitle: { fontWeight: '600', color: theme.colors.text },
-  itemSubtitle: { color: theme.colors.muted },
   empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
+  count: { ...theme.typography.caption, color: theme.colors.muted, marginBottom: theme.spacing.sm },
 });
