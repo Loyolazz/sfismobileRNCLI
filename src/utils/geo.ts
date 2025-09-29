@@ -1,5 +1,23 @@
 const directionRegex = /[NSEOWnseow]$/;
 
+const directionMap: Record<string, 'N' | 'S' | 'E' | 'O'> = {
+  N: 'N',
+  NORTE: 'N',
+  NORTH: 'N',
+  S: 'S',
+  SUL: 'S',
+  SOUTH: 'S',
+  E: 'E',
+  ESTE: 'E',
+  EAST: 'E',
+  L: 'E',
+  LESTE: 'E',
+  O: 'O',
+  OESTE: 'O',
+  WEST: 'O',
+  W: 'O',
+};
+
 function normalizeDecimal(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) return trimmed;
@@ -25,29 +43,59 @@ function convertDMSToDD(degrees: number, minutes: number, seconds: number, direc
 }
 
 function parseDms(input: string): number | null {
-  const cleaned = input
+  const normalized = input
     .replace(/º/g, '°')
-    .replace(/\s+/g, '')
-    .replace(/,/g, '.');
-  const parts = cleaned.split(/[^0-9A-Za-z.]+/).filter(Boolean);
-  if (parts.length < 3) return null;
+    .replace(/,/g, '.')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const cleaned = normalized.replace(/\s+/g, '');
+
+  const rawParts = normalized.split(/[^0-9A-Za-z.]+/).filter(Boolean);
+  if (rawParts.length < 3) return null;
 
   let direction = '';
-  const dirIndex = parts.findIndex((part) => /^[NSEOWnseow]$/.test(part));
-  let numbers: string[] = parts;
-  if (dirIndex >= 0) {
-    direction = parts[dirIndex].toUpperCase();
-    numbers = parts.filter((_, index) => index !== dirIndex);
-  } else if (directionRegex.test(cleaned)) {
-    direction = cleaned.slice(-1).toUpperCase();
+  const numericParts: string[] = [];
+
+  for (const part of rawParts) {
+    const upper = part.toUpperCase();
+    if (directionMap[upper]) {
+      direction = directionMap[upper];
+      continue;
+    }
+    if (/[0-9]/.test(part)) {
+      numericParts.push(part);
+    }
   }
 
-  const [degStr, minStr, ...rest] = numbers;
-  const secStr = rest.length >= 2 ? `${rest[0]}.${rest[1]}` : rest[0];
+  if (!direction) {
+    const suffix = cleaned.match(/(NORTE|NORTH|SUL|SOUTH|LESTE|ESTE|EAST|OESTE|WEST|[NSEOWL])$/i);
+    if (suffix) {
+      const mapped = directionMap[suffix[0].toUpperCase() as keyof typeof directionMap];
+      if (mapped) {
+        direction = mapped;
+      } else {
+        direction = suffix[0].slice(-1).toUpperCase();
+      }
+    } else if (directionRegex.test(cleaned)) {
+      direction = cleaned.slice(-1).toUpperCase();
+    }
+  }
+
+  if (numericParts.length < 2) {
+    return null;
+  }
+
+  const [degStr, minStr, ...rest] = numericParts;
+  const secondsParts = rest.length ? rest : ['0'];
+  const secStr =
+    secondsParts.length > 1 && !secondsParts[0].includes('.')
+      ? `${secondsParts[0]}.${secondsParts.slice(1).join('')}`
+      : secondsParts.join('');
 
   const degrees = Number(degStr);
   const minutes = Number(minStr);
-  const seconds = Number((secStr ?? '0').replace(/,/g, '.'));
+  const seconds = Number(secStr);
 
   if (![degrees, minutes, seconds].every((n) => Number.isFinite(n))) {
     return null;
