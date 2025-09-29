@@ -115,7 +115,6 @@ function parseDms(input: string): number | null {
   const secondsParts = rest.length ? rest : ['0'];
   const [secBase, ...secFraction] = secondsParts;
   const secStr = secFraction.length ? `${secBase}.${secFraction.join('')}` : secBase;
-
   const degrees = Number(degStr);
   const minutes = Number(minStr);
   const seconds = Number(secStr);
