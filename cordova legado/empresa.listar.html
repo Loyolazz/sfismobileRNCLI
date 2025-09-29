@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html  lang="pt-br">
+<head>
+
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ https://mts0.googleapis.com/ 'unsafe-inline' 'unsafe-eval'">
+
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+    <title>Empresa Listar</title>
+
+</head>
+<body ng-app="app">
+    <div ng-controller="MainCtrl">
+
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a onclick="window.history.back()" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Empresas Encontradas </a>
+            </nav>
+        </div>
+
+        <div class="fixed">
+            <p class="titulo"> {{empresas.length}} localizada(s).</p>
+            <p class="detalhe-info">
+                A pesquisa "{{filtro}}".
+                Escolha uma para visualizar sua frota ou localização do terminal.
+            </p>
+        </div>
+
+        <div class="app">
+            <div class="lista-empresa">
+                <ul class="collection" ng-repeat="empresa in empresas">
+
+                    <li class="collection-item avatar">
+                        <a ng-click="detalhar(empresa);">
+
+                            <div ng-if="empresa.ListaTipoEmpresa[0].IDTipoEmpresa == 9 || empresa.ListaTipoEmpresa[0].IDTipoEmpresa == 1">
+                                <img src="img/icon-embarca.png" alt="" class="circle">
+                            </div>
+                            <div ng-if="empresa.ListaTipoEmpresa[0].IDTipoEmpresa == 16">
+                                <img src="img/icon-terminal.png" alt="" class="circle">
+                            </div>
+                            <div ng-if="empresa.ListaTipoEmpresa[0].IDTipoEmpresa == 5">
+                                <img src="img/icon-terminal.png" alt="" class="circle">
+                            </div>
+                            <span class="title">{{empresa.NORazaoSocial}}</span>
+                            <i class="material-icons right">chevron_right</i>
+                            <p class="detalhe"> CNPJ: <b>{{empresa.NRInscricao}} </b></p>
+                            <p class="detalhe"> Endereço: <b> {{empresa.DSEndereco}} </b></p>
+                            <p class="detalhe"> Embarcações: <b>{{empresa.QTDEmbarcacao}} </p>
+                            <!--<div class="empresa-ativa"> <img src="img/status-atividade.png">  {{st_empresa}} </div> -->
+                        </a>
+                        <small style="display: inline-block; padding: 7px 0"><b><a ng-click="exibirHistorico(empresa);"> Histórico de fiscalizações<i class="material-icons left">search</i></a></b></small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="preloader" class="preloader-wrapper big active">
+        <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div><div class="gap-patch">
+                <div class="circle"></div>
+            </div><div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/util.js"></script>
+    <script type="text/javascript" src="js/gestor_bd.js"></script>
+    <script src="js/empresa.listar.js"></script>
+</body>
+</html>

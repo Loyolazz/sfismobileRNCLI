@@ -1,15 +1,47 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
+import {
+  TextInput,
+  Pressable,
+  Text,
+  FlatList,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import theme from '@/theme';
-import { consultarPorInstalacao, Empresa } from '@/api/consultarEmpresas';
+import { consultarPorInstalacao, type Empresa } from '@/api/consultarEmpresas';
+import EmpresaCard from '../components/EmpresaCard';
+import { hasText } from '@/utils/formatters';
+import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 
 export default function Instalacao() {
+  const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [query, setQuery] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  const handleOpenEmpresa = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Detalhes', { empresa });
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Empresa }) => (
+      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+    ),
+    [handleOpenEmpresa],
+  );
+
+  const handleSearch = useCallback(async () => {
+    if (!hasText(query)) {
+      Alert.alert('Atenção', 'Informe o nome da instalação.');
+      return;
+    }
     try {
       setLoading(true);
       const result = await consultarPorInstalacao(query);
@@ -19,7 +51,7 @@ export default function Instalacao() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query]);
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
@@ -27,31 +59,54 @@ export default function Instalacao() {
       <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Instalação"
+        placeholder="Nome da instalação"
+        autoCapitalize="characters"
+        autoCorrect={false}
         style={styles.input}
+        editable={!loading}
       />
-      <Pressable style={styles.button} onPress={handleSearch} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Pesquisando...' : 'Pesquisar'}</Text>
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          (pressed || loading) && styles.buttonPressed,
+          !hasText(query) && styles.buttonDisabled,
+        ]}
+        onPress={handleSearch}
+        disabled={loading || !hasText(query)}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Pesquisando...' : 'Pesquisar'}
+        </Text>
       </Pressable>
       <FlatList
         data={data}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.itemTitle}>{item.NORazaoSocial}</Text>
-            <Text style={styles.itemSubtitle}>CNPJ: {item.NRInscricao}</Text>
-          </View>
-        )}
-        ListEmptyComponent={!loading ? (
-          <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
-        ) : null}
+        renderItem={renderItem}
+        ListHeaderComponent={
+          data.length > 0 ? (
+            <Text style={styles.count}>
+              {data.length === 1
+                ? '1 empresa encontrada.'
+                : `${data.length} empresas encontradas.`}
+            </Text>
+          ) : null
+        }
+        ListEmptyComponent={
+          !loading ? (
+            <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
+          ) : null
+        }
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: theme.spacing.md, backgroundColor: theme.colors.surface },
+  container: {
+    flex: 1,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+  },
   label: { marginBottom: theme.spacing.sm, color: theme.colors.text },
   input: {
     borderWidth: 1,
@@ -67,9 +122,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.md,
   },
+  buttonPressed: { opacity: 0.85 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { ...theme.typography.button },
-  item: { paddingVertical: theme.spacing.sm, borderBottomWidth: 1, borderBottomColor: theme.colors.background },
-  itemTitle: { fontWeight: '600', color: theme.colors.text },
-  itemSubtitle: { color: theme.colors.muted },
-  empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
+  empty: {
+    textAlign: 'center',
+    color: theme.colors.muted,
+    marginTop: theme.spacing.md,
+  },
+  count: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginBottom: theme.spacing.sm,
+  },
 });

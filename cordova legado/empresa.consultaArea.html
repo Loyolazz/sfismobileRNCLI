@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+
+
+
+    <title>Tipo Consulta</title>
+
+</head>
+<body ng-app="app">
+
+    <div ng-controller="MainCtrl">
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a href="empresa.tipoConsulta.html" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Área de Consulta </a>
+            </nav>
+        </div>
+        <div id="deviceready" class="blink"></div>
+
+        <p class="titulo"> Selecione a área de consulta. </p>
+        <div class="app">
+
+
+                <div class="input-field col s12">
+                    <select name="area" id="area" ng-model="area" ng-change="muda()">
+                        <option value="" disabled selected>Área</option>
+                        <option ng-repeat="modalidade in modalidades | unique:'area'" value="{{modalidade.area}}"> {{modalidade.area}} </option>
+                    </select>
+                </div>
+
+                <div class="input-field col s12">
+                    <select name="tipo" id="tipo" ng-model="tipo" ng-change="muda()">
+                        <option value="" disabled selected>Tipo</option>
+                        <option ng-repeat="modalidade in modalidades | unique:'tipo' | filter:area" value="{{modalidade.tipo}}"> {{modalidade.tipo}} </option>
+                    </select>
+                </div>
+
+                <div class="input-field col s12">
+                    <select name="servico" id="servico" ng-model="servico" ng-change="proxima()">
+                        <option value="" disabled selected>Modalidade</option>
+                        <option ng-repeat="modalidade in modalidades | filter:tipo" value="{{modalidade.servico}}"> {{modalidade.servico}} </option>
+                    </select>
+                </div>
+       </div>
+    </div>
+
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="js/util.js"></script>
+    <script type="text/javascript" src="js/gestor_bd.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/modalidade.js"></script>
+    <script src="js/empresa.consultaArea.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            inicializarMaterializeSelect();
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            var options = null;
+
+            var elems = document.querySelectorAll('.sidenav');
+            var instances = M.Sidenav.init(elems, options);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <!--Import Google Icon Font-->
+        <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+        <!--Import materialize.css-->
+        <link type="text/css" rel="stylesheet" href="css/materialize.css"  media="screen,projection"/>
+        <link rel="stylesheet" type="text/css" href="css/padrao.css">
+  </head>
+    <body ng-app="app">
+            <div ng-controller="MainCtrl">
+
+                <div class="navbar-fixed">
+                    <nav class="nav">
+                      <a onclick="window.history.back()" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                     <form ng-submit="fechaTeclado()">
+                        <div class="input-field">
+                          <input id="search" type="search" placeholder="Pesquisa : Trecho" ng-model="trecho" required>
+                          <label class="label-icon" for="search"><i class="material-icons">search</i></label>
+                          <i class="material-icons icone-search">close</i>
+                        </div>
+                      </form>
+                    </nav>
+                    </nav>
+                </div>
+
+
+            <div class="fixed">
+                <p class="empresa"><b> &nbsp {{empresa.NORazaoSocial}} </b></p>
+                <p class="autorizacao"> &nbsp CNPJ:<b> {{empresa.NRInscricao}} </b></p>
+                <p class="autorizacao"> &nbsp Endereço: <b> {{empresa.DSEndereco}}</b> </p>
+                <p class="autorizacao"> &nbsp Modalidade: <b> {{empresa.Modalidade}}</b> </p>
+            </div>
+
+
+            <p class="info"> &nbsp Apresentação dos <b> {{trecho.length}} </b>trechos vinculados à empresa. </p>
+            <div class="linha"></div>
+
+                <div class="app">
+                    <div class="lista-trecho">
+                        <div class="collection" ng-repeat="trecho in trechos | filter:trecho">
+                            <a href="#" ng-click=proxima(trecho) class="collection-item avatar">
+                            <i class="material-icons circle"> my_location</i>
+                            <span class="title">Bacia/Trecho/Linha: </span>
+                             <p class="detalhe"> {{trecho.Instalacao}} </p>
+                            <p class="detalhe"> Tipo Transporte: {{trecho.Modalidade}} </p>
+                        </div>
+                    </div>
+               </div>
+           </div>
+      <div id="preloader"  class="preloader-wrapper big active">
+          <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+              <div class="circle"></div>
+            </div><div class="gap-patch">
+              <div class="circle"></div>
+            </div><div class="circle-clipper right">
+              <div class="circle"></div>
+            </div>
+          </div>
+        </div>
+      <!--JavaScript at end of body for optimized loading-->
+      <script src="js/angular.min.js"></script>
+      <script src="js/jquery.js"></script>
+      <script type="text/javascript" src="js/materialize.min.js"></script>
+      <script type="text/javascript" src="js/util.js"></script>
+      <script type="text/javascript" src="js/gestor_bd.js"></script>
+      <script src="js/empresa.trecho.js"></script>
+      <script type="text/javascript" src="cordova.js"></script>
+
+
+    </body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html ng-app>
+<head>
+    <!--
+    Customize this policy to fit your own app's needs. For more guidance, see:
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+    Some notes:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+            key maps: AIzaSyDhAuix_PObNq-igBovZz-ciYWcCHzXcRU
+
+            cordova plugin add cordova-plugin-googlemaps - -variable API_KEY_FOR_ANDROID="AIzaSyCU9rN7vVvIm560yVT1AI8_QUWcG_22KDg"
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->
+
+
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+
+
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/qrcode.js"></script>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var options = null;
+
+            var elems = document.querySelectorAll('.sidenav');
+            var instances = M.Sidenav.init(elems, options);
+        });
+
+
+    </script>
+
+    <title>Home</title>
+
+</head>
+<body>
+
+    <nav class="nav">
+        <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+        <a href="#" class="brand-logo left"><img align="middle" src="img/logo-navbar2.png"></a>
+
+        <ul id="nav-mobile" class="right">
+            <!--    <li>
+                  <div id="ex1">
+                    <i class="fa fa-envelope fa-5x fa-border icon-grey badgeNav"><i class="material-icons" >notifications</i></i>
+                  </div>
+                </li>
+                <li><a href="#"><i class="material-icons">refresh</i></a></li>
+                -->
+        </ul>
+
+    </nav>
+
+    <ul id="slide-out" class="sidenav">
+        <li>
+            <div class="user-view">
+                <div class="background">
+                    <img src="img/fundo.png">
+                </div>
+                <a href="#user"><img src="img/logo-navbar2@1,5x.png"></a>
+                <a href="#name"><span class="white-text name">{{arUsuario.servidor.NOUsuario}}</span></a>
+                <a href="index.html"><span class="sair white-text right"><img src="img/icon-sair.png"> Sair </span></a>
+
+                <a href="#email"><span class="white-text email">{{arUsuario.EEFuncionario}}</span></a>
+
+            </div>
+
+        </li>
+        <div class="menu">
+            <li><a href="home.html"><i class="material-icons ">home</i>Inicio</a></li>
+            <li><a href="minhasfiscalizacoes.fiscalizacoes.html"><i class="material-icons ">assignment</i>Minhas Fiscalizações</a></li>
+            <li><a href="empresa.consultar.html?tipofis=rotina"><i class="material-icons ">assignment_turned_in</i>Rotina</a></li>
+            <li><a href="empresa.consultarAutorizadas.html?tipofis=consulta"><i class="material-icons ">business</i>Consultar Autorizadas</a></li>
+            <li><a href="#!"><i class="material-icons ">folder_special</i>Tutorial</a></li>
+            <li><a href="#!"><i class="material-icons ">info</i>A ANTAQ</a></li>
+
+        </div>
+    </ul>
+
+    </div>
+
+
+    <div id="deviceready" class="blink">
+
+    </div>
+    <p class="pergunta"> Consultar Empresa </p>
+    <p class="subtitulo"> Informe a empresa que deseja consultar </p>
+    <div class="app">
+        <form id="form" action="empresa.listar.html">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="pesquisar" name="pesquisar" ng-model="pesquisa" required type="text" class="validate">
+                    <label id="label-pesquisa" class="active" for="pesquisar">Digite o CNPJ ou o nome</label>
+                </div>
+            </div>
+            <button type="submit" id="responder" class="waves-effect waves-blue btn botao">
+                PESQUISAR '{{pesquisa}}'
+            </button>
+        </form>
+        <div id="qrcode" class="qrcode">
+            <img src="img/qr-code@1,5x.png">
+            <p class="text-qrcode"> PREFIRO INFORMAR O QRCODE</p>
+        </div>
+        <div id="fechar" class="fechar"></div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/util.js"></script>
+
+</body>
+<script type="text/javascript">
+    window.onerror = function (message, url, lineNumber) {
+        alert("Error: " + message + " in " + url + " at line " + lineNumber);
+    }
+</script>
+</html>
