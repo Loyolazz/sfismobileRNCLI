@@ -30,4 +30,7 @@ export type ConsultarAutorizadasStackParamList = {
     Detalhes: {
         empresa: import('@/api/consultarEmpresas').Empresa;
     };
+    Mapa: {
+        empresa: import('@/api/consultarEmpresas').Empresa;
+    };
 };

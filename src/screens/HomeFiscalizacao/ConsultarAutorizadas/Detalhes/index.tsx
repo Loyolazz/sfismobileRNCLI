@@ -44,6 +44,7 @@ export default function Detalhes(): React.JSX.Element {
 
   const empresa = useMemo<Empresa>(() => route.params.empresa, [route.params.empresa]);
   const fluxo = useMemo<FluxoMigracao>(() => mapearFluxoMigracao(empresa), [empresa]);
+  const isFluxoMapa = fluxo.tipo === 'MAPA';
   const instrumento = useMemo(() => {
     const descricao = empresa.DescricaoNRInstrumento?.trim();
     if (descricao) return descricao;
@@ -53,6 +54,10 @@ export default function Detalhes(): React.JSX.Element {
   const handleAbrirRotina = useCallback(() => {
     drawerNavigation?.navigate('FiscalizacaoRotina');
   }, [drawerNavigation]);
+
+  const handleAbrirMapa = useCallback(() => {
+    navigation.navigate('Mapa', { empresa });
+  }, [empresa, navigation]);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -101,6 +106,22 @@ export default function Detalhes(): React.JSX.Element {
               </View>
             </View>
           ))}
+
+          {isFluxoMapa ? (
+            <>
+              <Pressable
+                onPress={handleAbrirMapa}
+                style={({ pressed }) => [styles.mapButton, pressed && styles.mapButtonPressed]}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir mapa da instalação"
+              >
+                <Text style={styles.mapButtonText}>Visualizar mapa da instalação</Text>
+              </Pressable>
+              <Text style={styles.mapHelper}>
+                O mapa utiliza a API Google Maps v3.53 com cópia offline para fiscalizações em áreas sem conectividade.
+              </Text>
+            </>
+          ) : null}
         </View>
 
         <View style={styles.section}>
@@ -183,6 +204,16 @@ const styles = StyleSheet.create({
   stepTitle: { ...theme.typography.body, fontWeight: '600' },
   stepDescription: { ...theme.typography.body, color: theme.colors.muted },
   stepReference: { ...theme.typography.caption, color: theme.colors.muted, fontStyle: 'italic' },
+  mapButton: {
+    marginTop: theme.spacing.sm,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    alignItems: 'center',
+  },
+  mapButtonPressed: { opacity: 0.85 },
+  mapButtonText: { ...theme.typography.button },
+  mapHelper: { ...theme.typography.caption, color: theme.colors.muted },
   actionButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.sm,
