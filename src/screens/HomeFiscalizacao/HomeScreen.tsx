@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus, DrawerNavigationProp } from '@react-navigation/drawer';
 import HomeHeader from '../../components/HomeHeader';
@@ -9,7 +9,11 @@ import { getUltimaVersao } from '@/utils/releases';
 import theme from '@/theme';
 import styles from './styles';
 import type { DrawerParamList } from '@/types/types';
-import { syncGestorDatabase, loadGestorSyncStatus } from '@/services/gestorbd';
+import {
+    syncGestorDatabase,
+    loadGestorSyncStatus,
+    listEmpresasAutorizadasAsync,
+} from '@/services/gestorbd';
 import { formatDateTime } from '@/utils/dates';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -21,6 +25,7 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
     const [expiresIn, setExpiresIn] = useState<string>('');
     const [showModal, setShowModal] = useState(false);
     const [syncing, setSyncing] = useState(false);
+    const [syncSummary, setSyncSummary] = useState<{ empresas: number; frota: number } | null>(null);
     const [lastSync, setLastSync] = useState<string | null>(null);
 
     useEffect(() => {
@@ -59,11 +64,33 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
 
     useEffect(() => {
         let mounted = true;
-        loadGestorSyncStatus().then(status => {
-            if (mounted && status?.updatedAt) {
-                setLastSync(formatDateTime(status.updatedAt));
-            }
-        });
+        loadGestorSyncStatus()
+            .then(status => {
+                if (!mounted) {
+                    return;
+                }
+
+                if (status?.updatedAt) {
+                    setLastSync(formatDateTime(status.updatedAt));
+                } else {
+                    setLastSync(null);
+                }
+
+                if (status?.counts) {
+                    setSyncSummary({ empresas: status.counts.empresas, frota: status.counts.frota });
+                } else {
+                    setSyncSummary(null);
+                }
+
+                console.log('[gestorbd] status inicial carregado', {
+                    atualizadoEm: status?.updatedAt ? formatDateTime(status.updatedAt) : null,
+                    counts: status?.counts,
+                    cursors: status?.cursors,
+                });
+            })
+            .catch(error => {
+                console.error('[gestorbd] falha ao carregar status inicial', error);
+            });
         return () => {
             mounted = false;
         };
@@ -92,14 +119,30 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
             return;
         }
         setSyncing(true);
+        console.log('[gestorbd] sincronização iniciada');
         try {
             const status = await syncGestorDatabase();
-            const formatted = formatDateTime(status.updatedAt);
+            const formatted = status.updatedAt ? formatDateTime(status.updatedAt) : null;
             setLastSync(formatted);
-            const { autorizadas, irregularidades, equipe } = status.counts;
+            const totals = status.counts ?? { empresas: 0, frota: 0 };
+            const lastRun = status.lastRun ?? totals;
+            setSyncSummary(totals);
+            const sample = await listEmpresasAutorizadasAsync({ limit: 5, offset: 0 });
+            console.log('[gestorbd] sincronização concluída', {
+                totais: totals,
+                baixados: lastRun,
+                cursors: status.cursors,
+                empresas: sample.map(item => ({
+                    id: item.ID,
+                    razaoSocial: item.NORAZAOSOCIAL,
+                    nrInscricao: item.NRINSCRICAO,
+                    uf: item.SGUF,
+                    municipio: item.NOMUNICIPIO,
+                })),
+            });
             Alert.alert(
                 'Dados atualizados',
-                `Autorizadas: ${autorizadas}\nIrregularidades: ${irregularidades}\nEquipe: ${equipe}`,
+                `Empresas baixadas nesta execução: ${lastRun.empresas}\nFrota baixada nesta execução: ${lastRun.frota}\nTotal de empresas salvas: ${totals.empresas}\nTotal de frota salva: ${totals.frota}`,
             );
         } catch (error) {
             console.error('[gestorbd] sincronização', error);
@@ -155,9 +198,23 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
                     {lastSync ? (
                         <Text style={styles.lastSyncText}>Última atualização do banco: {lastSync}</Text>
                     ) : null}
+                    {syncSummary ? (
+                        <Text style={styles.lastSyncText}>
+                            Registros salvos • Empresas: {syncSummary.empresas} • Frota: {syncSummary.frota}
+                        </Text>
+                    ) : null}
                     <Text style={styles.versionText}>Versão WS: {versaoStr}</Text>
                 </View>
             </ScrollView>
+
+            <Modal visible={syncing} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.loadingBox}>
+                        <ActivityIndicator size="large" color={theme.colors.primary} />
+                        <Text style={styles.loadingText}>Baixando dados do banco...</Text>
+                    </View>
+                </View>
+            </Modal>
 
             <Modal visible={showModal} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
