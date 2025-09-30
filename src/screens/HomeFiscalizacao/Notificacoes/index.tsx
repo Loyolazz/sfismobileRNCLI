@@ -8,6 +8,7 @@ import Icon from '@/components/Icon';
 import { listarMensagensPush, MensagemPush } from '@/api/notificacoes';
 import { loadSession } from '@/services/session';
 import type { DrawerParamList } from '@/types/types';
+import theme from '@/theme';
 import styles from './styles';
 
 export default function Notificacoes() {
@@ -46,7 +47,7 @@ export default function Notificacoes() {
           <Icon
             name={unread ? 'notifications-unread' : 'notifications'}
             size={24}
-            color="#0F3C52"
+            color={theme.colors.primaryDark}
           />
         </View>
         <View style={styles.cardContent}>
@@ -64,7 +65,7 @@ export default function Notificacoes() {
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#fff" />
+          <Icon name="arrow-back" size={24} color={theme.colors.surface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notificações</Text>
         <View style={styles.headerSpacer} />
