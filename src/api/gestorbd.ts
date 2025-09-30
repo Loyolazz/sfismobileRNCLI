@@ -17,6 +17,7 @@ const ensureArray = <T>(value: MaybeArray<T>): T[] => {
 export type EmpresaAutorizadaRecord = Record<string, unknown>;
 export type IrregularidadeRecord = Record<string, unknown>;
 export type ServidorRecord = Record<string, unknown>;
+export type FrotaAlocadaRecord = Record<string, unknown>;
 
 async function postJson<T>(
   action: string,
@@ -56,6 +57,16 @@ export async function listarServidores(): Promise<ServidorRecord[]> {
     return ensureArray(response.data?.d);
   } catch (error) {
     console.warn('[gestorbd] Falha ao listar servidores', error);
+    return [];
+  }
+}
+
+export async function listarFrotaAlocada(): Promise<FrotaAlocadaRecord[]> {
+  try {
+    const response = await postJson<MaybeArray<FrotaAlocadaRecord>>('ListarFrotaAlocada');
+    return ensureArray(response.data?.d);
+  } catch (error) {
+    console.warn('[gestorbd] Falha ao listar frota alocada', error);
     return [];
   }
 }
