@@ -13,7 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
 import { consultarPorInstalacao, type Empresa } from '@/api/consultarEmpresas';
-import EmpresaCard from '../../components/EmpresaCard';
+import EmpresaCard from '../../../../../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 

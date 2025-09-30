@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import Icon from '@/components/Icon';
-import styles, { CARD_GRADIENT } from '../styles';
+import styles, { CARD_GRADIENT } from '../screens/HomeFiscalizacao/styles';
 import type { DrawerParamList } from '@/types/types';
 
 type Item = { key: keyof DrawerParamList; title: string; icon: string };

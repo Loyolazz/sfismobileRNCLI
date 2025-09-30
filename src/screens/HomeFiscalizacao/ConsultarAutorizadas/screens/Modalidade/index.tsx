@@ -7,7 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import SelectField, { type SelectOption } from '@/components/SelectField';
 import theme from '@/theme';
 import { consultarPorModalidade, type Empresa } from '@/api/consultarEmpresas';
-import EmpresaCard from '../../components/EmpresaCard';
+import EmpresaCard from '../../../../../components/EmpresaCard';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 import {
   AREAS_DE_CONSULTA,
@@ -15,7 +15,7 @@ import {
   type ModalidadeArea,
   type ModalidadeItem,
   type ModalidadeTipo,
-} from '../../utils/modalidades';
+} from '../../../../../utils/modalidades';
 
 export default function Modalidade(): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();

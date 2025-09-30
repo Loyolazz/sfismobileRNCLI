@@ -9,7 +9,7 @@ import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import theme from '@/theme';
 import { formatCnpj, formatDate } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList, DrawerParamList } from '@/types/types';
-import { mapearFluxoMigracao, type FluxoMigracao } from '../../utils/fluxo';
+import { mapearFluxoMigracao, type FluxoMigracao } from '../../../../../utils/fluxo';
 
 import type { Empresa } from '@/api/consultarEmpresas';
 

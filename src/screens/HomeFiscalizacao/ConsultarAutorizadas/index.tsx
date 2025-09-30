@@ -5,7 +5,7 @@ import type { NativeStackNavigationOptions } from '@react-navigation/native-stac
 
 import theme from '@/theme';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
-import HeaderBackButton from '../components/HeaderBackButton';
+import HeaderBackButton from '../../../components/HeaderBackButton';
 
 import ConsultarAutorizadasMenu from './screens/Menu';
 import CnpjRazao from './screens/CnpjRazao';

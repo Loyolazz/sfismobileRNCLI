@@ -28,7 +28,7 @@ import Tutorial from './Tutorial';
 import NovidadesVersao from './NovidadesVersao';
 import SituacaoServico from './SituacaoServico';
 import Notificacoes from './Notificacoes';
-import HeaderBackButton from './components/HeaderBackButton';
+import HeaderBackButton from '../../components/HeaderBackButton';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/core';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();

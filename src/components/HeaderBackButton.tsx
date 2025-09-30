@@ -3,7 +3,7 @@ import { Pressable } from 'react-native';
 import Icon from '@/components/Icon';
 import theme from '@/theme';
 
-import homeStyles from '../styles';
+import homeStyles from '../screens/HomeFiscalizacao/styles';
 
 type HeaderBackButtonProps = {
   onPress: () => void;

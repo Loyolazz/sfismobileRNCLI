@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Icon from '@/components/Icon';
-import styles from '../styles';
+import styles from '../screens/HomeFiscalizacao/styles';
 import theme from '@/theme';
 
 type Props = {
