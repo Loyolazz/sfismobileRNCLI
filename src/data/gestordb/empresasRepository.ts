@@ -3,17 +3,36 @@ import { allAsync, getAsync, txAsync } from './database';
 export type EmpresaAutorizadaRow = {
   ID: number;
   AREAPPF: string | null;
+  DSBAIRRO: string | null;
+  DSENDERECO: string | null;
+  DTADITAMENTO: string | null;
+  DTOUTORGA: string | null;
+  EMAIL: string | null;
   INSTALACAO: string | null;
   INSTALACAOSEMACENTOS: string | null;
   MODALIDADE: string | null;
+  NOMUNICIPIO: string | null;
   NRINSCRICAO: string | null;
   NRINSTRUMENTO: string | null;
   NORAZAOSOCIAL: string | null;
   SGUF: string | null;
-  NOMUNICIPIO: string | null;
+  NRADITAMENTO: string | null;
+  NRCEP: string | null;
   TPINSCRICAO: string | null;
   QTDEMBARCACAO: number | null;
   LISTATIPOEMPRESA: string | null;
+  NOMECONTATO: string | null;
+  IDCONTRATOARRENDAMENTO: string | null;
+  VLMONTANTEINVESTIMENTO: string | null;
+  NRTLO: string | null;
+  NRRESOLUCAO: string | null;
+  AUTORIDADEPORTUARIA: string | null;
+  NRINSCRICAOINSTALACAO: string | null;
+  NORAZAOSOCIALINSTALACAO: string | null;
+  NOREPRESENTANTE: string | null;
+  NRTELEFONE: string | null;
+  EEREPRESENTANTE: string | null;
+  NRDOCUMENTOSEI: string | null;
   PAYLOAD: string;
 };
 
@@ -36,6 +55,29 @@ export type FrotaAlocadaRow = {
   NRINSTRUMENTO: string | null;
   PAYLOAD: string;
 };
+
+function getFieldValue(item: Record<string, unknown>, ...candidates: string[]): unknown {
+  for (const key of candidates) {
+    if (Object.prototype.hasOwnProperty.call(item, key)) {
+      const value = item[key];
+      if (value !== undefined) {
+        return value;
+      }
+    }
+  }
+
+  const normalized = candidates.map(candidate => candidate.toLowerCase());
+  for (const key of Object.keys(item)) {
+    if (normalized.includes(key.toLowerCase())) {
+      const value = item[key];
+      if (value !== undefined) {
+        return value;
+      }
+    }
+  }
+
+  return undefined;
+}
 
 export type EmpresaAutorizada = EmpresaAutorizadaRow & {
   payload: Record<string, unknown>;
@@ -187,19 +229,38 @@ export async function upsertEmpresasAutorizadasBulkAsync(items: Array<Record<str
   const sql = `INSERT OR REPLACE INTO EMPRESASAUTORIZADAS (
     ID,
     AREAPPF,
+    DSBAIRRO,
+    DSENDERECO,
+    DTADITAMENTO,
+    DTOUTORGA,
+    EMAIL,
     INSTALACAO,
     INSTALACAOSEMACENTOS,
+    LISTATIPOEMPRESA,
     MODALIDADE,
+    NOMUNICIPIO,
+    NORAZAOSOCIAL,
+    NRADITAMENTO,
+    NRCEP,
     NRINSCRICAO,
     NRINSTRUMENTO,
-    NORAZAOSOCIAL,
-    SGUF,
-    NOMUNICIPIO,
-    TPINSCRICAO,
+    NOMECONTATO,
     QTDEMBARCACAO,
-    LISTATIPOEMPRESA,
+    SGUF,
+    TPINSCRICAO,
+    IDCONTRATOARRENDAMENTO,
+    VLMONTANTEINVESTIMENTO,
+    NRTLO,
+    NRRESOLUCAO,
+    AUTORIDADEPORTUARIA,
+    NRINSCRICAOINSTALACAO,
+    NORAZAOSOCIALINSTALACAO,
+    NOREPRESENTANTE,
+    NRTELEFONE,
+    EEREPRESENTANTE,
+    NRDOCUMENTOSEI,
     PAYLOAD
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   await txAsync<void>(tx => {
     items.forEach((item, index) => {
@@ -207,18 +268,37 @@ export async function upsertEmpresasAutorizadasBulkAsync(items: Array<Record<str
       const id = Number.isFinite(numericId) ? numericId : index;
       const params = [
         id,
-        toStringValue(item?.AREAPPF ?? item?.areaPPF),
-        toStringValue(item?.INSTALACAO ?? item?.instalacao),
-        toStringValue(item?.INSTALACAOSEMACENTOS ?? item?.instalacaoSemAcentos),
-        toStringValue(item?.MODALIDADE ?? item?.modalidade),
-        toStringValue(item?.NRINSCRICAO ?? item?.nrInscricao),
-        toStringValue(item?.NRINSTRUMENTO ?? item?.nrInstrumento),
-        toStringValue(item?.NORAZAOSOCIAL ?? item?.noRazaoSocial),
-        toStringValue(item?.SGUF ?? item?.sgUf),
-        toStringValue(item?.NOMUNICIPIO ?? item?.noMunicipio),
-        toStringValue(item?.TPINSCRICAO ?? item?.tpInscricao),
-        toNumberValue(item?.QTDEMBARCACAO ?? item?.qtdEmbarcacao),
-        toStringValue(item?.LISTATIPOEMPRESA ?? item?.listaTipoEmpresa),
+        toStringValue(getFieldValue(item, 'AREAPPF', 'AreaPPF', 'areaPPF')),
+        toStringValue(getFieldValue(item, 'DSBAIRRO', 'DSBairro', 'dsBairro')),
+        toStringValue(getFieldValue(item, 'DSENDERECO', 'DSEndereco', 'dsEndereco')),
+        toStringValue(getFieldValue(item, 'DTADITAMENTO', 'DTAditamento', 'dtAditamento')),
+        toStringValue(getFieldValue(item, 'DTOUTORGA', 'DTOutorga', 'dtOutorga')),
+        toStringValue(getFieldValue(item, 'EMAIL', 'Email', 'email')),
+        toStringValue(getFieldValue(item, 'INSTALACAO', 'Instalacao', 'instalacao')),
+        toStringValue(getFieldValue(item, 'INSTALACAOSEMACENTOS', 'InstalacaoSemAcentos', 'instalacaoSemAcentos')),
+        toStringValue(getFieldValue(item, 'LISTATIPOEMPRESA', 'ListaTipoEmpresa', 'listaTipoEmpresa')),
+        toStringValue(getFieldValue(item, 'MODALIDADE', 'Modalidade', 'modalidade')),
+        toStringValue(getFieldValue(item, 'NOMUNICIPIO', 'NOMunicipio', 'noMunicipio')),
+        toStringValue(getFieldValue(item, 'NORAZAOSOCIAL', 'NORazaoSocial', 'noRazaoSocial')),
+        toStringValue(getFieldValue(item, 'NRADITAMENTO', 'NRAditamento', 'nrAditamento')),
+        toStringValue(getFieldValue(item, 'NRCEP', 'NRCep', 'nrCep')),
+        toStringValue(getFieldValue(item, 'NRINSCRICAO', 'NRInscricao', 'nrInscricao')),
+        toStringValue(getFieldValue(item, 'NRINSTRUMENTO', 'NRInstrumento', 'nrInstrumento')),
+        toStringValue(getFieldValue(item, 'NOMECONTATO', 'NomeContato', 'nomeContato')),
+        toNumberValue(getFieldValue(item, 'QTDEMBARCACAO', 'QTDEmbarcacao', 'qtdEmbarcacao')),
+        toStringValue(getFieldValue(item, 'SGUF', 'SGUf', 'sgUf')),
+        toStringValue(getFieldValue(item, 'TPINSCRICAO', 'TPInscricao', 'tpInscricao')),
+        toStringValue(getFieldValue(item, 'IDCONTRATOARRENDAMENTO', 'IDContratoArrendamento', 'idContratoArrendamento')),
+        toStringValue(getFieldValue(item, 'VLMONTANTEINVESTIMENTO', 'VLMontanteInvestimento', 'vlMontanteInvestimento')),
+        toStringValue(getFieldValue(item, 'NRTLO', 'NRTlo', 'nrTlo')),
+        toStringValue(getFieldValue(item, 'NRRESOLUCAO', 'NRResolucao', 'nrResolucao')),
+        toStringValue(getFieldValue(item, 'AUTORIDADEPORTUARIA', 'AutoridadePortuaria', 'autoridadePortuaria')),
+        toStringValue(getFieldValue(item, 'NRINSCRICAOINSTALACAO', 'NRInscricaoInstalacao', 'nrInscricaoInstalacao')),
+        toStringValue(getFieldValue(item, 'NORAZAOSOCIALINSTALACAO', 'NORazaoSocialInstalacao', 'noRazaoSocialInstalacao')),
+        toStringValue(getFieldValue(item, 'NOREPRESENTANTE', 'NORepresentante', 'noRepresentante')),
+        toStringValue(getFieldValue(item, 'NRTELEFONE', 'NRTelefone', 'nrTelefone')),
+        toStringValue(getFieldValue(item, 'EEREPRESENTANTE', 'EERepresentante', 'eeRepresentante')),
+        toStringValue(getFieldValue(item, 'NRDOCUMENTOSEI', 'NRDocumentoSEI', 'nrDocumentoSei')),
         normalizePayload(item),
       ];
 
@@ -260,21 +340,21 @@ export async function upsertFrotaAlocadaBulkAsync(items: Array<Record<string, un
       const id = Number.isFinite(numericId) ? numericId : index;
       const params = [
         id,
-        toStringValue(item?.IDFROTA ?? item?.idFrota),
-        toStringValue(item?.TPINSCRICAO ?? item?.tpInscricao),
-        toStringValue(item?.IDEMBARCACAO ?? item?.idEmbarcacao),
-        toStringValue(item?.STEMBARCACAO ?? item?.stEmbarcacao),
-        toStringValue(item?.DTINICIO ?? item?.dtInicio),
-        toStringValue(item?.DTTERMINO ?? item?.dtTermino),
-        toStringValue(item?.TPAFRETAMENTO ?? item?.tpAfretamento),
-        toStringValue(item?.STREGISTRO ?? item?.stRegistro),
-        toStringValue(item?.IDFROTAPAI ?? item?.idFrotaPai),
-        toStringValue(item?.STHOMOLOGACAO ?? item?.stHomologacao),
-        toStringValue(item?.NOEMBARCACAO ?? item?.noEmbarcacao),
-        toStringValue(item?.NRCAPITANIA ?? item?.nrCapitania),
-        toStringValue(item?.TIPOEMBARCACAO ?? item?.tipoEmbarcacao),
-        toStringValue(item?.NRINSCRICAO ?? item?.nrInscricao),
-        toStringValue(item?.NRINSTRUMENTO ?? item?.nrInstrumento),
+        toStringValue(getFieldValue(item, 'IDFROTA', 'IDFrota', 'idFrota')),
+        toStringValue(getFieldValue(item, 'TPINSCRICAO', 'TPInscricao', 'tpInscricao')),
+        toStringValue(getFieldValue(item, 'IDEMBARCACAO', 'IDEmbarcacao', 'idEmbarcacao')),
+        toStringValue(getFieldValue(item, 'STEMBARCACAO', 'STEmbarcacao', 'stEmbarcacao')),
+        toStringValue(getFieldValue(item, 'DTINICIO', 'DTInicio', 'dtInicio')),
+        toStringValue(getFieldValue(item, 'DTTERMINO', 'DTTermino', 'dtTermino')),
+        toStringValue(getFieldValue(item, 'TPAFRETAMENTO', 'TPAfretamento', 'tpAfretamento')),
+        toStringValue(getFieldValue(item, 'STREGISTRO', 'STRegistro', 'stRegistro')),
+        toStringValue(getFieldValue(item, 'IDFROTAPAI', 'IDFrotaPai', 'idFrotaPai')),
+        toStringValue(getFieldValue(item, 'STHOMOLOGACAO', 'STHomologacao', 'stHomologacao')),
+        toStringValue(getFieldValue(item, 'NOEMBARCACAO', 'NoEmbarcacao', 'noEmbarcacao')),
+        toStringValue(getFieldValue(item, 'NRCAPITANIA', 'NRCapitania', 'nrCapitania')),
+        toStringValue(getFieldValue(item, 'TIPOEMBARCACAO', 'TipoEmbarcacao', 'tipoEmbarcacao')),
+        toStringValue(getFieldValue(item, 'NRINSCRICAO', 'NRInscricao', 'nrInscricao')),
+        toStringValue(getFieldValue(item, 'NRINSTRUMENTO', 'NRInstrumento', 'nrInstrumento')),
         normalizePayload(item),
       ];
 
