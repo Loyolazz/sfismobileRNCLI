@@ -127,18 +127,15 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
             const totals = status.counts ?? { empresas: 0, frota: 0 };
             const lastRun = status.lastRun ?? totals;
             setSyncSummary(totals);
-            const sample = await listEmpresasAutorizadasAsync({ limit: 5, offset: 0 });
+            const sample = await listEmpresasAutorizadasAsync({ limit: 3000, offset: 0 });
             console.log('[gestorbd] sincronização concluída', {
                 totais: totals,
                 baixados: lastRun,
                 cursors: status.cursors,
                 empresas: sample.map(item => ({
-                    id: item.ID,
-                    razaoSocial: item.NORAZAOSOCIAL,
-                    nrInscricao: item.NRINSCRICAO,
-                    uf: item.SGUF,
-                    municipio: item.NOMUNICIPIO,
+                  ...item,
                 })),
+
             });
             Alert.alert(
                 'Dados atualizados',
