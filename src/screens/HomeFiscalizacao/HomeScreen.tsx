@@ -9,7 +9,11 @@ import { getUltimaVersao } from '@/utils/releases';
 import theme from '@/theme';
 import styles from './styles';
 import type { DrawerParamList } from '@/types/types';
-import { syncGestorDatabase, loadGestorSyncStatus } from '@/services/gestorbd';
+import {
+    syncGestorDatabase,
+    loadGestorSyncStatus,
+    listEmpresasAutorizadasAsync,
+} from '@/services/gestorbd';
 import { formatDateTime } from '@/utils/dates';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -123,10 +127,18 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
             const totals = status.counts ?? { empresas: 0, frota: 0 };
             const lastRun = status.lastRun ?? totals;
             setSyncSummary(totals);
+            const sample = await listEmpresasAutorizadasAsync({ limit: 5, offset: 0 });
             console.log('[gestorbd] sincronização concluída', {
                 totais: totals,
                 baixados: lastRun,
                 cursors: status.cursors,
+                empresas: sample.map(item => ({
+                    id: item.ID,
+                    razaoSocial: item.NORAZAOSOCIAL,
+                    nrInscricao: item.NRINSCRICAO,
+                    uf: item.SGUF,
+                    municipio: item.NOMUNICIPIO,
+                })),
             });
             Alert.alert(
                 'Dados atualizados',

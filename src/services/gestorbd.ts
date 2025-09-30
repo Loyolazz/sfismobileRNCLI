@@ -151,10 +151,18 @@ export async function countFrotaByEmpresaAsync(params: CountFrotaParams): Promis
 
 export async function logGestorDatabaseSnapshot(): Promise<void> {
   const status = await loadGestorSyncStatus();
+  const sample = await listEmpresasFromDbAsync({ limit: 5, offset: 0 });
   console.log('[gestorbd] snapshot', {
     updatedAt: status.updatedAt ? new Date(status.updatedAt).toISOString() : null,
     cursors: status.cursors,
     counts: status.counts,
+    empresas: sample.map(item => ({
+      id: item.ID,
+      razaoSocial: item.NORAZAOSOCIAL,
+      nrInscricao: item.NRINSCRICAO,
+      uf: item.SGUF,
+      municipio: item.NOMUNICIPIO,
+    })),
   });
 }
 
