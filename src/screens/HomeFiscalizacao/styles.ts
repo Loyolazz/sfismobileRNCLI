@@ -146,6 +146,20 @@ const styles = StyleSheet.create({
     padding: gap,
     gap: theme.spacing.xs,
   },
+  loadingBox: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.lg,
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    width: '80%',
+    maxWidth: 320,
+  },
+  loadingText: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
   modalTitle: {
     ...theme.typography.heading,
     fontSize: 16,
