@@ -25,6 +25,7 @@ import {
   type MapSnapshot,
 } from '@/services/mapSnapshotCache';
 import styles from './styles';
+import theme from '@/theme';
 
 type MapaRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Mapa'>;
 
