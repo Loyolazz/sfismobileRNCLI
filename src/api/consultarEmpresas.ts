@@ -1,5 +1,14 @@
 // src/api/consultarEmpresas.ts
+import NetInfo from '@react-native-community/netinfo';
+
 import { soapRequest, extractSoapResult } from '@/api/antaq';
+import {
+  listEmpresasAutorizadasAsync,
+  listEmpresasPorEmbarcacaoAsync,
+  type EmpresaAutorizada,
+  type ListEmpresasParams,
+} from '@/data/gestordb/empresasRepository';
+import { ensureEmpresaPayload } from '@/utils/payload';
 
 export type TipoEmpresa = {
   IDTipoEmpresa: number;
@@ -71,15 +80,79 @@ type FiltroAutorizadas = {
   instalacao?: string;
 };
 
+async function shouldUseOfflineData(): Promise<boolean> {
+  try {
+    const state = await NetInfo.fetch();
+    if (!state) return false;
+    if (!state.isConnected) return true;
+    if (state.type === 'none' || state.type === 'unknown') return true;
+    if (state.isInternetReachable === false) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+function coerceNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+async function consultarEmpresasAutorizadasOffline(payload: FiltroAutorizadas): Promise<Empresa[]> {
+  const { cnpjRazaosocial, modalidade, instalacao, embarcacao } = payload;
+
+  if (embarcacao) {
+    const porEmbarcacao = await listEmpresasPorEmbarcacaoAsync(embarcacao);
+    if (porEmbarcacao.length > 0) {
+      return porEmbarcacao.map(mapEmpresaAutorizadaOffline);
+    }
+  }
+
+  const params: ListEmpresasParams = {};
+
+  if (cnpjRazaosocial) {
+    params.busca = cnpjRazaosocial;
+  } else if (instalacao) {
+    params.instalacao = instalacao;
+  } else if (embarcacao) {
+    params.busca = embarcacao;
+  }
+
+  if (modalidade) {
+    params.modalidade = modalidade;
+  }
+
+  const empresas = await listEmpresasAutorizadasAsync(params);
+  return empresas.map(mapEmpresaAutorizadaOffline);
+}
+
 async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise<Empresa[]> {
-  const parsed = await soapRequest('ConsultarEmpresasAutorizadas', payload);
-  const result = extractSoapResult(parsed, 'ConsultarEmpresasAutorizadas');
+  if (await shouldUseOfflineData()) {
+    return consultarEmpresasAutorizadasOffline(payload);
+  }
 
-  // No serviço legado normalmente vem um array de autorizações
-  const itens = Array.isArray(result?.d) ? result.d : (result?.Empresa ?? result);
-  const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
+  try {
+    const parsed = await soapRequest('ConsultarEmpresasAutorizadas', payload);
+    const result = extractSoapResult(parsed, 'ConsultarEmpresasAutorizadas');
 
-  return list.map(mapEmpresaAutorizadaLikeCordova);
+    // No serviço legado normalmente vem um array de autorizações
+    const itens = Array.isArray(result?.d) ? result.d : (result?.Empresa ?? result);
+    const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
+
+    if (!list.length) {
+      return consultarEmpresasAutorizadasOffline(payload);
+    }
+
+    return list.map(mapEmpresaAutorizadaLikeCordova);
+  } catch (error) {
+    const fallback = await consultarEmpresasAutorizadasOffline(payload);
+    if (fallback.length > 0) {
+      return fallback;
+    }
+    throw error;
+  }
 }
 
 export async function buscarEmpresasAutorizadas(
@@ -102,6 +175,51 @@ export async function consultarPorInstalacao(instalacao: string): Promise<Empres
 }
 
 /* --------------------------------- mappers -------------------------------- */
+
+function mapEmpresaAutorizadaOffline(row: EmpresaAutorizada): Empresa {
+  const payload = ensureEmpresaPayload(row.payload, {
+    NORazaoSocial: row.NORAZAOSOCIAL,
+    TPInscricao: coerceNumber(row.TPINSCRICAO) ?? row.TPINSCRICAO,
+    NRInscricao: row.NRINSCRICAO,
+    DSEndereco: row.DSENDERECO,
+    SGUF: row.SGUF,
+    NOMunicipio: row.NOMUNICIPIO,
+    DSBairro: row.DSBAIRRO,
+    NRCEP: row.NRCEP,
+    QTDEmbarcacao: coerceNumber(row.QTDEMBARCACAO),
+    AreaPPF: row.AREAPPF,
+    Instalacao: row.INSTALACAO,
+    Modalidade: row.MODALIDADE,
+    NRInstrumento: row.NRINSTRUMENTO,
+    DTOutorga: row.DTOUTORGA,
+    DTAditamento: row.DTADITAMENTO,
+    NRAditamento: row.NRADITAMENTO,
+    NomeContato: row.NOMECONTATO,
+    Email: row.EMAIL,
+    IDContratoArrendamento:
+      coerceNumber(row.IDCONTRATOARRENDAMENTO) ?? row.IDCONTRATOARRENDAMENTO,
+    VLMontanteInvestimento: row.VLMONTANTEINVESTIMENTO,
+    NRTLO: row.NRTLO,
+    NRResolucao: row.NRRESOLUCAO,
+    AutoridadePortuaria: row.AUTORIDADEPORTUARIA,
+    NRInscricaoInstalacao: row.NRINSCRICAOINSTALACAO,
+    NORazaoSocialInstalacao: row.NORAZAOSOCIALINSTALACAO,
+    NORepresentante: row.NOREPRESENTANTE,
+    NRTelefone: row.NRTELEFONE,
+    EERepresentante: row.EEREPRESENTANTE,
+    NRDocumentoSEI: row.NRDOCUMENTOSEI,
+  });
+
+  if (payload.ListaTipoEmpresa == null && row.LISTATIPOEMPRESA) {
+    payload.ListaTipoEmpresa = row.LISTATIPOEMPRESA;
+  }
+
+  if (payload.QTDEmbarcacao == null) {
+    payload.QTDEmbarcacao = coerceNumber(row.QTDEMBARCACAO);
+  }
+
+  return mapEmpresaAutorizadaLikeCordova(payload);
+}
 
 function mapEmpresaResumo(x: any): Empresa {
   return {
@@ -174,8 +292,25 @@ function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
 
 function normalizeListaTipoEmpresa(src: any): TipoEmpresa[] | null {
   if (!src) return null;
-  const arr = Array.isArray(src?.TipoEmpresa) ? src.TipoEmpresa : [src?.TipoEmpresa].filter(Boolean);
-  return arr.map((t: any) => ({
+
+  if (typeof src === 'string') {
+    try {
+      const parsed = JSON.parse(src);
+      return normalizeListaTipoEmpresa(parsed);
+    } catch {
+      return null;
+    }
+  }
+
+  const itens = Array.isArray(src)
+    ? src
+    : Array.isArray(src?.TipoEmpresa)
+      ? src.TipoEmpresa
+      : [src?.TipoEmpresa].filter(Boolean);
+
+  if (!itens.length) return null;
+
+  return itens.map((t: any) => ({
     IDTipoEmpresa: num(t?.IDTipoEmpresa),
     DSTipoEmpresa: str(t?.DSTipoEmpresa),
     NRinscricao: str(t?.NRinscricao),

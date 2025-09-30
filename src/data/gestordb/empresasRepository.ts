@@ -1,3 +1,4 @@
+import { ensureEmpresaPayload, serializeEmpresaPayload, type EmpresaPayload } from '@/utils/payload';
 import { allAsync, getAsync, txAsync } from './database';
 
 export type EmpresaAutorizadaRow = {
@@ -89,6 +90,7 @@ export type ListEmpresasParams = {
   areaPPF?: string;
   uf?: string;
   municipio?: string;
+  instalacao?: string;
   limit?: number;
   offset?: number;
 };
@@ -108,21 +110,65 @@ function toNumberValue(value: unknown): number | null {
   return Number.isFinite(num) ? num : null;
 }
 
-function normalizePayload(payload: unknown): string {
+function parseMaybeJson(value: unknown): unknown {
+  if (value == null) return null;
+  if (typeof value !== 'string') return value;
+
   try {
-    return JSON.stringify(payload ?? {});
+    return JSON.parse(value);
   } catch {
-    return JSON.stringify({});
+    return value;
   }
 }
 
+function buildPayloadFallback(item: Record<string, unknown>): Partial<EmpresaPayload> {
+  const tpInscricao = getFieldValue(item, 'TPINSCRICAO', 'TPInscricao');
+  const contrato = getFieldValue(item, 'IDCONTRATOARRENDAMENTO', 'IDContratoArrendamento');
+
+  return {
+    NORazaoSocial: toStringValue(getFieldValue(item, 'NORAZAOSOCIAL', 'NORazaoSocial')),
+    TPInscricao: toNumberValue(tpInscricao) ?? toStringValue(tpInscricao),
+    NRInscricao: toStringValue(getFieldValue(item, 'NRINSCRICAO', 'NRInscricao')),
+    DSEndereco: toStringValue(getFieldValue(item, 'DSENDERECO', 'DSEndereco')),
+    SGUF: toStringValue(getFieldValue(item, 'SGUF', 'SGUf')),
+    NOMunicipio: toStringValue(getFieldValue(item, 'NOMUNICIPIO', 'NOMunicipio')),
+    DSBairro: toStringValue(getFieldValue(item, 'DSBAIRRO', 'DSBairro')),
+    NRCEP: toStringValue(getFieldValue(item, 'NRCEP', 'NRCep')),
+    QTDEmbarcacao: toNumberValue(getFieldValue(item, 'QTDEMBARCACAO', 'QTDEmbarcacao')),
+    ListaTipoEmpresa: parseMaybeJson(getFieldValue(item, 'LISTATIPOEMPRESA', 'ListaTipoEmpresa')),
+    AreaPPF: toStringValue(getFieldValue(item, 'AREAPPF', 'AreaPPF')),
+    Instalacao: toStringValue(getFieldValue(item, 'INSTALACAO', 'Instalacao')),
+    Modalidade: toStringValue(getFieldValue(item, 'MODALIDADE', 'Modalidade')),
+    NRInstrumento: toStringValue(getFieldValue(item, 'NRINSTRUMENTO', 'NRInstrumento')),
+    DTOutorga: toStringValue(getFieldValue(item, 'DTOUTORGA', 'DTOutorga')),
+    NRAditamento: toStringValue(getFieldValue(item, 'NRADITAMENTO', 'NRAditamento')),
+    DTAditamento: toStringValue(getFieldValue(item, 'DTADITAMENTO', 'DTAditamento')),
+    NomeContato: toStringValue(getFieldValue(item, 'NOMECONTATO', 'NomeContato')),
+    Email: toStringValue(getFieldValue(item, 'EMAIL', 'Email')),
+    IDContratoArrendamento: toNumberValue(contrato) ?? toStringValue(contrato),
+    VLMontanteInvestimento: getFieldValue(item, 'VLMONTANTEINVESTIMENTO', 'VLMontanteInvestimento'),
+    NRTLO: toStringValue(getFieldValue(item, 'NRTLO', 'NRTlo')),
+    NRResolucao: toStringValue(getFieldValue(item, 'NRRESOLUCAO', 'NRResolucao')),
+    AutoridadePortuaria: toStringValue(getFieldValue(item, 'AUTORIDADEPORTUARIA', 'AutoridadePortuaria')),
+    NRInscricaoInstalacao: toStringValue(getFieldValue(item, 'NRINSCRICAOINSTALACAO', 'NRInscricaoInstalacao')),
+    NORazaoSocialInstalacao: toStringValue(
+      getFieldValue(item, 'NORAZAOSOCIALINSTALACAO', 'NORazaoSocialInstalacao'),
+    ),
+    NORepresentante: toStringValue(getFieldValue(item, 'NOREPRESENTANTE', 'NORepresentante')),
+    NRTelefone: toStringValue(getFieldValue(item, 'NRTELEFONE', 'NRTelefone')),
+    EERepresentante: toStringValue(getFieldValue(item, 'EEREPRESENTANTE', 'EERepresentante')),
+    NRDocumentoSEI: toStringValue(getFieldValue(item, 'NRDOCUMENTOSEI', 'NRDocumentoSEI')),
+  };
+}
+
+function normalizePayload(item: Record<string, unknown>): string {
+  const rawPayload = getFieldValue(item, 'payload', 'PAYLOAD', 'Payload');
+  const fallback = buildPayloadFallback(item);
+  return serializeEmpresaPayload(rawPayload, fallback);
+}
+
 function parsePayload(payload: string): Record<string, unknown> {
-  if (!payload) return {};
-  try {
-    return JSON.parse(payload);
-  } catch {
-    return {};
-  }
+  return ensureEmpresaPayload(payload);
 }
 
 function mapEmpresa(row: EmpresaAutorizadaRow): EmpresaAutorizada {
@@ -135,19 +181,26 @@ function mapEmpresa(row: EmpresaAutorizadaRow): EmpresaAutorizada {
 export async function listEmpresasAutorizadasAsync(
   params: ListEmpresasParams = {},
 ): Promise<EmpresaAutorizada[]> {
-  const { busca, modalidade, areaPPF, uf, municipio, limit = 50, offset = 0 } = params;
+  const { busca, modalidade, areaPPF, uf, municipio, instalacao, limit = 50, offset = 0 } = params;
 
   const where: string[] = [];
   const values: Array<string | number> = [];
 
   if (busca) {
     const like = `%${busca.trim()}%`;
-    where.push('(' + ['NORAZAOSOCIAL', 'NRINSCRICAO', 'INSTALACAO'].map(field => `${field} LIKE ?`).join(' OR ') + ')');
+    where.push(
+      '(' +
+        ['NORAZAOSOCIAL', 'NRINSCRICAO', 'INSTALACAO']
+          .map(field => `UPPER(${field}) LIKE UPPER(?)`)
+          .join(' OR ') +
+        ')',
+    );
     values.push(like, like, like);
   }
   if (modalidade) {
-    where.push('MODALIDADE = ?');
-    values.push(modalidade);
+    const like = `%${modalidade.trim()}%`;
+    where.push('UPPER(MODALIDADE) LIKE UPPER(?)');
+    values.push(like);
   }
   if (areaPPF) {
     where.push('AREAPPF = ?');
@@ -161,6 +214,13 @@ export async function listEmpresasAutorizadasAsync(
     where.push('NOMUNICIPIO = ?');
     values.push(municipio);
   }
+  if (instalacao) {
+    const like = `%${instalacao.trim()}%`;
+    where.push(
+      '((INSTALACAO LIKE ? COLLATE NOCASE) OR (INSTALACAOSEMACENTOS LIKE ? COLLATE NOCASE))',
+    );
+    values.push(like, like);
+  }
 
   const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const sql = `SELECT * FROM EMPRESASAUTORIZADAS ${whereClause} ORDER BY NORAZAOSOCIAL COLLATE NOCASE LIMIT ? OFFSET ?`;
@@ -168,6 +228,38 @@ export async function listEmpresasAutorizadasAsync(
   values.push(limit, offset);
 
   const rows = await allAsync<EmpresaAutorizadaRow>(sql, values);
+  return rows.map(mapEmpresa);
+}
+
+export async function listEmpresasPorEmbarcacaoAsync(termo: string): Promise<EmpresaAutorizada[]> {
+  const search = termo.trim();
+  if (!search) {
+    return [];
+  }
+
+  const like = `%${search}%`;
+  const sql = `
+    SELECT DISTINCT e.*
+    FROM FROTAALOCADA f
+    INNER JOIN EMPRESASAUTORIZADAS e
+      ON e.NRINSCRICAO = f.NRINSCRICAO
+      AND CAST(IFNULL(e.TPINSCRICAO, 1) AS INTEGER) = CAST(IFNULL(f.TPINSCRICAO, 1) AS INTEGER)
+      AND (
+        IFNULL(e.NRINSTRUMENTO, '') = IFNULL(f.NRINSTRUMENTO, IFNULL(e.NRINSTRUMENTO, ''))
+        OR IFNULL(f.NRINSTRUMENTO, '') = ''
+      )
+    WHERE (
+      UPPER(IFNULL(f.NOEMBARCACAO, '')) LIKE UPPER(?)
+      OR UPPER(IFNULL(f.NRCAPITANIA, '')) LIKE UPPER(?)
+      OR UPPER(IFNULL(f.IDFROTA, '')) LIKE UPPER(?)
+      OR UPPER(IFNULL(f.IDEMBARCACAO, '')) LIKE UPPER(?)
+      OR UPPER(IFNULL(f.NRINSTRUMENTO, '')) LIKE UPPER(?)
+    )
+    ORDER BY e.NORAZAOSOCIAL COLLATE NOCASE
+  `;
+
+  const params: string[] = [like, like, like, like, like];
+  const rows = await allAsync<EmpresaAutorizadaRow>(sql, params);
   return rows.map(mapEmpresa);
 }
 
