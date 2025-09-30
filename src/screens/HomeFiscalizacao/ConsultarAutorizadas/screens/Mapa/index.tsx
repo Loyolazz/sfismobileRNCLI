@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import NetInfo from '@react-native-community/netinfo';
 import { WebView } from 'react-native-webview';
 
-import theme from '@/theme';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 import type { Empresa } from '@/api/consultarEmpresas';
 import {
@@ -25,6 +24,7 @@ import {
   snapshotEhAntigo,
   type MapSnapshot,
 } from '@/services/mapSnapshotCache';
+import styles from './styles';
 
 type MapaRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Mapa'>;
 
@@ -48,6 +48,7 @@ const GOOGLE_MAPS_URL =
   'https://maps.googleapis.com/maps/api/js?v=3.53&key=AIzaSyBByE0Uc7WXYndpyTk_3he-TqgSQ4Pyhbw&callback=initMap';
 
 const GOOGLE_STATIC_DEFAULT_ZOOM = 13;
+const BRASIL_CENTRO = { lat: -15.793889, lng: -47.882778 } as const;
 
 const collapseSpaces = (value: string) => value.replace(/\s+/g, ' ').trim();
 
@@ -63,7 +64,6 @@ const normalizeCodigo = (value?: string) => {
   return removeDiacritics(value).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 };
 
-// ---- Fallback por Geocodificação (quando não houver lat/lng) ----
 function montarQueryGeocode(opts: {
   titulo?: string | null | undefined;
   municipio?: string | null | undefined;
@@ -118,8 +118,10 @@ function pickTerminal(
         (alvo) => alvo === nome || alvo === local,
       );
 
-      // Garante boolean (em vez de "" | boolean)
-      const codigoMatch = !!codigo && codigosPreferidos.some((alvo) => alvo === codigo);
+      const codigoNormalizado = codigo || '';
+      const codigoMatch =
+        codigoNormalizado.length > 0 &&
+        codigosPreferidos.some((alvo) => alvo === codigoNormalizado);
 
       return nomeOuLocalMatch || codigoMatch;
     });
@@ -203,8 +205,6 @@ function construirHtmlMapa(info: TerminalInfo, empresa: Empresa): string {
   </body>
 </html>`;
 }
-
-// --- NOVO: HTML de fallback que usa Google Geocoder pelo endereço ---
 function construirHtmlMapaGeocode(query: string, infoHtml: string) {
   const onlineScript = `<script src="${GOOGLE_MAPS_URL}" async defer></script>`;
   const queryEscapada = JSON.stringify(query);
@@ -223,7 +223,7 @@ function construirHtmlMapaGeocode(query: string, infoHtml: string) {
         if (!window.google || !window.google.maps) return;
 
         var map = new google.maps.Map(document.getElementById('map'), {
-          center: { lat: -15.793889, lng: -47.882778 }, // Centro do BR enquanto geocodifica
+          center: { lat: ${BRASIL_CENTRO.lat}, lng: ${BRASIL_CENTRO.lng} },
           zoom: 5,
           mapTypeId: 'roadmap',
           gestureHandling: 'greedy'
@@ -357,7 +357,6 @@ export default function MapaInstalacao(): React.JSX.Element {
     return { terminal: terminalSelecionado, lat: latitude, lng: longitude };
   }, [terminalSelecionado]);
 
-  // Query para geocodificação quando não há coordenadas
   const queryGeocode = useMemo(() => {
     const titulo =
       (terminalSelecionado?.nome ||
@@ -372,7 +371,6 @@ export default function MapaInstalacao(): React.JSX.Element {
     });
   }, [terminalSelecionado, Instalacao, NORazaoSocialInstalacao, NORazaoSocial, NOMunicipio, SGUF]);
 
-  // InfoHtml de fallback (reaproveita o card com o "melhor" terminal)
   const infoHtmlFallback = useMemo(() => {
     const fakeTerminal = {
       ...terminalSelecionado,
@@ -397,7 +395,6 @@ export default function MapaInstalacao(): React.JSX.Element {
     if (infoTerminal) {
       return construirHtmlMapa(infoTerminal, empresa);
     }
-    // Fallback: sem coordenadas, mas online e com query -> usar geocoding
     if (online && queryGeocode) {
       return construirHtmlMapaGeocode(queryGeocode, infoHtmlFallback);
     }
@@ -600,87 +597,3 @@ export default function MapaInstalacao(): React.JSX.Element {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.surface },
-  header: { padding: theme.spacing.md, gap: 4 },
-  empresaTitulo: { ...theme.typography.heading },
-  empresaSubtitulo: { ...theme.typography.body, color: theme.colors.muted },
-  fonte: { ...theme.typography.caption, color: theme.colors.muted },
-  mensagem: { ...theme.typography.caption, color: theme.colors.warning, paddingHorizontal: theme.spacing.md },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listaWrapper: { paddingVertical: theme.spacing.sm },
-  listaTitulo: { ...theme.typography.body, paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.xs },
-  listaContainer: { paddingHorizontal: theme.spacing.md, gap: theme.spacing.sm },
-  instalacaoItem: {
-    width: 260,
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.background,
-    backgroundColor: theme.colors.background,
-  },
-  instalacaoItemAtivo: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  instalacaoItemPressed: { opacity: 0.85 },
-  instalacaoTitulo: { ...theme.typography.body, fontWeight: '600', color: theme.colors.text },
-  instalacaoTituloAtivo: { color: theme.colors.primaryDark },
-  instalacaoDescricao: { ...theme.typography.caption, color: theme.colors.muted, marginTop: theme.spacing.xs },
-  instalacaoAviso: { ...theme.typography.caption, color: theme.colors.warning, marginTop: theme.spacing.xs },
-  mapaWrapper: {
-    flex: 1,
-    margin: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.background,
-  },
-  webview: { flex: 1 },
-  snapshotWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  snapshotImage: {
-    width: '100%',
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.surface,
-  },
-  snapshotLegenda: { ...theme.typography.caption, color: theme.colors.muted, textAlign: 'center' },
-  semCoordenadas: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  semCoordenadasTitulo: { ...theme.typography.heading, fontSize: 18 },
-  semCoordenadasDescricao: { ...theme.typography.body, color: theme.colors.muted, textAlign: 'center' },
-  snapshotLoader: {
-    position: 'absolute',
-    bottom: theme.spacing.sm,
-    left: theme.spacing.sm,
-    right: theme.spacing.sm,
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.surface,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.xs,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  snapshotLoaderTexto: { ...theme.typography.caption, color: theme.colors.muted },
-});

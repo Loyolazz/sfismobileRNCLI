@@ -1,329 +1,298 @@
-import {StyleSheet, Dimensions, Platform} from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+
 import theme from '@/theme';
 
 const { width } = Dimensions.get('window');
+const gap = typeof theme.spacing.md === 'number' ? theme.spacing.md : 16;
 
-export const GAP = (theme?.spacing?.md as number) ?? 16;
-export const CARD_SIZE = Math.floor((width - GAP * 3) / 2);
-
+export const GAP = gap;
+export const CARD_SIZE = Math.floor((width - gap * 3) / 2);
 export const CARD_GRADIENT: [string, string] = [
-    theme?.colors?.primaryDark ?? '#0A2647',
-    theme?.colors?.primary ?? '#1E3A59',
+  theme.colors.primaryDark,
+  theme.colors.primary,
+];
+export const DRAWER_BANNER_GRADIENT: [string, string] = [
+  theme.colors.primaryDark,
+  theme.colors.primary,
 ];
 
-export const DRAWER_BANNER_GRADIENT: [string, string] = [
-  theme?.colors?.primaryDark ?? '#0A2647',
-  theme?.colors?.primary ?? '#1E3A59',
-];
+const tileShadow = Platform.select({
+  ios: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  android: { elevation: 4 },
+  default: {},
+});
+
+const bannerShadow = Platform.select({
+  ios: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  android: { elevation: 3 },
+  default: {},
+});
 
 const styles = StyleSheet.create({
-    /* ---------- base ---------- */
-    safeArea: {
-        flex: 1,
-        backgroundColor: theme?.colors?.primaryDark ?? '#0A2647',
-    },
-    scroll: { flex: 1, backgroundColor: '#fff' },
-    scrollContent: {
-        paddingTop: 0, // cola no header
-    },
-    scrollContentExtraPadding: {
-        paddingBottom: GAP,
-    },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.primaryDark,
+  },
+  scroll: { flex: 1, backgroundColor: theme.colors.surface },
+  scrollContent: { paddingTop: 0 },
+  scrollContentExtraPadding: { paddingBottom: gap },
 
-    /* ---------- header ---------- */
-    header: {
-        height: 56,
-        backgroundColor: theme?.colors?.primaryDark ?? '#0A2647',
-        paddingHorizontal: GAP,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    headerTitle: { color: '#fff', fontSize: 18, fontWeight: '600' },
-    headerButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+  header: {
+    height: 56,
+    backgroundColor: theme.colors.primaryDark,
+    paddingHorizontal: gap,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerTitle: { ...theme.typography.heading, color: theme.colors.surface, fontSize: 18 },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerButtonSpacing: {
+    marginLeft: theme.spacing.xs,
+  },
 
-    /* ---------- saudação FULL-BLEED ---------- */
-    greetingBox: {
-        backgroundColor: theme?.colors?.primaryDark ?? '#0A2647',
-        paddingHorizontal: GAP,
-        paddingTop: GAP,
-        paddingBottom: GAP * 1.1,
-        marginTop: 0,
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    greetingTexts: { flex: 1 },
-    greetingText: { fontSize: 20, color: '#fff' },
-    greetingStrong: { fontWeight: '700' },
-    greetingSub: { color: '#fff', marginTop: 4, fontSize: 14, opacity: 0.9 },
-    greetingCounter: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  greetingBox: {
+    backgroundColor: theme.colors.primaryDark,
+    paddingHorizontal: gap,
+    paddingTop: gap,
+    paddingBottom: gap * 1.1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  greetingTexts: { flex: 1 },
+  greetingText: { ...theme.typography.heading, color: theme.colors.surface },
+  greetingStrong: { fontWeight: '700' },
+  greetingSub: { ...theme.typography.body, color: theme.colors.surface, opacity: 0.9 },
+  greetingCounter: { ...theme.typography.body, color: theme.colors.surface, fontWeight: '600' },
 
-    /* ---------- seção com padding lateral (grid + versão) ---------- */
-    section: { paddingHorizontal: GAP },
+  section: { paddingHorizontal: gap },
 
-    /* ---------- grid ---------- */
-    grid: {
-        paddingTop: GAP,
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-    },
-    tileWrapper: {
-        width: CARD_SIZE,
-        marginBottom: GAP,
-    },
-    tile: {
-        width: '100%',
-        height: CARD_SIZE, // quadrado
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-        // sombra sutil
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    tileIconWrap: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255,255,255,0.12)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 8,
-    },
-    tileText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
-        textAlign: 'center',
-    },
+  grid: {
+    paddingTop: gap,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  tileWrapper: { width: CARD_SIZE, marginBottom: gap },
+  tile: {
+    width: '100%',
+    height: CARD_SIZE,
+    borderRadius: theme.radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    ...tileShadow,
+  },
+  tileIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  tileText: {
+    color: theme.colors.surface,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 
-    /* ---------- rodapé ---------- */
-    footer: {
-        backgroundColor: theme.colors.surface,
-    },
-    versionText: {
-        textAlign: 'center',
-        fontSize: 12,
-        color: '#8B98A9',
-        paddingVertical: 4,
-    },
+  versionText: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: theme.colors.muted,
+    paddingVertical: theme.spacing.xs,
+  },
+  lastSyncText: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: theme.colors.muted,
+    marginBottom: theme.spacing.xs,
+  },
 
-    /* ===================== Drawer — NOVO VISUAL ===================== */
-    drawerSafe: { flex: 1, backgroundColor: '#F6F8FB' },
-    drawerScrollContent: { paddingBottom: 24 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: gap,
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    width: '100%',
+    padding: gap,
+    gap: theme.spacing.xs,
+  },
+  modalTitle: {
+    ...theme.typography.heading,
+    fontSize: 16,
+    color: theme.colors.primaryDark,
+  },
+  modalItem: { ...theme.typography.body, color: theme.colors.text },
+  modalButton: {
+    marginTop: theme.spacing.sm,
+    alignSelf: 'flex-end',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.primaryDark,
+    borderRadius: theme.radius.sm,
+  },
+  modalButtonText: { ...theme.typography.button },
 
-    // Banner (gradiente + sombra)
-    /* --- Banner melhorado --- */
-    drawerBanner: {
-        marginHorizontal: 16,
-        marginTop: 12,
-        borderRadius: 20,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        elevation: 3,
-        position: 'relative',
-    },
-// shapes circulares de fundo (decor)
-    drawerDecorA: {
-        position: 'absolute',
-        right: -30,
-        top: -30,
-        width: 140,
-        height: 140,
-        borderRadius: 70,
-        backgroundColor: 'rgba(255,255,255,0.08)',
-    },
-    drawerDecorB: {
-        position: 'absolute',
-        right: 30,
-        top: 30,
-        width: 90,
-        height: 90,
-        borderRadius: 45,
-        backgroundColor: 'rgba(255,255,255,0.06)',
-    },
-
-    drawerBannerTop: {
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 6,
-        alignItems: 'flex-end',
-    },
-    drawerLogo: { width: 96, height: 28, opacity: 0.95 },
-
-    drawerHeaderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingBottom: 16,
-    },
-
-// avatar + ring
-    drawerAvatarRing: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: 'rgba(255,255,255,0.35)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    drawerAvatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        borderWidth: 2,
-        borderColor: '#fff',
-        backgroundColor: '#fff',
-    },
-    drawerAvatarFallback: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
-
-    drawerHeaderText: { flex: 1, minWidth: 0 },
-
-    drawerNameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    drawerName: { color: '#fff', fontSize: 18, fontWeight: '800', maxWidth: '110%' },
-
-// badge de perfil
-    perfilBadge: {
-        backgroundColor: '#E5EEF9',
-        borderRadius: 999,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    perfilBadgeText: {
-        color: '#0A2647',
-        fontSize: 12,
-        fontWeight: '700',
-    },
-
-// pílula grande para unidade
-    unidadePill: {
-        marginTop: 10,
-        alignSelf: 'flex-start',
-        backgroundColor: '#EAF1FA',
-        borderRadius: 999,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 6,
-        maxWidth: '100%',
-    },
-    unidadePillText: {
-        color: '#0A2647',
-        fontSize: 13,
-        fontWeight: '700',
-    },
-
-// chips compactos
-    drawerChipsRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, gap: 8 },
-    drawerChipSm: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        borderRadius: 999,
-    },
-    drawerChipSmText: { color: '#0A2647', fontSize: 12, fontWeight: '600' },
-
-// (mantém estes)
-    drawerListCard: {
-        backgroundColor: 'transparent',   // sem fundo de “cartão”
-        marginHorizontal: 0,
-        marginTop: (theme?.spacing?.md ?? 16),
-        borderRadius: 0,
-        ...Platform.select({
-            android: {
-                elevation: 0,
-            },
-            ios: {
-                shadowColor: 'transparent',
-                shadowOpacity: 0,
-                shadowRadius: 0,
-                shadowOffset: { width: 0, height: 0 },
-            },
-        }),
-    },
-    drawerFooter: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 },
-    logoutPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        alignSelf: 'stretch',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        backgroundColor: '#fff',
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: '#D7E1EE',
-    },
-    logoutPillText: { color: theme?.colors?.primaryDark ?? '#0A2647', fontWeight: '800' },
-
-    /* ---------- Modal (Novidades) ---------- */
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.35)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: GAP,
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        width: '100%',
-        padding: GAP,
-    },
-    modalTitle: {
-        fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 8,
-        color: theme?.colors?.primaryDark ?? '#0A2647',
-    },
-    modalItem: { fontSize: 14, marginBottom: 6, color: '#2C3E50' },
-    modalButton: {
-        marginTop: 12,
-        alignSelf: 'flex-end',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        backgroundColor: theme?.colors?.primaryDark ?? '#0A2647',
-        borderRadius: 8,
-    },
-    modalButtonText: { color: '#fff', fontWeight: '600' },
+  drawerSafe: { flex: 1, backgroundColor: theme.colors.background },
+  drawerScrollContent: { paddingBottom: theme.spacing.lg },
+  drawerBanner: {
+    marginHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
+    position: 'relative',
+    ...bannerShadow,
+  },
+  drawerDecorA: {
+    position: 'absolute',
+    right: -30,
+    top: -30,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  drawerDecorB: {
+    position: 'absolute',
+    right: 30,
+    top: 30,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  drawerBannerTop: {
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xs,
+    alignItems: 'flex-end',
+  },
+  drawerLogo: { width: 96, height: 28, opacity: 0.95 },
+  drawerHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
+  },
+  drawerAvatarRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.sm,
+  },
+  drawerAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: theme.colors.surface,
+    backgroundColor: theme.colors.surface,
+  },
+  drawerAvatarFallback: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: theme.colors.surface,
+  },
+  drawerHeaderText: { flex: 1, minWidth: 0 },
+  drawerNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  drawerName: { color: theme.colors.surface, fontSize: 18, fontWeight: '800', maxWidth: '110%' },
+  unidadePill: {
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-start',
+    backgroundColor: '#EAF1FA',
+    borderRadius: 999,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.xs,
+    maxWidth: '100%',
+  },
+  unidadePillText: { color: theme.colors.primaryDark, fontSize: 13, fontWeight: '700' },
+  drawerChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  drawerChipSm: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 999,
+  },
+  drawerChipSmText: { color: theme.colors.primaryDark, fontSize: 12, fontWeight: '600' },
+  drawerListCard: {
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
+    marginTop: theme.spacing.md,
+    borderRadius: 0,
+    ...Platform.select({
+      android: { elevation: 0 },
+      ios: {
+        shadowColor: 'transparent',
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        shadowOffset: { width: 0, height: 0 },
+      },
+      default: {},
+    }),
+  },
+  drawerFooter: { paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.sm, paddingBottom: theme.spacing.md },
+  logoutPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    alignSelf: 'stretch',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#D7E1EE',
+  },
+  logoutPillText: { color: theme.colors.primaryDark, fontWeight: '800' },
 });
 
 export default styles;

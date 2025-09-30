@@ -1,11 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import SelectField, { type SelectOption } from '@/components/SelectField';
-import theme from '@/theme';
 import { consultarPorModalidade, type Empresa } from '@/api/consultarEmpresas';
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
@@ -16,6 +15,7 @@ import {
   type ModalidadeItem,
   type ModalidadeTipo,
 } from '../../../../../utils/modalidades';
+import styles from './styles';
 
 export default function Modalidade(): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
@@ -173,48 +173,3 @@ export default function Modalidade(): React.JSX.Element {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.md,
-  },
-  formulario: {
-    marginBottom: theme.spacing.md,
-  },
-  titulo: {
-    ...theme.typography.heading,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  botao: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    alignItems: 'center',
-    marginTop: theme.spacing.sm,
-  },
-  botaoPressionado: {
-    opacity: 0.85,
-  },
-  botaoDesabilitado: {
-    opacity: 0.5,
-  },
-  botaoTexto: {
-    ...theme.typography.button,
-  },
-  contador: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-    marginBottom: theme.spacing.sm,
-  },
-  nenhumResultado: {
-    textAlign: 'center',
-    color: theme.colors.muted,
-    marginTop: theme.spacing.md,
-  },
-  listaVazia: {
-    flexGrow: 1,
-  },
-});

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import theme from '@/theme';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import styles from './styles';
 
 const options = [
   { label: 'Por CNPJ / Razão Social', route: 'CnpjRazao' as const },
@@ -28,15 +28,8 @@ export default function ConsultarAutorizadasMenu() {
           accessibilityLabel={`Abrir consulta ${o.label}`}
         >
           <Text style={styles.optionText}>{o.label}</Text>
-        </Pressable>
+      </Pressable>
       ))}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: theme.spacing.md, backgroundColor: theme.colors.surface },
-  title: { ...theme.typography.heading, textAlign: 'center', marginBottom: theme.spacing.lg },
-  option: { backgroundColor: theme.colors.primary, padding: theme.spacing.md, borderRadius: theme.radius.md, marginBottom: theme.spacing.sm },
-  optionText: { ...theme.typography.button },
-});

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDrawerStatus, DrawerNavigationProp } from '@react-navigation/drawer';
 import HomeHeader from '../../components/HomeHeader';
@@ -9,6 +9,8 @@ import { getUltimaVersao } from '@/utils/releases';
 import theme from '@/theme';
 import styles from './styles';
 import type { DrawerParamList } from '@/types/types';
+import { syncGestorDatabase, loadGestorSyncStatus } from '@/services/gestorbd';
+import { formatDateTime } from '@/utils/dates';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -18,6 +20,8 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
     const [userName, setUserName] = useState<string>('');
     const [expiresIn, setExpiresIn] = useState<string>('');
     const [showModal, setShowModal] = useState(false);
+    const [syncing, setSyncing] = useState(false);
+    const [lastSync, setLastSync] = useState<string | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -53,6 +57,18 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
         }
     }, [route?.params?.showReleases]);
 
+    useEffect(() => {
+        let mounted = true;
+        loadGestorSyncStatus().then(status => {
+            if (mounted && status?.updatedAt) {
+                setLastSync(formatDateTime(status.updatedAt));
+            }
+        });
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
     type Item = { key: keyof DrawerParamList; title: string; icon: string };
     const items: Item[] = useMemo(
         () => [
@@ -71,6 +87,31 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
     const isDrawerOpen = drawerStatus === 'open';
     const openDrawer = useCallback(() => navigation.openDrawer(), [navigation]);
     const openNotifications = useCallback(() => navigation.navigate('Notificacoes'), [navigation]);
+    const handleSyncGestor = useCallback(async () => {
+        if (syncing) {
+            return;
+        }
+        setSyncing(true);
+        try {
+            const status = await syncGestorDatabase();
+            const formatted = formatDateTime(status.updatedAt);
+            setLastSync(formatted);
+            const { autorizadas, irregularidades, equipe } = status.counts;
+            Alert.alert(
+                'Dados atualizados',
+                `Autorizadas: ${autorizadas}\nIrregularidades: ${irregularidades}\nEquipe: ${equipe}`,
+            );
+        } catch (error) {
+            console.error('[gestorbd] sincronização', error);
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Não foi possível baixar os dados. Tente novamente.';
+            Alert.alert('Erro ao atualizar', message);
+        } finally {
+            setSyncing(false);
+        }
+    }, [syncing]);
     const closeModal = useCallback(() => {
         setShowModal(false);
         navigation.setParams({ showReleases: undefined });
@@ -85,7 +126,12 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
                 barStyle={isDrawerOpen ? 'dark-content' : 'light-content'}
                 backgroundColor={isDrawerOpen ? theme.colors.surface : theme.colors.primaryDark}
             />
-            <HomeHeader onMenuPress={openDrawer} onNotificationsPress={openNotifications} />
+            <HomeHeader
+                onMenuPress={openDrawer}
+                onNotificationsPress={openNotifications}
+                onSyncPress={handleSyncGestor}
+                syncing={syncing}
+            />
 
             <View style={styles.greetingBox}>
                 <View style={styles.greetingTexts}>
@@ -106,6 +152,9 @@ export default function HomeScreen({ navigation, route }: { navigation: HomeScre
             >
                 <View style={styles.section}>
                     <TileGrid items={items} navigation={navigation} />
+                    {lastSync ? (
+                        <Text style={styles.lastSyncText}>Última atualização do banco: {lastSync}</Text>
+                    ) : null}
                     <Text style={styles.versionText}>Versão WS: {versaoStr}</Text>
                 </View>
             </ScrollView>

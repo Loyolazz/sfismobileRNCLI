@@ -128,9 +128,6 @@ export default function HomeFiscalizacao({ route, navigation }: Props) {
           };
         }}
       />
-
-
-      {/* Itens exibidos no Drawer */}
       <Drawer.Screen
         name="RelatorioUsuario"
         component={RelatorioUsuario}
