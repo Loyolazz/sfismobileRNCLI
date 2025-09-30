@@ -7,13 +7,13 @@ import theme from '@/theme';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 import HeaderBackButton from '../components/HeaderBackButton';
 
-import ConsultarAutorizadasMenu from './MenuScreen';
-import CnpjRazao from './CnpjRazao';
-import Modalidade from './Modalidade';
-import Embarcacao from './Embarcacao';
-import Instalacao from './Instalacao';
-import Detalhes from './Detalhes';
-import Mapa from './Mapa';
+import ConsultarAutorizadasMenu from './screens/Menu';
+import CnpjRazao from './screens/CnpjRazao';
+import Modalidade from './screens/Modalidade';
+import Embarcacao from './screens/Embarcacao';
+import Instalacao from './screens/Instalacao';
+import Detalhes from './screens/Detalhes';
+import Mapa from './screens/Mapa';
 
 const Stack = createNativeStackNavigator<ConsultarAutorizadasStackParamList>();
 

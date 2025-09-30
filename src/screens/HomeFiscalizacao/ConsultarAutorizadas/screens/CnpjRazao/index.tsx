@@ -1,20 +1,21 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextInput, Pressable, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { buscarEmpresasAutorizadas, type Empresa } from '@/api/consultarEmpresas';
 import theme from '@/theme';
-import { consultarPorModalidade, type Empresa } from '@/api/consultarEmpresas';
-import EmpresaCard from '../components/EmpresaCard';
+import EmpresaCard from '../../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 
-export default function Modalidade() {
+export default function CnpjRazao() {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [query, setQuery] = useState('');
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
@@ -31,33 +32,44 @@ export default function Modalidade() {
   );
 
   const handleSearch = useCallback(async () => {
-    if (!hasText(query)) {
-      Alert.alert('Atenção', 'Informe a modalidade para prosseguir.');
+    const q = query.trim();
+    if (!hasText(q)) {
+      Alert.alert('Atenção', 'Digite um CNPJ ou Razão Social.');
       return;
     }
     try {
       setLoading(true);
-      const result = await consultarPorModalidade(query);
-      setData(result);
-    } catch {
-      Alert.alert('Erro', 'Não foi possível consultar empresas');
+      const result = await buscarEmpresasAutorizadas(q);
+      setData(Array.isArray(result) ? result : []);
+      setPesquisaRealizada(true);
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível consultar empresas.');
     } finally {
       setLoading(false);
     }
   }, [query]);
 
+  const emptyListStyle = useMemo(
+    () => (data.length === 0 && pesquisaRealizada ? styles.emptyList : undefined),
+    [data.length, pesquisaRealizada],
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <Text style={styles.label}>Informe a Modalidade</Text>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <Text style={styles.label}>Digite o CNPJ ou Razão Social</Text>
+
       <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Modalidade"
-        autoCapitalize="words"
+        placeholder="CNPJ ou Razão Social"
+        autoCapitalize="characters"
         autoCorrect={false}
-        style={styles.input}
+        returnKeyType="search"
+        onSubmitEditing={handleSearch}
         editable={!loading}
+        style={styles.input}
       />
+
       <Pressable
         style={({ pressed }) => [
           styles.button,
@@ -66,13 +78,22 @@ export default function Modalidade() {
         ]}
         onPress={handleSearch}
         disabled={loading || !hasText(query)}
+        accessibilityRole="button"
+        accessibilityLabel="Pesquisar empresas por CNPJ ou Razão Social"
       >
         <Text style={styles.buttonText}>{loading ? 'Pesquisando...' : 'Pesquisar'}</Text>
       </Pressable>
+
       <FlatList
         data={data}
-        keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
+        keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
         renderItem={renderItem}
+        contentContainerStyle={emptyListStyle}
+        ListEmptyComponent={
+          !loading && pesquisaRealizada ? (
+            <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
+          ) : null
+        }
         ListHeaderComponent={
           data.length > 0 ? (
             <Text style={styles.count}>
@@ -80,9 +101,6 @@ export default function Modalidade() {
             </Text>
           ) : null
         }
-        ListEmptyComponent={!loading ? (
-          <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
-        ) : null}
       />
     </SafeAreaView>
   );
@@ -90,24 +108,32 @@ export default function Modalidade() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: theme.spacing.md, backgroundColor: theme.colors.surface },
-  label: { marginBottom: theme.spacing.sm, color: theme.colors.text },
+  label: { marginBottom: theme.spacing.sm, ...theme.typography.heading },
   input: {
     borderWidth: 1,
     borderColor: theme.colors.muted,
     borderRadius: theme.radius.sm,
     padding: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.background,
   },
   button: {
     backgroundColor: theme.colors.primary,
-    padding: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
     borderRadius: theme.radius.sm,
     alignItems: 'center',
     marginBottom: theme.spacing.md,
   },
   buttonPressed: { opacity: 0.85 },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { ...theme.typography.button },
-  empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
-  count: { ...theme.typography.caption, color: theme.colors.muted, marginBottom: theme.spacing.sm },
+  buttonText: { ...theme.typography.button, color: theme.colors.surface },
+  emptyList: {
+    flexGrow: 1,
+  },
+  empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.lg },
+  count: {
+    ...theme.typography.caption,
+    color: theme.colors.muted,
+    marginBottom: theme.spacing.sm,
+  },
 });
