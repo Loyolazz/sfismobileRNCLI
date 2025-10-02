@@ -65,7 +65,10 @@ export default function LoginScreen() {
                 Toast.error(msg);
                 return;
             }
-            const { token, servidor } = await usuarioAutenticar(usuario, senha);
+          const { token, servidor } = await usuarioAutenticar({
+            loginUsuario: usuario,
+            senhaUsuario: senha,
+          });
             await saveSession({ token, usuario: servidor }, keepConnected, 14);
             Toast.success("Login realizado com sucesso!");
             navigation.replace("HomeDrawer", { showReleases: "1" });

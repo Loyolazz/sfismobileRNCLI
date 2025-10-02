@@ -124,6 +124,12 @@ function parseMaybeJson(value: unknown): unknown {
 function buildPayloadFallback(item: Record<string, unknown>): Partial<EmpresaPayload> {
   const tpInscricao = getFieldValue(item, 'TPINSCRICAO', 'TPInscricao');
   const contrato = getFieldValue(item, 'IDCONTRATOARRENDAMENTO', 'IDContratoArrendamento');
+  const montanteInvestimento = getFieldValue(
+    item,
+    'VLMONTANTEINVESTIMENTO',
+    'VLMontanteInvestimento',
+  );
+
 
   return {
     NORazaoSocial: toStringValue(getFieldValue(item, 'NORAZAOSOCIAL', 'NORazaoSocial')),
@@ -146,7 +152,7 @@ function buildPayloadFallback(item: Record<string, unknown>): Partial<EmpresaPay
     NomeContato: toStringValue(getFieldValue(item, 'NOMECONTATO', 'NomeContato')),
     Email: toStringValue(getFieldValue(item, 'EMAIL', 'Email')),
     IDContratoArrendamento: toNumberValue(contrato) ?? toStringValue(contrato),
-    VLMontanteInvestimento: getFieldValue(item, 'VLMONTANTEINVESTIMENTO', 'VLMontanteInvestimento'),
+    VLMontanteInvestimento: toNumberValue(montanteInvestimento) ?? toStringValue(montanteInvestimento),
     NRTLO: toStringValue(getFieldValue(item, 'NRTLO', 'NRTlo')),
     NRResolucao: toStringValue(getFieldValue(item, 'NRRESOLUCAO', 'NRResolucao')),
     AutoridadePortuaria: toStringValue(getFieldValue(item, 'AUTORIDADEPORTUARIA', 'AutoridadePortuaria')),

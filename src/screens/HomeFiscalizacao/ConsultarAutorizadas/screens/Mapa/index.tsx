@@ -550,7 +550,9 @@ export default function MapaInstalacao(): React.JSX.Element {
           <Text style={styles.listaTitulo}>Instalações disponíveis</Text>
           <FlatList
             data={instalacoes}
-            keyExtractor={(item, index) => `${item.cdInstalacaoPortuaria || item.nome || index}`}
+            keyExtractor={(item, index) =>
+              `${item.cdInstalacaoPortuaria || item.cnpj || item.nome || 'instalacao'}-${index}`
+            }
             renderItem={renderItem}
             horizontal
             showsHorizontalScrollIndicator={false}

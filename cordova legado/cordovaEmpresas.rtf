@@ -1,0 +1,2824 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;\f1\fmodern\fcharset0 Courier-BoldOblique;}
+{\colortbl;\red255\green255\blue255;\red191\green100\blue38;\red32\green32\blue32;\red254\green187\blue91;
+\red153\green168\blue186;\red88\green118\blue71;\red109\green109\blue109;\red133\green96\blue154;\red86\green132\blue173;
+\red225\green179\blue88;\red172\green172\blue172;\red149\green184\blue79;\red41\green50\blue40;}
+{\*\expandedcolortbl;;\csgenericrgb\c74902\c39216\c14902;\csgenericrgb\c12549\c12549\c12549;\csgenericrgb\c99608\c73333\c35686;
+\csgenericrgb\c60000\c65882\c72941;\csgenericrgb\c34510\c46275\c27843;\csgenericrgb\c42745\c42745\c42745;\csgenericrgb\c52157\c37647\c60392;\csgenericrgb\c33725\c51765\c67843;
+\csgenericrgb\c88235\c70196\c34510;\csgenericrgb\c67451\c67451\c67451;\csgenericrgb\c58431\c72157\c30980;\csgenericrgb\c16078\c19608\c15686;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww29200\viewh18460\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf2 \cb3 async function \cf4 gestorCarregarAutorizadasWebAsinc\cf5 ($http) \{\
+    \cf2 try \cf5 \{\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Atualizando Dados"\cf5 )\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        \cf2 let \cf5 firstFunction = \cf2 new \cf4 Promise\cf5 (\cf2 function \cf5 (resolve\cf2 , \cf5 reject) \{\
+\
+            \cf2 var \cf5 data = \{\cf8 modalidade\cf5 : \cf6 ''\cf2 , \cf8 cnpjRazaosocial\cf5 : \cf6 ''\cf5 \}\
+            $http(\{\
+                \cf8 url\cf5 : \cf4 urlService\cf5 () + \cf6 'ListarEmpresasAutorizadas'\cf2 ,\
+                \cf8 method\cf5 : \cf6 "POST"\cf2 ,\
+                \cf8 data\cf5 : data\
+            \})\
+                .\cf4 then\cf5 (\cf2 async function \cf5 (response) \{\
+\
+                    \cf2 try \cf5 \{\
+                        \cf2 if \cf5 (response.\cf8 status \cf5 == \cf9 200\cf5 ) \{\
+                            \cf7 //...\
+                            \cf4 openDB\cf5 ()\cf2 ;\
+\
+                            \cf7 //...\
+                            
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 async function \cf5 (tx) \{\
+                                \cf7 //..\
+                                \cf5 tx.\cf4 executeSql\cf5 (\cf6 "DELETE FROM EMPRESASAUTORIZADAS"\cf5 )\cf2 ;\
+\
+                                \cf7 //..\
+                                \cf5 tx.\cf4 executeSql\cf5 (\cf6 "DELETE FROM EMPRESACONTRATO"\cf5 )\cf2 ;\
+\
+                                \cf7 //...\
+                                \cf2 var \cf5 empresas = response.\cf8 data\cf5 .\cf8 d\cf2 ;\
+\
+                                \cf7 //...\
+                                \cf5 angular.\cf4 forEach\cf5 (empresas\cf2 , async function \cf5 (value\cf2 , \cf5 key) \{\
+                                    \cf2 var \cf5 razaosocial = \cf4 removerAcentos\cf5 (empresas[key].\cf8 NORazaoSocial\cf5 )\cf2 ;\
+                                    var \cf5 modalidade = \cf4 removerAcentos\cf5 (empresas[key].\cf8 Modalidade\cf5 )\cf2 ;\
+                                    var \cf5 cgc = \cf4 formatarCNPJ\cf5 (empresas[key].\cf8 NRInscricao\cf5 )\cf2 ;\
+                                    var \cf5 instalacaosemacentos = \cf4 removerAcentos\cf5 (empresas[key].\cf8 Instalacao\cf5 )\cf2 ;\
+\
+                                    var \cf5 norepresentante = \cf6 ""\cf2 ;\
+                                    var \cf5 nrtelefone = \cf6 ""\cf2 ;\
+                                    var \cf5 eerepresentante = \cf6 ""\cf2 ;\
+\
+                                    if \cf5 (empresas[key].STIntimacaoViaTelefone || empresas[key].STIntimacaoViaEmail) \{\
+                                        norepresentante = empresas[key].NORepresentante\cf2 ;\
+                                        if \cf5 (empresas[key].STIntimacaoViaTelefone) \{\
+                                            nrtelefone = empresas[key].\cf8 NRTelefone\cf2 ;\
+                                        \cf5 \}\
+                                        \cf2 if \cf5 (empresas[key].STIntimacaoViaEmail) \{\
+                                            eerepresentante = empresas[key].\cf8 EERepresentante\cf2 ;\
+                                        \cf5 \}\
+                                    \}\
+\
+                                    \cf7 //if(cgc == '21160021000144')\
+                                    //\{\
+                                    //    console.log(empresas[key].NRInstrumento);\
+                                    //\}\
+\
+                                    \cf2 var \cf5 query = \cf6 "INSERT INTO EMPRESASAUTORIZADAS ( " \cf5 +\
+                                        \cf6 "  ID" \cf5 +\
+                                        \cf6 " ,AREAPPF " \cf5 +\
+                                        \cf6 " ,DSBAIRRO " \cf5 +\
+                                        \cf6 " ,DSENDERECO " \cf5 +\
+                                        \cf6 " ,DTADITAMENTO " \cf5 +\
+                                        \cf6 " ,DTOUTORGA " \cf5 +\
+                                        \cf6 " ,EMAIL " \cf5 +\
+                                        \cf6 " ,INSTALACAO " \cf5 +\
+                                        \cf6 " ,INSTALACAOSEMACENTOS " \cf5 +\
+                                        \cf6 " ,LISTATIPOEMPRESA " \cf5 +\
+                                        \cf6 " ,MODALIDADE " \cf5 +\
+                                        \cf6 " ,NOMUNICIPIO " \cf5 +\
+                                        \cf6 " ,NORAZAOSOCIAL " \cf5 +\
+                                        \cf6 " ,NRADITAMENTO " \cf5 +\
+                                        \cf6 " ,NRCEP " \cf5 +\
+                                        \cf6 " ,NRINSCRICAO " \cf5 +\
+                                        \cf6 " ,NRINSTRUMENTO " \cf5 +\
+                                        \cf6 " ,NOMECONTATO " \cf5 +\
+                                        \cf6 " ,QTDEMBARCACAO " \cf5 +\
+                                        \cf6 " ,SGUF " \cf5 +\
+                                        \cf6 " ,TPINSCRICAO " \cf5 +\
+                                        \cf6 " ,IDCONTRATOARRENDAMENTO " \cf5 +\
+                                        \cf6 " ,VLMONTANTEINVESTIMENTO " \cf5 +\
+                                        \cf6 " ,NRTLO " \cf5 +\
+                                        \cf6 " ,NRRESOLUCAO " \cf5 +\
+                                        \cf6 " ,AUTORIDADEPORTUARIA " \cf5 +\
+                                        \cf6 " ,NRINSCRICAOINSTALACAO " \cf5 +\
+                                        \cf6 " ,NORAZAOSOCIALINSTALACAO " \cf5 +\
+                                        \cf6 " ,NOREPRESENTANTE " \cf5 +\
+                                        \cf6 " ,NRTELEFONE " \cf5 +\
+                                        \cf6 " ,EEREPRESENTANTE " \cf5 +\
+                                        \cf6 " ,NRDOCUMENTOSEI " \cf5 +\
+                                        \cf6 " ) " \cf5 +\
+                                        \cf6 " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"\cf2 ;\
+\
+                                    \cf5 tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 [\
+                                            key\cf2 , \cf5 empresas[key].\cf8 AreaPPF\cf2 , \cf5 empresas[key].\cf8 DSBairro\cf2 , \cf5 empresas[key].\cf8 DSEndereco\cf2 , \cf5 empresas[key].\cf8 DTAditamento\cf2 , \cf5 empresas[key].\cf8 DTOutorga\cf2 , \cf5 empresas[key].\cf8 Email\cf2 , \cf5 empresas[key].\cf8 Instalacao\cf2 , \cf5 instalacaosemacentos\cf2 , \cf5 empresas[key].\cf8 ListaTipoEmpresa\cf2 , \cf5 modalidade\cf2 , \cf5 empresas[key].\cf8 NOMunicipio\cf2 , \cf5 razaosocial\cf2 , \cf5 empresas[key].\cf8 NRAditamento\cf2 , \cf5 empresas[key].\cf8 NRCEP\cf2 , \cf5 cgc\cf2 , \cf5 empresas[key].\cf8 NRInstrumento\cf2 , \cf5 empresas[key].\cf8 NomeContato\cf2 , \cf5 empresas[key].\cf8 QTDEmbarcacao\cf2 , \cf5 empresas[key].\cf8 SGUF\cf2 , \cf5 empresas[key].\cf8 TPInscricao\
+\
+                                            \cf2 , \cf5 empresas[key].\cf8 IDContratoArrendamento\cf2 , \cf5 empresas[key].VLMontanteInvestimento\cf2 , \cf5 empresas[key].NRTLO\cf2 , \cf5 empresas[key].\cf8 NRResolucao\cf2 , \cf5 empresas[key].\cf8 AutoridadePortuaria\
+                                            \cf2 , \cf5 empresas[key].\cf8 NRInscricaoInstalacao\cf2 , \cf5 empresas[key].\cf8 NORazaoSocialInstalacao\cf2 , \cf5 norepresentante\cf2 , \cf5 nrtelefone\cf2 , \cf5 eerepresentante\cf2 , \cf5 empresas[key].\cf8 NRDocumentoSEI\
+                                        \cf5 ]\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                                            
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 "rowsAffected: " \cf5 + res.\cf8 rowsAffected \cf5 + \cf6 " -- should be 1"\cf5 )\cf2 ;\
+                                        \cf5 \}\cf2 ,\
+                                        function \cf5 (tx\cf2 , \cf5 error) \{\
+                                            \cf4 preloaderStop\cf5 ()\cf2 ;\
+                                            
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'INSERT error: ' \cf5 + error.\cf8 message\cf5 )\cf2 ;\
+                                        \cf5 \})\cf2 ;\
+\
+                                    try \cf5 \{\
+                                        \cf2 if \cf5 (empresas[key].\cf8 IDContratoArrendamento \cf5 > \cf9 0\cf5 ) \{\
+                                            \cf2 var \cf5 queryContrato = \cf6 "INSERT INTO EMPRESACONTRATO ( " \cf5 +\
+                                                \cf6 "  ID " \cf5 +\
+                                                \cf6 " ,NRCNPJ " \cf5 +\
+                                                \cf6 " ,IDCONTRATOARRENDAMENTO " \cf5 +\
+                                                \cf6 " ,IDCLASSIFICAOSUBCLASSIFICAOCARGA " \cf5 +\
+                                                \cf6 " ,IDCLASSIFICAOSUBCLASSIFICAOCARGAPAI " \cf5 +\
+                                                \cf6 " ,IDGRUPOMERCADORIA " \cf5 +\
+                                                \cf6 " ,IDNATUREZACARGA " \cf5 +\
+                                                \cf6 " ,NRVERSAO " \cf5 +\
+                                                \cf6 " ,CDCONTRATO " \cf5 +\
+                                                \cf6 " ,NOGRUPOMERCADORIA " \cf5 +\
+                                                \cf6 " ,VLAREATOTAL " \cf5 +\
+                                                \cf6 " ,IDTIPOSERVICO " \cf5 +\
+                                                \cf6 " ,NOTIPOSERVICO " \cf5 +\
+                                                \cf6 " ,NOCLASSIFICACAOCARGA " \cf5 +\
+                                                \cf6 " ) " \cf5 +\
+                                                \cf6 " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"\cf2 ;\
+\
+                                            \cf5 tx.\cf4 executeSql\cf5 (queryContrato\cf2 , \cf5 [\
+                                                    key\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 NRCnpj\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 IDContratoArrendamento\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 IDClassificaoSubclassificaoCarga\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 IDClassificaoSubclassificaoCargaPai\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 IDGrupoMercadoria\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 IDNaturezaCarga\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 NRVersao\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 CDContrato\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 NOGrupoMercadoria\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 VLAreaTotal\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 IDTipoServico\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 NOTipoServico\cf2 , \cf5 empresas[key].ContratoEmpresa[\cf9 0\cf5 ].\cf8 NOClassificacaoCarga\
+                                                \cf5 ]\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                                                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 "rowsAffectedContratoEmpresa: " \cf5 + res.\cf8 rowsAffected \cf5 + \cf6 " -- should be 1"\cf5 )\cf2 ;\
+                                                \cf5 \}\cf2 ,\
+                                                function \cf5 (tx\cf2 , \cf5 error) \{\
+                                                    \cf4 preloaderStop\cf5 ()\cf2 ;\
+                                                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'INSERT ContratoEmpresa error: ' \cf5 + error.\cf8 message\cf5 )\cf2 ;\
+                                                \cf5 \})\cf2 ;\
+                                        \cf5 \}\
+                                    \} \cf2 catch \cf5 (error) \{\
+                                        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 "Erro contrato empresa" \cf5 + error.\cf8 message\cf5 )\cf2 ;\
+                                    \cf5 \}\
+\
+                                \})\cf2 ;\
+\
+                                \cf7 //...\
+                                \cf4 gestorMarcarAtualizacao\cf5 (\cf6 "EMPRESASAUTORIZADAS"\cf5 )\cf2 ;\
+\
+                                \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                            \cf5 \})\cf2 ;\
+\
+                        \cf5 \}\
+                    \} \cf2 catch \cf5 (erro) \{\
+                        \cf4 logErro\cf5 (\cf6 'gestorCarregarAutorizadasWebAsinc'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'linha'\cf5 : erro.\cf8 lineNumber\cf5 \}))\cf2 ;\
+                        \cf4 preloaderStop\cf5 ()\cf2 ;\
+                        \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                    \cf5 \}\
+\
+                \})\
+                .\cf4 catch\cf5 (\cf2 async function \cf5 () \{\
+                    \cf4 preloaderStop\cf5 ()\cf2 ;\
+                    \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+        \cf5 \}\cf2 , function \cf5 (err) \{\
+            \cf4 logErro\cf5 (\cf6 'gestorCarregarAutorizadasWebAsinc'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'linha'\cf5 : err.\cf8 lineNumber\cf5 \}))\cf2 ;\
+            \cf4 resolve\cf5 (\cf2 true\cf5 )\cf2 ;\
+            \cf4 alert\cf5 (\cf6 'Erro ao carregar dados'\cf5 )\cf2 ;\
+        \cf5 \})\cf2 ;\
+\
+        async function \cf4 secondFunction\cf5 () \{\
+            \cf2 let \cf5 result = \cf2 await \cf5 firstFunction\
+        \}\cf2 ;\
+\
+        await \cf4 secondFunction\cf5 ()\cf2 ;\
+\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarAutorizadasWebAsinc'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'linha'\cf5 : erro.\cf8 lineNumber\cf5 \}))\cf2 ;\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 function \cf4 gestorCarregarAutorizadasWeb\cf5 ($http) \{\
+    \cf2 try \cf5 \{\
+        \cf4 gestorAbrirNotificacao\cf5 (
+\f1\i\b \cf8 idSincAutorizadas
+\f0\i0\b0 \cf2 , \cf6 'Sincronizando dados'\cf2 , \cf6 ' Iniciando...'\cf2 , \cf6 'T'\cf5 )\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Atualizando Dados"\cf5 )\cf2 ;\
+\
+        var \cf5 data = \{\cf8 modalidade\cf5 : \cf6 ''\cf2 , \cf8 cnpjRazaosocial\cf5 : \cf6 ''\cf5 \}\
+        $http(\{\
+            \cf8 url\cf5 : \cf4 urlService\cf5 () + \cf6 'ListarEmpresasAutorizadas'\cf2 ,\
+            \cf8 method\cf5 : \cf6 "POST"\cf2 ,\
+            \cf8 data\cf5 : data\
+        \})\
+            .\cf4 then\cf5 (\cf2 function \cf5 (response) \{\
+                \cf2 try \cf5 \{\
+                    \cf2 if \cf5 (response.\cf8 status \cf5 == \cf9 200\cf5 ) \{\
+                        
+\f1\i\b \cf8 idSincFinalizar 
+\f0\i0\b0 \cf5 = \cf9 0\cf2 ;\
+\
+                        \cf7 //...\
+                        \cf4 openDB\cf5 ()\cf2 ;\
+\
+                        \cf7 //...\
+                        
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+                            \cf7 //...\
+                            \cf5 tx.\cf4 executeSql\cf5 (\cf6 "DELETE FROM EMPRESASAUTORIZADAS"\cf5 )\cf2 ;\
+\
+                            \cf7 //...\
+                            \cf2 var \cf5 empresas = response.\cf8 data\cf5 .\cf8 d\cf2 ;\
+\
+                            \cf7 //...\
+                            \cf5 angular.\cf4 forEach\cf5 (empresas\cf2 , function \cf5 (value\cf2 , \cf5 key) \{\
+                                \cf2 var \cf5 razaosocial = \cf4 removerAcentos\cf5 (empresas[key].\cf8 NORazaoSocial\cf5 )\cf2 ;\
+                                var \cf5 modalidade = \cf4 removerAcentos\cf5 (empresas[key].\cf8 Modalidade\cf5 )\cf2 ;\
+                                var \cf5 cgc = \cf4 formatarCNPJ\cf5 (empresas[key].\cf8 NRInscricao\cf5 )\cf2 ;\
+                                var \cf5 instalacaosemacentos = \cf4 removerAcentos\cf5 (empresas[key].\cf8 Instalacao\cf5 )\cf2 ;\
+\
+                                var \cf5 norepresentante = \cf6 ""\cf2 ;\
+                                var \cf5 nrtelefone = \cf6 ""\cf2 ;\
+                                var \cf5 eerepresentante = \cf6 ""\cf2 ;\
+\
+                                if \cf5 (empresas[key].STIntimacaoViaTelefone || empresas[key].STIntimacaoViaEmail) \{\
+                                    norepresentante = empresas[key].NORepresentante\cf2 ;\
+                                    if \cf5 (empresas[key].STIntimacaoViaTelefone) \{\
+                                        nrtelefone = empresas[key].\cf8 NRTelefone\cf2 ;\
+                                    \cf5 \}\
+                                    \cf2 if \cf5 (empresas[key].STIntimacaoViaEmail) \{\
+                                        eerepresentante = empresas[key].\cf8 EERepresentante\cf2 ;\
+                                    \cf5 \}\
+                                \}\
+\
+                                \cf2 var \cf5 query = \cf6 "INSERT INTO EMPRESASAUTORIZADAS ( " \cf5 +\
+                                    \cf6 "  ID" \cf5 +\
+                                    \cf6 " ,AREAPPF " \cf5 +\
+                                    \cf6 " ,DSBAIRRO " \cf5 +\
+                                    \cf6 " ,DSENDERECO " \cf5 +\
+                                    \cf6 " ,DTADITAMENTO " \cf5 +\
+                                    \cf6 " ,DTOUTORGA " \cf5 +\
+                                    \cf6 " ,EMAIL " \cf5 +\
+                                    \cf6 " ,INSTALACAO " \cf5 +\
+                                    \cf6 " ,INSTALACAOSEMACENTOS " \cf5 +\
+                                    \cf6 " ,LISTATIPOEMPRESA " \cf5 +\
+                                    \cf6 " ,MODALIDADE " \cf5 +\
+                                    \cf6 " ,NOMUNICIPIO " \cf5 +\
+                                    \cf6 " ,NORAZAOSOCIAL " \cf5 +\
+                                    \cf6 " ,NRADITAMENTO " \cf5 +\
+                                    \cf6 " ,NRCEP " \cf5 +\
+                                    \cf6 " ,NRINSCRICAO " \cf5 +\
+                                    \cf6 " ,NRINSTRUMENTO " \cf5 +\
+                                    \cf6 " ,NOMECONTATO " \cf5 +\
+                                    \cf6 " ,QTDEMBARCACAO " \cf5 +\
+                                    \cf6 " ,SGUF " \cf5 +\
+                                    \cf6 " ,TPINSCRICAO " \cf5 +\
+                                    \cf6 " ,NRINSCRICAOINSTALACAO " \cf5 +\
+                                    \cf6 " ,NORAZAOSOCIALINSTALACAO " \cf5 +\
+                                    \cf6 " ,NOREPRESENTANTE " \cf5 +\
+                                    \cf6 " ,NRTELEFONE " \cf5 +\
+                                    \cf6 " ,EEREPRESENTANTE " \cf5 +\
+                                    \cf6 " ,NRDOCUMENTOSEI " \cf5 +\
+                                    \cf6 " ) " \cf5 +\
+                                    \cf6 " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"\cf2 ;\
+\
+                                \cf5 tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 [\
+                                        key\cf2 , \cf5 empresas[key].\cf8 AreaPPF\cf2 , \cf5 empresas[key].\cf8 DSBairro\cf2 , \cf5 empresas[key].\cf8 DSEndereco\cf2 , \cf5 empresas[key].\cf8 DTAditamento\cf2 , \cf5 empresas[key].\cf8 DTOutorga\cf2 , \cf5 empresas[key].\cf8 Email\cf2 , \cf5 empresas[key].\cf8 Instalacao\cf2 , \cf5 instalacaosemacentos\cf2 , \cf5 empresas[key].\cf8 ListaTipoEmpresa\cf2 , \cf5 modalidade\cf2 , \cf5 empresas[key].\cf8 NOMunicipio\cf2 , \cf5 razaosocial\cf2 , \cf5 empresas[key].\cf8 NRAditamento\cf2 , \cf5 empresas[key].\cf8 NRCEP\cf2 , \cf5 cgc\cf2 , \cf5 empresas[key].\cf8 NRInstrumento\cf2 , \cf5 empresas[key].\cf8 NomeContato\cf2 , \cf5 empresas[key].\cf8 QTDEmbarcacao\cf2 , \cf5 empresas[key].\cf8 SGUF\cf2 , \cf5 empresas[key].\cf8 TPInscricao\
+                                        \cf2 , \cf5 empresas[key].\cf8 NRInscricaoInstalacao\cf2 , \cf5 empresas[key].\cf8 NORazaoSocialInstalacao\cf2 , \cf5 norepresentante\cf2 , \cf5 nrtelefone\cf2 , \cf5 eerepresentante\cf2 , \cf5 empresas[key].\cf8 NRDocumentoSEI\
+                                    \cf5 ]\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                                        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 "rowsAffected: " \cf5 + res.\cf8 rowsAffected \cf5 + \cf6 " -- should be 1"\cf5 )\cf2 ;\
+                                    \cf5 \}\cf2 ,\
+                                    function \cf5 (tx\cf2 , \cf5 error) \{\
+                                        \cf4 preloaderStop\cf5 ()\cf2 ;\
+                                        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'INSERT error: ' \cf5 + error.\cf8 message\cf5 )\cf2 ;\
+                                    \cf5 \})\cf2 ;\
+                            \cf5 \})\cf2 ;\
+\
+                            \cf7 //...\
+                            \cf4 gestorMarcarAtualizacao\cf5 (\cf6 "EMPRESASAUTORIZADAS"\cf5 )\cf2 ;\
+\
+                            \cf7 //...\
+                            \cf4 gestorCarregarEquipeWeb\cf5 ($http)\cf2 ;\
+\
+                            \cf7 //...\
+                            \cf4 gestorFecharNotificacao\cf5 (
+\f1\i\b \cf8 idSincAutorizadas
+\f0\i0\b0 \cf2 , \cf6 'Sincronizando Autorizadas'\cf2 , \cf6 'Os dados foram atualizados'\cf2 , \cf6 'F'\cf5 )\cf2 ;\
+\
+                        \cf5 \})\cf2 ;\
+                    \cf5 \}\
+                \} \cf2 catch \cf5 (erro) \{\
+                    \cf4 logErro\cf5 (\cf6 'gestorCarregarAutorizadasWeb'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'linha'\cf5 : erro.\cf8 lineNumber\cf5 \}))\cf2 ;\
+                    \cf4 preloaderStop\cf5 ()\cf2 ;\
+                    
+\f1\i\b \cf8 idSincFinalizar 
+\f0\i0\b0 \cf5 = \cf9 2\cf2 ;\
+                \cf5 \}\
+            \}).\cf4 catch\cf5 (\cf2 function \cf5 () \{\
+            \cf4 preloaderStop\cf5 ()\cf2 ;\
+            
+\f1\i\b \cf8 idSincFinalizar 
+\f0\i0\b0 \cf5 = \cf9 2\cf2 ;\
+        \cf5 \})\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarAutorizadasWeb'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'linha'\cf5 : erro.\cf8 lineNumber\cf5 \}))\cf2 ;\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+        
+\f1\i\b \cf8 idSincFinalizar 
+\f0\i0\b0 \cf5 = \cf9 2\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 function \cf4 gestorCarregarDadosAutorizadas\cf5 (valor\cf2 , \cf5 tipo\cf2 , \cf5 valorNumero) \{\
+    \cf2 try \cf5 \{\
+        valor = \cf4 removerAcentos\cf5 (valor)\cf2 ;\
+        \cf5 valor = valor.\cf4 toUpperCase\cf5 ()\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  EMPRESASAUTORIZADAS.ID " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.AREAPPF " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DSBAIRRO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DSENDERECO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DTADITAMENTO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DTOUTORGA " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.EMAIL " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.INSTALACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.LISTATIPOEMPRESA " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.MODALIDADE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NOMUNICIPIO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NORAZAOSOCIAL " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRADITAMENTO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRCEP " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRINSCRICAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRINSTRUMENTO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NOMECONTATO " \cf5 +\
+            \cf6 " ,(SELECT COUNT(*) AS QTDEMBARCACAO FROM FROTAALOCADA WHERE FROTAALOCADA.NRINSCRICAO = EMPRESASAUTORIZADAS.NRINSCRICAO AND EMPRESASAUTORIZADAS.NRINSTRUMENTO = FROTAALOCADA.NRINSTRUMENTO ) AS QTDEMBARCACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.SGUF " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.TPINSCRICAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRRESOLUCAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.AUTORIDADEPORTUARIA " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NORAZAOSOCIALINSTALACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NOREPRESENTANTE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRTELEFONE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.EEREPRESENTANTE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRDOCUMENTOSEI " \cf5 +\
+            \cf6 " FROM EMPRESASAUTORIZADAS"\cf2 ;\
+\
+\
+        if \cf5 (tipo == \cf6 "MODALIDADE"\cf5 ) \{\
+            query += \cf6 " WHERE UPPER(EMPRESASAUTORIZADAS.MODALIDADE) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+        \cf5 \} \cf2 else if \cf5 (tipo == \cf6 "AUTORIZADA"\cf5 ) \{\
+            query += \cf6 " WHERE (EMPRESASAUTORIZADAS.NRINSCRICAO = '%" \cf5 + valor + \cf6 "%' OR EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO = '%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+        \cf5 \} \cf2 else if \cf5 (tipo == \cf6 "INSTALACAO"\cf5 ) \{\
+            query += \cf6 " WHERE UPPER(EMPRESASAUTORIZADAS.AREAPPF) = 'PORTO' AND UPPER(EMPRESASAUTORIZADAS.INSTALACAOSEMACENTOS) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+        \cf5 \} \cf2 else \cf5 \{\
+            query += \cf6 " WHERE UPPER(EMPRESASAUTORIZADAS.NORAZAOSOCIAL) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+            \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAO LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+            \cf5 query += \cf6 " OR UPPER(EMPRESASAUTORIZADAS.NORAZAOSOCIALINSTALACAO) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+            \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+        \cf5 \}\
+\
+\
+        \cf2 var \cf5 arData = \{\}\cf2 ;\
+        \cf5 arData.\cf8 empresas \cf5 = []\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+            tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                    \cf2 if \cf5 (res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE != \cf6 "Contrato de Passagem"\cf5 ) \{\
+\
+                        \cf2 let \cf5 novoInstrumento = \cf2 null;\
+                        \cf5 novoInstrumento = \cf4 unirTermosRepetidos\cf5 (res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 , \cf5 res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO)\cf2 ;\
+\
+                        let \cf5 DescInstrumento = \cf6 ""\cf2 ;\
+\
+                        let \cf5 n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Longo Curso"\cf5 )\cf2 ;\
+\
+                        if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Cabotagem"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Apoio Portuario"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Apoio Maritimo"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+\
+                        \cf2 if \cf5 (n == \cf2 true\cf5 ) \{\
+                            DescInstrumento = \cf6 "Termo de Autoriza\'e7\'e3o: " \cf5 + novoInstrumento\cf2 ;\
+                        \cf5 \} \cf2 else \cf5 \{\
+                            DescInstrumento = \cf6 "Instrumento: " \cf5 + novoInstrumento\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf7 //...\
+                        \cf5 arData.\cf8 empresas\cf5 .\cf4 push\cf5 (\{\
+                            \cf8 AreaPPF\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).AREAPPF\cf2 ,\
+                            \cf8 DSBairro\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DSBAIRRO\cf2 ,\
+                            \cf8 DSEndereco\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DSENDERECO\cf2 ,\
+                            \cf8 DTAditamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTADITAMENTO\cf2 ,\
+                            \cf8 DTOutorga\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTOUTORGA\cf2 ,\
+                            \cf8 Email\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).EMAIL\cf2 ,\
+                            \cf8 Instalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).INSTALACAO\cf2 ,\
+                            \cf8 ListaTipoEmpresa\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LISTATIPOEMPRESA\cf2 ,\
+                            \cf8 Modalidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 ,\
+                            \cf8 NOMunicipio\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOMUNICIPIO\cf2 ,\
+                            \cf8 NORazaoSocial\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 NORAZAOSOCIAL\cf2 ,\
+                            \cf8 NRAditamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRADITAMENTO\cf2 ,\
+                            \cf8 NRCEP\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 NRCEP\cf2 ,\
+                            \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\cf2 ,\
+                            \cf8 NRInstrumento\cf5 : novoInstrumento\cf2 , \cf7 //res.rows.item(i).NRINSTRUMENTO,\
+                            \cf8 NomeContato\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOMECONTATO\cf2 ,\
+                            \cf8 QTDEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).QTDEMBARCACAO\cf2 ,\
+                            \cf8 SGUF\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 SGUF\cf2 ,\
+                            \cf8 TPInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 TPINSCRICAO\cf2 ,\
+                            \cf8 DescricaoNRInstrumento\cf5 : DescInstrumento\cf2 ,\
+                            \cf8 NRResolucao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRRESOLUCAO\cf2 ,\
+                            \cf8 AutoridadePortuaria\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).AUTORIDADEPORTUARIA\cf2 ,\
+                            \cf8 NRInscricaoInstalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAOINSTALACAO\cf2 ,\
+                            \cf8 NORazaoSocialInstalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NORAZAOSOCIALINSTALACAO\cf2 ,\
+                            \cf8 NOREpresentante\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOREPRESENTANTE\cf2 ,\
+                            \cf8 NRTelefone\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRTELEFONE\cf2 ,\
+                            \cf8 EERepresentante\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).EEREPRESENTANTE\cf2 ,\
+                            \cf8 NRDocumentoSEI\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRDOCUMENTOSEI\
+                        \})\cf2 ;\
+                    \cf5 \}\
+                \}\
+\
+                \cf7 //...\
+                \cf5 angular.\cf4 forEach\cf5 (arData.\cf8 empresas\cf2 , function \cf5 (value\cf2 , \cf5 key) \{\
+                    arData = \cf4 verificaAutorizacao\cf5 (arData\cf2 , \cf5 key)\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+\
+                
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arData.\cf8 empresas\cf5 )\cf2 ;\
+                
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmpresas"\cf5 )\cf2 ;\
+                
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmpresas"\cf2 , \cf5 angular.toJson(arData.\cf8 empresas\cf5 ))\cf2 ;\
+\
+\
+                
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 location \cf5 = \cf6 "empresa.listarAutorizadas.html"\cf2 ;\
+\
+            \cf5 \})\cf2 ;\
+\
+\
+        \cf5 \}\cf2 , function \cf5 (err) \{\
+            \cf4 logErro\cf5 (\cf6 'CarregarDadosAutorizadas'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                \cf6 'valor'\cf5 : valor\cf2 ,\
+                \cf6 'tipo'\cf5 : tipo\cf2 ,\
+                \cf6 'valorNumero'\cf5 : valorNumero\
+            \}))\cf2 ;\
+            \cf4 alert\cf5 (\cf6 'CarregarDadosAutorizadas: An error occured while displaying saved notes'\cf5 )\cf2 ;\
+        \cf5 \})\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'CarregarDadosAutorizadas'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'valor'\cf5 : valor\cf2 ,\
+            \cf6 'tipo'\cf5 : tipo\cf2 ,\
+            \cf6 'valorNumero'\cf5 : valorNumero\
+        \}))\cf2 ;\
+    \cf5 \} \cf2 finally \cf5 \{\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 function \cf4 gestorCarregarDadosEmpresaEmbarcacao\cf5 (nrinscricao\cf2 , \cf5 nrinstrumento) \{\
+    \cf2 try \cf5 \{\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  EMPRESASAUTORIZADAS.ID " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.AREAPPF " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DSBAIRRO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DSENDERECO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DTADITAMENTO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.DTOUTORGA " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.EMAIL " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.INSTALACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.LISTATIPOEMPRESA " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.MODALIDADE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NOMUNICIPIO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NORAZAOSOCIAL " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRADITAMENTO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRCEP " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRINSCRICAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRINSTRUMENTO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NOMECONTATO " \cf5 +\
+            \cf6 " ,(SELECT COUNT(*) AS QTDEMBARCACAO FROM FROTAALOCADA WHERE FROTAALOCADA.NRINSCRICAO = EMPRESASAUTORIZADAS.NRINSCRICAO AND EMPRESASAUTORIZADAS.NRINSTRUMENTO = FROTAALOCADA.NRINSTRUMENTO ) AS QTDEMBARCACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.SGUF " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.TPINSCRICAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRRESOLUCAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.AUTORIDADEPORTUARIA " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NORAZAOSOCIALINSTALACAO " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NOREPRESENTANTE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRTELEFONE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.EEREPRESENTANTE " \cf5 +\
+            \cf6 " ,EMPRESASAUTORIZADAS.NRDOCUMENTOSEI " \cf5 +\
+            \cf6 " FROM EMPRESASAUTORIZADAS"\cf2 ;\
+\
+        \cf5 query += \cf6 " WHERE EMPRESASAUTORIZADAS.NRINSCRICAO = '" \cf5 + nrinscricao + \cf6 "' " \cf5 +\
+            \cf6 " AND EMPRESASAUTORIZADAS.NRINSTRUMENTO = '" \cf5 + nrinstrumento + \cf6 "' "\cf2 ;\
+\
+        var \cf5 arData = \{\}\cf2 ;\
+        \cf5 arData.\cf8 empresas \cf5 = []\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+            tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                    \cf2 if \cf5 (res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE != \cf6 "Contrato de Passagem"\cf5 ) \{\
+\
+                        \cf2 let \cf5 novoInstrumento = \cf2 null;\
+                        \cf5 novoInstrumento = \cf4 unirTermosRepetidos\cf5 (res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 , \cf5 res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO)\cf2 ;\
+\
+                        let \cf5 DescInstrumento = \cf6 ""\cf2 ;\
+\
+                        let \cf5 n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Longo Curso"\cf5 )\cf2 ;\
+\
+                        if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Cabotagem"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Apoio Portuario"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE.\cf4 includes\cf5 (\cf6 "Apoio Maritimo"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+\
+                        \cf2 if \cf5 (n == \cf2 true\cf5 ) \{\
+                            DescInstrumento = \cf6 "Termo de Autoriza\'e7\'e3o: " \cf5 + novoInstrumento\cf2 ;\
+                        \cf5 \} \cf2 else \cf5 \{\
+                            DescInstrumento = \cf6 "Instrumento: " \cf5 + novoInstrumento\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf7 //...\
+                        \cf5 arData.\cf8 empresas\cf5 .\cf4 push\cf5 (\{\
+                            \cf8 AreaPPF\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).AREAPPF\cf2 ,\
+                            \cf8 DSBairro\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DSBAIRRO\cf2 ,\
+                            \cf8 DSEndereco\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DSENDERECO\cf2 ,\
+                            \cf8 DTAditamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTADITAMENTO\cf2 ,\
+                            \cf8 DTOutorga\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTOUTORGA\cf2 ,\
+                            \cf8 Email\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).EMAIL\cf2 ,\
+                            \cf8 Instalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).INSTALACAO\cf2 ,\
+                            \cf8 ListaTipoEmpresa\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LISTATIPOEMPRESA\cf2 ,\
+                            \cf8 Modalidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 ,\
+                            \cf8 NOMunicipio\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOMUNICIPIO\cf2 ,\
+                            \cf8 NORazaoSocial\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 NORAZAOSOCIAL\cf2 ,\
+                            \cf8 NRAditamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRADITAMENTO\cf2 ,\
+                            \cf8 NRCEP\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 NRCEP\cf2 ,\
+                            \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\cf2 ,\
+                            \cf8 NRInstrumento\cf5 : novoInstrumento\cf2 , \cf7 //res.rows.item(i).NRINSTRUMENTO,\
+                            \cf8 NomeContato\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOMECONTATO\cf2 ,\
+                            \cf8 QTDEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).QTDEMBARCACAO\cf2 ,\
+                            \cf8 SGUF\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 SGUF\cf2 ,\
+                            \cf8 TPInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 TPINSCRICAO\cf2 ,\
+                            \cf8 DescricaoNRInstrumento\cf5 : DescInstrumento\cf2 ,\
+                            \cf8 NRResolucao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRRESOLUCAO\cf2 ,\
+                            \cf8 AutoridadePortuaria\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).AUTORIDADEPORTUARIA\cf2 ,\
+                            \cf8 NRInscricaoInstalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAOINSTALACAO\cf2 ,\
+                            \cf8 NORazaoSocialInstalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NORAZAOSOCIALINSTALACAO\cf2 ,\
+                            \cf8 NOREpresentante\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOREPRESENTANTE\cf2 ,\
+                            \cf8 NRTelefone\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRTELEFONE\cf2 ,\
+                            \cf8 EERepresentante\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).EEREPRESENTANTE\cf2 ,\
+                            \cf8 NRDocumentoSEI\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRDOCUMENTOSEI\
+                        \})\cf2 ;\
+                    \cf5 \}\
+                \}\
+\
+                \cf7 //...\
+                \cf5 angular.\cf4 forEach\cf5 (arData.\cf8 empresas\cf2 , function \cf5 (value\cf2 , \cf5 key) \{\
+                    arData = \cf4 verificaAutorizacao\cf5 (arData\cf2 , \cf5 key)\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+\
+                
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arData.\cf8 empresas\cf5 )\cf2 ;\
+                var \cf5 empresas = []\cf2 ;\
+                if \cf5 (arData.\cf8 empresas\cf5 .\cf8 length \cf5 > \cf9 0\cf5 )\
+                    empresas.\cf4 push\cf5 (arData.\cf8 empresas\cf5 [\cf9 0\cf5 ])\cf2 ;\
+                
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmpresas"\cf5 )\cf2 ;\
+                
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmpresas"\cf2 , \cf5 angular.toJson(empresas))\cf2 ;\
+\
+                
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 location \cf5 = \cf6 "empresa.detalharEmbarcacao.html"\cf2 ;\
+\
+            \cf5 \})\cf2 ;\
+\
+\
+        \cf5 \}\cf2 , function \cf5 (err) \{\
+            \cf4 logErro\cf5 (\cf6 'gestorCarregarDadosEmpresaEmbarcacao'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+                \cf6 'nrinstrumento'\cf5 : nrinstrumento\
+            \}))\cf2 ;\
+            \cf4 alert\cf5 (\cf6 'gestorCarregarDadosEmpresaEmbarcacao: An error occured while displaying saved notes'\cf5 )\cf2 ;\
+        \cf5 \})\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarDadosEmpresaEmbarcacao'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+            \cf6 'nrinstrumento'\cf5 : nrinstrumento\
+        \}))\cf2 ;\
+    \cf5 \} \cf2 finally \cf5 \{\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 function \cf4 gestorCarregarDadosEmbarcacoes\cf5 (valor\cf2 , \cf5 valorNumero) \{\
+    \cf2 try \cf5 \{\
+        valor = \cf4 removerAcentos\cf5 (valor)\cf2 ;\
+        \cf5 valor = valor.\cf4 toUpperCase\cf5 ()\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  ID " \cf5 +\
+            \cf6 " ,IDFROTA " \cf5 +\
+            \cf6 " ,TPINSCRICAO " \cf5 +\
+            \cf6 " ,IDEMBARCACAO " \cf5 +\
+            \cf6 " ,STEMBARCACAO " \cf5 +\
+            \cf6 " ,DTINICIO " \cf5 +\
+            \cf6 " ,DTTERMINO " \cf5 +\
+            \cf6 " ,TPAFRETAMENTO " \cf5 +\
+            \cf6 " ,STREGISTRO " \cf5 +\
+            \cf6 " ,IDFROTAPAI " \cf5 +\
+            \cf6 " ,STHOMOLOGACAO " \cf5 +\
+            \cf6 " ,NOEMBARCACAO " \cf5 +\
+            \cf6 " ,NRCAPITANIA " \cf5 +\
+            \cf6 " ,TIPOEMBARCACAO " \cf5 +\
+            \cf6 " ,NRINSCRICAO " \cf5 +\
+            \cf6 " ,NRINSTRUMENTO " \cf5 +\
+            \cf6 " FROM EMBARCACOESINTERIOR "\cf2 ;\
+\
+        \cf5 query += \cf6 " WHERE EXISTS (SELECT NULL FROM EMPRESASAUTORIZADAS WHERE " \cf5 +\
+            \cf6 " IFNULL(EMBARCACOESINTERIOR.TPINSCRICAO,1) = CAST(IFNULL(EMPRESASAUTORIZADAS.TPINSCRICAO,1) AS INT) " \cf5 +\
+            \cf6 " AND EMBARCACOESINTERIOR.NRINSCRICAO = EMPRESASAUTORIZADAS.NRINSCRICAO " \cf5 +\
+            \cf6 " AND EMBARCACOESINTERIOR.NRINSTRUMENTO = EMPRESASAUTORIZADAS.NRINSTRUMENTO) "\cf2 ;\
+\
+        if \cf5 (valor && valor != \cf6 ""\cf5 ) \{\
+            query += \cf6 " AND UPPER(EMBARCACOESINTERIOR.NOEMBARCACAO) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+        \cf5 \}\
+\
+        \cf2 if \cf5 (valorNumero && valorNumero != \cf6 ""\cf5 ) \{\
+            valorNumero = \cf4 removerAcentos\cf5 (valorNumero)\cf2 ;\
+            \cf5 valorNumero = valorNumero.\cf4 toUpperCase\cf5 ().\cf4 trim\cf5 ()\cf2 ;\
+            \cf5 query += \cf6 " AND UPPER(EMBARCACOESINTERIOR.NRCAPITANIA) LIKE UPPER('%" \cf5 + valorNumero + \cf6 "%') "\cf2 ;\
+        \cf5 \}\
+\
+        \cf2 var \cf5 embarcacoes = []\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+            tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                    \cf7 //...\
+                    \cf5 embarcacoes.\cf4 push\cf5 (\{\
+                        \cf8 IDFrota\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDFROTA\cf2 ,\
+                        \cf8 TPInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 TPINSCRICAO\cf2 ,\
+                        \cf8 IDEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDEMBARCACAO\cf2 ,\
+                        \cf8 STEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).STEMBARCACAO\cf2 ,\
+                        \cf8 DTInicio\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTINICIO\cf2 ,\
+                        \cf8 DTTermino\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTTERMINO\cf2 ,\
+                        \cf8 TPAfretamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).TPAFRETAMENTO\cf2 ,\
+                        \cf8 STRegistro\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).STREGISTRO\cf2 ,\
+                        \cf8 IDFrotaPai\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDFROTAPAI\cf2 ,\
+                        \cf8 STHomologacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).STHOMOLOGACAO\cf2 ,\
+                        \cf8 NoEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOEMBARCACAO\cf2 ,\
+                        \cf8 NRCapitania\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRCAPITANIA\cf2 ,\
+                        \cf8 TipoEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).TIPOEMBARCACAO\cf2 ,\
+                        \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\cf2 ,\
+                        \cf8 NRInstrumento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO\
+                    \})\cf2 ;\
+                \cf5 \}\
+\
+                
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (embarcacoes)\cf2 ;\
+                
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmbarcacoes"\cf5 )\cf2 ;\
+                
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmbarcacoes"\cf2 , \cf5 angular.toJson(embarcacoes))\cf2 ;\
+\
+                
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 location \cf5 = \cf6 "empresa.listarEmbarcacoes.html"\cf2 ;\
+\
+            \cf5 \})\cf2 ;\
+\
+\
+        \cf5 \}\cf2 , function \cf5 (err) \{\
+            \cf4 logErro\cf5 (\cf6 'CarregarDadosEmbarcacoes'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                \cf6 'valor'\cf5 : valor\cf2 ,\
+                \cf6 'valorNumero'\cf5 : valorNumero\
+            \}))\cf2 ;\
+            \cf4 alert\cf5 (\cf6 'gestorCarregarDadosEmbarcacoes: An error occured while displaying saved notes'\cf5 )\cf2 ;\
+        \cf5 \})\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarDadosEmbarcacoes'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'valor'\cf5 : valor\cf2 ,\
+            \cf6 'valorNumero'\cf5 : valorNumero\
+        \}))\cf2 ;\
+    \cf5 \} \cf2 finally \cf5 \{\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 async function \cf4 gestorCarregarCadastroAutorizadas\cf5 (valor\cf2 , \cf5 tipo\cf2 , \cf5 nrinstrumento) \{\
+\
+    \cf2 var \cf5 arData = \{\}\cf2 ;\
+    \cf5 arData.\cf8 empresas \cf5 = []\cf2 ;\
+    \cf5 arData.\cf8 contrato \cf5 = []\cf2 ;\
+    let \cf5 flagAgruparInterior = \cf2 false;\
+    let \cf5 modalidade = \cf2 null;\
+\
+    try \cf5 \{\
+        modalidade = \cf4 removerAcentos\cf5 (
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .filtroConsultaCadastroNivel3)\cf2 ;\
+        \cf5 modalidade = modalidade.\cf4 replace\cf5 (\cf6 " (TUP)"\cf2 , \cf6 ""\cf5 )\cf2 ;\
+        \cf5 modalidade = modalidade.\cf4 replace\cf5 (\cf6 " (ETC)"\cf2 , \cf6 ""\cf5 )\cf2 ;\
+        \cf5 modalidade = modalidade.\cf4 replace\cf5 (\cf6 " (IPT)"\cf2 , \cf6 ""\cf5 )\cf2 ;\
+        \cf5 modalidade = modalidade.\cf4 replace\cf5 (\cf6 " (IPR)"\cf2 , \cf6 ""\cf5 )\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (error) \{\
+        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+    \cf5 \}\
+\
+    \cf2 try \cf5 \{\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT "\cf2 ;\
+        \cf5 query += \cf6 "  EMPRESASAUTORIZADAS.ID "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.AREAPPF "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.DSBAIRRO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.DSENDERECO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.DTADITAMENTO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.DTOUTORGA "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.EMAIL "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.INSTALACAO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.LISTATIPOEMPRESA "\cf2 ;\
+        if \cf5 ((modalidade != \cf2 null\cf5 ) && (modalidade != \cf6 "undefined"\cf5 )) \{\
+            query += \cf6 " ,'" \cf5 + modalidade + \cf6 "' as MODALIDADE "\cf2 ;\
+        \cf5 \} \cf2 else \cf5 \{\
+            query += \cf6 " ,EMPRESASAUTORIZADAS.MODALIDADE "\cf2 ;\
+        \cf5 \}\
+        query += \cf6 " ,EMPRESASAUTORIZADAS.NOMUNICIPIO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NORAZAOSOCIAL "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRADITAMENTO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRCEP "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRINSCRICAO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRINSTRUMENTO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NOMECONTATO "\cf2 ;\
+        \cf5 query += \cf6 " ,(SELECT COUNT(*) AS QTDEMBARCACAO FROM FROTAALOCADA WHERE FROTAALOCADA.NRINSCRICAO = EMPRESASAUTORIZADAS.NRINSCRICAO AND EMPRESASAUTORIZADAS.NRINSTRUMENTO = FROTAALOCADA.NRINSTRUMENTO ) AS QTDEMBARCACAO "\cf2 ;\
+        \cf5 query += \cf6 " ,(SELECT COUNT(*) AS QTDEMBARCACAO FROM FROTAALOCADAMARITIMA WHERE FROTAALOCADAMARITIMA.NRINSCRICAO = EMPRESASAUTORIZADAS.NRINSCRICAO ) AS QTDEMBARCACAOMARITIMA "\cf2 ;\
+        \cf5 query += \cf6 " ,(SELECT COUNT(*) FROM EMBARCACAOCONSTRUCAO WHERE EMBARCACAOCONSTRUCAO.NRINSCRICAO = EMPRESASAUTORIZADAS.NRINSCRICAO ) AS QTDEMBARCACAOCONSTRUCAO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.SGUF "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.TPINSCRICAO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.IDCONTRATOARRENDAMENTO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.VLMONTANTEINVESTIMENTO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRTLO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRRESOLUCAO "\cf2 ;\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.AUTORIDADEPORTUARIA "\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO "\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NORAZAOSOCIALINSTALACAO "\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NOREPRESENTANTE "\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRTELEFONE "\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.EEREPRESENTANTE "\
+        \cf5 query += \cf6 " ,EMPRESASAUTORIZADAS.NRDOCUMENTOSEI "\
+        \cf5 query += \cf6 " FROM EMPRESASAUTORIZADAS "\cf2 ;\
+\
+        if \cf5 (tipo == \cf6 "AUTORIZADA"\cf5 ) \{\
+            query += \cf6 " WHERE (EMPRESASAUTORIZADAS.NRINSCRICAO = '" \cf5 + valor + \cf6 "' "\cf2 ;\
+            \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO = '" \cf5 + valor + \cf6 "') "\cf2 ;\
+\
+            \cf5 query += \cf6 " AND EMPRESASAUTORIZADAS.NRINSTRUMENTO = '" \cf5 + nrinstrumento.\cf4 replace\cf5 (\cf6 "TA - "\cf2 , \cf6 ""\cf5 ) + \cf6 "' "\cf2 ;\
+\
+            try \cf5 \{\
+                \cf2 if \cf5 ((modalidade != \cf2 null\cf5 ) && (modalidade != \cf6 "undefined"\cf5 )) \{\
+                    query += \cf6 "AND UPPER(EMPRESASAUTORIZADAS.MODALIDADE) LIKE UPPER('%" \cf5 + modalidade + \cf6 "%') "\cf2 ;\
+                \cf5 \}\
+            \} \cf2 catch \cf5 (error) \{\
+                
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+            \cf5 \}\
+\
+            query += \cf6 " LIMIT 1 "\cf2 ;\
+\
+        \cf5 \} \cf2 else if \cf5 (tipo == \cf6 "AUTORIZADAS"\cf5 ) \{\
+\
+            query += \cf6 " WHERE UPPER( EMPRESASAUTORIZADAS.NORAZAOSOCIAL ) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+            \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAO LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+            \cf5 query += \cf6 " OR UPPER( EMPRESASAUTORIZADAS.NORAZAOSOCIALINSTALACAO ) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+            \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+\
+            \cf7 //...\
+            \cf5 query += \cf6 " GROUP BY EMPRESASAUTORIZADAS.NRINSCRICAO, EMPRESASAUTORIZADAS.MODALIDADE, EMPRESASAUTORIZADAS.NRINSTRUMENTO "\cf2 ;\
+\
+        \cf5 \} \cf2 else \cf5 \{\
+\
+            query += \cf6 " WHERE "\cf2 ;\
+\
+            try \cf5 \{\
+\
+                \cf2 if \cf5 (modalidade != \cf2 null\cf5 ) \{\
+                    \cf2 let \cf5 n = \cf2 false;\
+                    try \cf5 \{\
+                        \cf7 //boolean inserido para evitar a mesclagem de Ex.: Registro de Estacao .... com Estacao de transbordo de carga\
+                        \cf5 n = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "LONGO CURSO"\cf5 )\cf2 ;\
+                        if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "CABOTAGEM"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "APOIO PORTUARIO"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+                            n = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "APOIO MARITIMO"\cf5 )\cf2 ;\
+                        \cf5 \}\
+                    \} \cf2 catch \cf5 (error) \{\
+                        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+                    \cf5 \}\
+\
+\
+                    \cf2 try \cf5 \{\
+                        \cf7 //boolean inserido para evitar a mesclagem de Ex.: Registro de Estacao .... com Estacao de transbordo de carga\
+                        \cf5 flagAgruparInterior = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "LONGITUDINAL DE CARGA"\cf5 )\cf2 ;\
+                        if \cf5 (flagAgruparInterior == \cf2 false\cf5 ) \{\
+                            flagAgruparInterior = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "LONGITUDINAL DE PASSAGEIROS"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (flagAgruparInterior == \cf2 false\cf5 ) \{\
+                            flagAgruparInterior = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "LONGITUDINAL MISTO"\cf5 )\cf2 ;\
+                        \cf5 \}\
+\
+                        \cf2 if \cf5 (flagAgruparInterior == \cf2 false\cf5 ) \{\
+                            flagAgruparInterior = modalidade.\cf4 toUpperCase\cf5 ().\cf4 includes\cf5 (\cf6 "TRAVESSIA"\cf5 )\cf2 ;\
+                        \cf5 \}\
+                    \} \cf2 catch \cf5 (error) \{\
+                        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+                    \cf5 \}\
+\
+                    \cf2 if \cf5 (n == \cf2 true\cf5 ) \{\
+                        query += \cf6 " UPPER(EMPRESASAUTORIZADAS.MODALIDADE) LIKE UPPER('%" \cf5 + modalidade + \cf6 "%') "\cf2 ;\
+                    \cf5 \} \cf2 else \cf5 \{\
+                        query += \cf6 " UPPER(EMPRESASAUTORIZADAS.MODALIDADE) LIKE UPPER('" \cf5 + modalidade + \cf6 "%') "\cf2 ;\
+\
+                    \cf5 \}\
+\
+\
+                \}\
+            \} \cf2 catch \cf5 (error) \{\
+                
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+            \cf5 \}\
+\
+            \cf2 try \cf5 \{\
+                \cf2 if \cf5 ((valor != \cf2 null\cf5 ) && (valor != \cf6 ""\cf5 )) \{\
+                    valor = \cf4 removerAcentos\cf5 (valor)\cf2 ;\
+                    \cf5 valor = valor.\cf4 toUpperCase\cf5 ()\cf2 ;\
+\
+                    \cf5 query += \cf6 " AND UPPER(EMPRESASAUTORIZADAS.NORAZAOSOCIAL) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+                    \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAO LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+                    \cf5 query += \cf6 " OR UPPER(EMPRESASAUTORIZADAS.NORAZAOSOCIALINSTALACAO) LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+                    \cf5 query += \cf6 " OR EMPRESASAUTORIZADAS.NRINSCRICAOINSTALACAO LIKE UPPER('%" \cf5 + valor + \cf6 "%') "\cf2 ;\
+                \cf5 \}\
+\
+            \} \cf2 catch \cf5 (error) \{\
+                
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+            \cf5 \}\
+\
+            \cf2 if \cf5 (flagAgruparInterior == \cf2 true\cf5 ) \{\
+                query += \cf6 " GROUP BY EMPRESASAUTORIZADAS.NRINSCRICAO, EMPRESASAUTORIZADAS.MODALIDADE, EMPRESASAUTORIZADAS.NRINSTRUMENTO "\cf2 ;\
+            \cf5 \}\
+\
+            query += \cf6 " ORDER BY EMPRESASAUTORIZADAS.NORAZAOSOCIAL "\cf2 ;\
+            \cf5 query += \cf6 " LIMIT 3000 "\cf2 ;\
+        \cf5 \}\
+\
+\
+        \cf7 /*===============================================*/\
+        \cf2 let \cf5 firstFunction = \cf2 new \cf4 Promise\cf5 (\cf2 function \cf5 (resolve\cf2 , \cf5 reject) \{\
+\
+            
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 async function \cf5 (tx) \{\
+                tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , async function \cf5 (tx\cf2 , \cf5 res) \{\
+                    \cf2 let \cf5 qtdRegAutorizada = res.\cf8 rows\cf5 .\cf8 length\cf2 ;\
+\
+                    for \cf5 (\cf2 let \cf5 i = \cf9 0\cf2 ; \cf5 i < qtdRegAutorizada\cf2 ; \cf5 i++) \{\
+                        \cf7 //...\
+                        \cf5 arData.\cf8 empresas\cf5 .\cf4 push\cf5 (\{\
+                            \cf8 AreaPPF\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).AREAPPF\cf2 ,\
+                            \cf8 DSBairro\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DSBAIRRO\cf2 ,\
+                            \cf8 DSEndereco\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DSENDERECO\cf2 ,\
+                            \cf8 DTAditamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTADITAMENTO\cf2 ,\
+                            \cf8 DTOutorga\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTOUTORGA\cf2 ,\
+                            \cf8 Email\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).EMAIL\cf2 ,\
+                            \cf8 Instalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).INSTALACAO\cf2 ,\
+                            \cf8 ListaTipoEmpresa\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LISTATIPOEMPRESA\cf2 ,\
+                            \cf8 Modalidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 ,\
+                            \cf8 NOMunicipio\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOMUNICIPIO\cf2 ,\
+                            \cf8 NORazaoSocial\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 NORAZAOSOCIAL\cf2 ,\
+                            \cf8 NRAditamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRADITAMENTO\cf2 ,\
+                            \cf8 NRCEP\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 NRCEP\cf2 ,\
+                            \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\cf2 ,\
+                            \cf8 NRInstrumento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO\cf2 ,\
+                            \cf8 NomeContato\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOMECONTATO\cf2 ,\
+                            \cf8 QTDEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).QTDEMBARCACAO\cf2 ,\
+                            \cf8 SGUF\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 SGUF\cf2 ,\
+                            \cf8 TPInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 TPINSCRICAO\cf2 ,\
+                            \cf8 QTDEmbarcacaoMaritima\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).QTDEMBARCACAOMARITIMA\cf2 ,\
+                            \cf8 QTDEmbarcacaoConstrucao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).QTDEMBARCACAOCONSTRUCAO\cf2 ,\
+                            \cf8 IDContratoArrendamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDCONTRATOARRENDAMENTO\cf2 ,\
+                            \cf8 VLMontanteInvestimento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).VLMONTANTEINVESTIMENTO\cf2 ,\
+                            \cf8 NRTLO\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRTLO\cf2 ,\
+                            \cf8 NRResolucao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRRESOLUCAO\cf2 ,\
+                            \cf8 AutoridadePortuaria\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).AUTORIDADEPORTUARIA\cf2 ,\
+                            \cf8 NRInscricaoInstalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAOINSTALACAO\cf2 ,\
+                            \cf8 NORazaoSocialInstalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NORAZAOSOCIALINSTALACAO\cf2 ,\
+                            \cf8 NOREpresentante\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOREPRESENTANTE\cf2 ,\
+                            \cf8 NRTelefone\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRTELEFONE\cf2 ,\
+                            \cf8 EERepresentante\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).EEREPRESENTANTE\cf2 ,\
+                            \cf8 NRDocumentoSEI\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRDOCUMENTOSEI\
+                        \})\cf2 ;\
+                    \cf5 \}\
+\
+                    \cf7 //...\
+                    \cf5 angular.\cf4 forEach\cf5 (arData.\cf8 empresas\cf2 , function \cf5 (value\cf2 , \cf5 key) \{\
+                        arData = \cf4 verificaAutorizacao\cf5 (arData\cf2 , \cf5 key)\cf2 ;\
+                    \cf5 \})\cf2 ;\
+\
+                    \cf7 //...\
+                    \cf2 try \cf5 \{\
+                        \cf2 let \cf5 qtdEmpresas = \cf9 0\cf2 ;\
+                        \cf5 qtdEmpresas = arData.\cf8 empresas\cf5 .\cf8 length\cf2 ;\
+                        if \cf5 (qtdEmpresas > \cf9 0\cf5 ) \{\
+                            \cf2 for \cf5 (\cf2 var \cf5 emp = \cf9 0\cf2 ; \cf5 emp < qtdEmpresas\cf2 ; \cf5 emp++) \{\
+                                \cf2 if \cf5 (arData.\cf8 empresas\cf5 [emp].\cf8 IDContratoArrendamento \cf5 > \cf9 0\cf5 ) \{\
+                                    \cf2 var \cf5 resultSet01 = []\cf2 ;\
+                                    \cf5 resultSet01 = \cf2 await \cf4 gestorExecuteReaderArray\cf5 (\cf6 "SELECT \cf4 *\cf6  FROM EMPRESACONTRATO WHERE \cf8 IDCONTRATOARRENDAMENTO\cf6  = " \cf5 +\
+                                        arData.\cf8 empresas\cf5 [emp].\cf8 IDContratoArrendamento\cf5 )\cf2 ;\
+\
+                                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (resultSet01)\cf2 ;\
+                                    let \cf5 qtd = \cf9 0\cf2 ;\
+                                    \cf5 qtd = resultSet01.\cf8 length\cf2 ;\
+                                    if \cf5 (qtd > \cf9 0\cf5 ) \{\
+                                        \cf2 for \cf5 (\cf2 var \cf5 x = \cf9 0\cf2 ; \cf5 x < qtd\cf2 ; \cf5 x++) \{\
+                                            arData.\cf8 contrato \cf5 = \{\
+                                                \cf8 NRCnpj\cf5 : resultSet01[x].NRCNPJ\cf2 ,\
+                                                \cf8 IDContratoArrendamento\cf5 : resultSet01[x].IDCONTRATOARRENDAMENTO\cf2 ,\
+                                                \cf8 IDClassificaoSubclassificaoCarga\cf5 : resultSet01[x].IDCLASSIFICAOSUBCLASSIFICAOCARGA\cf2 ,\
+                                                \cf8 IDClassificaoSubclassificaoCargaPai\cf5 : resultSet01[x].IDCLASSIFICAOSUBCLASSIFICAOCARGAPAI\cf2 ,\
+                                                \cf8 IDGrupoMercadoria\cf5 : resultSet01[x].IDGRUPOMERCADORIA\cf2 ,\
+                                                \cf8 IDNaturezaCarga\cf5 : resultSet01[x].IDNATUREZACARGA\cf2 ,\
+                                                \cf8 NRVersao\cf5 : resultSet01[x].NRVERSAO\cf2 ,\
+                                                \cf8 CDContrato\cf5 : resultSet01[x].CDCONTRATO\cf2 ,\
+                                                \cf8 NOGrupoMercadoria\cf5 : resultSet01[x].NOGRUPOMERCADORIA\cf2 ,\
+                                                \cf8 VLAreaTotal\cf5 : resultSet01[x].VLAREATOTAL\cf2 ,\
+                                                \cf8 IDTipoServico\cf5 : resultSet01[x].IDTIPOSERVICO\cf2 ,\
+                                                \cf8 NOTipoServico\cf5 : resultSet01[x].NOTIPOSERVICO\cf2 ,\
+                                                \cf8 NOClassificacaoCarga\cf5 : resultSet01[x].NOCLASSIFICACAOCARGA\
+                                            \}\
+                                        \}\
+                                    \}\
+\
+                                \} \cf2 else \cf5 \{\
+                                    arData.\cf8 contrato \cf5 = \{\
+                                        \cf8 NRCnpj\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 IDContratoArrendamento\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 IDClassificaoSubclassificaoCarga\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 IDClassificaoSubclassificaoCargaPai\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 IDGrupoMercadoria\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 IDNaturezaCarga\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 NRVersao\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 CDContrato\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 NOGrupoMercadoria\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 VLAreaTotal\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 IDTipoServico\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 NOTipoServico\cf5 : \cf6 ""\cf2 ,\
+                                        \cf8 NOClassificacaoCarga\cf5 : \cf6 ""\
+                                    \cf5 \}\
+                                \}\
+                            \}\
+                        \}\
+                    \} \cf2 catch \cf5 (error) \{\
+                        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 "Erro ao carregar contrato: " \cf5 + error.\cf8 message\cf5 )\cf2 ;\
+                    \cf5 \}\
+\
+\
+                    \cf2 if \cf5 (tipo == \cf6 "AUTORIZADA"\cf5 ) \{\
+                        \cf7 //...\
+                        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmpresa"\cf5 )\cf2 ;\
+                        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmpresa"\cf2 , \cf5 angular.toJson(arData.\cf8 empresas\cf5 [\cf9 0\cf5 ]))\cf2 ;\
+\
+                        \cf7 //...\
+                        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmpresaCadastros"\cf5 )\cf2 ;\
+                        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmpresaCadastros"\cf2 , \cf5 angular.toJson(arData))\cf2 ;\
+\
+                    \cf5 \} \cf2 else \cf5 \{\
+                        \cf7 //...\
+                        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmpresaCadastros"\cf5 )\cf2 ;\
+                        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmpresaCadastros"\cf2 , \cf5 angular.toJson(arData))\cf2 ;\
+                    \cf5 \}\
+\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arData.\cf8 empresas\cf5 )\cf2 ;\
+\
+                    \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+\
+            \cf5 \}\cf2 , function \cf5 (err) \{\
+                \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroAutorizadas'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                    \cf6 'valor'\cf5 : valor\cf2 ,\
+                    \cf6 'tipo'\cf5 : tipo\cf2 ,\
+                    \cf6 'nrinstrumento'\cf5 : nrinstrumento\
+                \}))\cf2 ;\
+                \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf4 alert\cf5 (\cf6 'gestorCarregarCadastroAutorizadas' \cf5 + err.\cf8 message\cf5 )\cf2 ;\
+            \cf5 \})\cf2 ;\
+        \cf5 \})\
+\
+        \cf2 async function \cf4 secondFunction\cf5 () \{\
+            \cf2 let \cf5 result = \cf2 await \cf5 firstFunction\
+        \}\cf2 ;\
+\
+        await \cf4 secondFunction\cf5 ()\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroAutorizadas'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'valor'\cf5 : valor\cf2 ,\
+            \cf6 'tipo'\cf5 : tipo\cf2 ,\
+            \cf6 'nrinstrumento'\cf5 : nrinstrumento\
+        \}))\cf2 ;\
+    \cf5 \}\
+\
+    \cf2 return \cf5 arData\cf2 ;\
+\cf5 \}\
+\
+\cf2 async function \cf4 gestorCarregarCadastroInstalacoesPortuarias\cf5 (nrinscricao\cf2 , \cf5 instalacao\cf2 , \cf5 modalidade) \{\
+    \cf2 try \cf5 \{\
+        nrinscricao = nrinscricao.\cf4 replace\cf5 (\cf6 "."\cf2 , \cf6 ""\cf5 )\cf2 ;\
+        \cf5 nrinscricao = nrinscricao.\cf4 replace\cf5 (\cf6 "-"\cf2 , \cf6 ""\cf5 )\cf2 ;\
+        \cf5 nrinscricao = nrinscricao.\cf4 replace\cf5 (\cf6 "/"\cf2 , \cf6 ""\cf5 )\cf2 ;\
+        \cf5 nrinscricao = nrinscricao.\cf4 replace\cf5 (\cf6 " "\cf2 , \cf6 ""\cf5 )\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  ID " \cf5 +\
+            \cf6 " ,BAIRRO " \cf5 +\
+            \cf6 " ,CDBIGRAMA " \cf5 +\
+            \cf6 " ,CDCENTROIDE " \cf5 +\
+            \cf6 " ,CDINSTALACAOPORTUARIA " \cf5 +\
+            \cf6 " ,CDTERMINAL " \cf5 +\
+            \cf6 " ,CDTRIGRAMA " \cf5 +\
+            \cf6 " ,CEP " \cf5 +\
+            \cf6 " ,CIDADE " \cf5 +\
+            \cf6 " ,CNPJ " \cf5 +\
+            \cf6 " ,COMPANHIA " \cf5 +\
+            \cf6 " ,COMPLEMENTO " \cf5 +\
+            \cf6 " ,ENDERECO " \cf5 +\
+            \cf6 " ,ESTADO " \cf5 +\
+            \cf6 " ,FONTE " \cf5 +\
+            \cf6 " ,GESTAO " \cf5 +\
+            \cf6 " ,IDCIDADE " \cf5 +\
+            \cf6 " ,IDREGIAOHIDROGRAFICA " \cf5 +\
+            \cf6 " ,LATITUDE " \cf5 +\
+            \cf6 " ,LEGISLACAO " \cf5 +\
+            \cf6 " ,LOCALIZACAO " \cf5 +\
+            \cf6 " ,LONGITUDE " \cf5 +\
+            \cf6 " ,MODALIDADE " \cf5 +\
+            \cf6 " ,NOME " \cf5 +\
+            \cf6 " ,NUMERO " \cf5 +\
+            \cf6 " ,OBSERVACAO " \cf5 +\
+            \cf6 " ,PAIS " \cf5 +\
+            \cf6 " ,PROFUNDIDADE " \cf5 +\
+            \cf6 " ,REGIAOHIDROGRAFICA " \cf5 +\
+            \cf6 " ,SITUACAO " \cf5 +\
+            \cf6 " ,TIPO " \cf5 +\
+            \cf6 " ,UF " \cf5 +\
+            \cf6 " FROM INSTALACAOPORTUARIA "\cf2 ;\
+\
+        \cf5 query += \cf6 " WHERE CNPJ = '" \cf5 + nrinscricao + \cf6 "'"\cf2 ;\
+\
+        if \cf5 (modalidade == \cf6 "Travessia"\cf5 ) \{\
+            \cf2 if \cf5 (instalacao != \cf2 null\cf5 ) \{\
+                query += \cf6 " AND UPPER(LOCALIZACAO) LIKE UPPER('%" \cf5 + instalacao + \cf6 "%')"\cf2 ;\
+            \cf5 \}\
+        \}\
+\
+        \cf2 var \cf5 arData = []\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        \cf2 let \cf5 firstFunction = \cf2 new \cf4 Promise\cf5 (\cf2 function \cf5 (resolve\cf2 , \cf5 reject) \{\
+\
+            
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+                tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                    \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                        \cf7 //...\
+                        \cf5 arData.\cf4 push\cf5 (\{\
+                            \cf8 bairro\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).BAIRRO\cf2 ,\
+                            \cf8 cdbigrama\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CDBIGRAMA\cf2 ,\
+                            \cf8 cdcentroide\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CDCENTROIDE\cf2 ,\
+                            \cf8 cdinstalacaoportuaria\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CDINSTALACAOPORTUARIA\cf2 ,\
+                            \cf8 cdterminal\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CDTERMINAL\cf2 ,\
+                            \cf8 cdtrigrama\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CDTRIGRAMA\cf2 ,\
+                            \cf8 cep\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CEP\cf2 ,\
+                            \cf8 cidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).CIDADE\cf2 ,\
+                            \cf8 cnpj\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 CNPJ\cf2 ,\
+                            \cf8 companhia\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).COMPANHIA\cf2 ,\
+                            \cf8 complemento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).COMPLEMENTO\cf2 ,\
+                            \cf8 endereco\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).ENDERECO\cf2 ,\
+                            \cf8 estado\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).ESTADO\cf2 ,\
+                            \cf8 fonte\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).FONTE\cf2 ,\
+                            \cf8 gestao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).GESTAO\cf2 ,\
+                            \cf8 idcidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDCIDADE\cf2 ,\
+                            \cf8 idregiaohidrografica\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDREGIAOHIDROGRAFICA\cf2 ,\
+                            \cf8 latitude\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LATITUDE\cf2 ,\
+                            \cf8 legislacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LEGISLACAO\cf2 ,\
+                            \cf8 localizacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LOCALIZACAO\cf2 ,\
+                            \cf8 longitude\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).LONGITUDE\cf2 ,\
+                            \cf8 modalidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 ,\
+                            \cf8 nome\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOME\cf2 ,\
+                            \cf8 numero\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NUMERO\cf2 ,\
+                            \cf8 observacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).OBSERVACAO\cf2 ,\
+                            \cf8 pais\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).PAIS\cf2 ,\
+                            \cf8 profundidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).PROFUNDIDADE\cf2 ,\
+                            \cf8 regiaohidrografica\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).REGIAOHIDROGRAFICA\cf2 ,\
+                            \cf8 situacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).SITUACAO\cf2 ,\
+                            \cf8 tipo\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).TIPO\cf2 ,\
+                            \cf8 uf\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 UF\
+                        \cf5 \})\cf2 ;\
+                    \cf5 \}\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arData)\cf2 ;\
+\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arTerminais"\cf5 )\cf2 ;\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arTerminais"\cf2 , \cf5 angular.toJson(arData) || \cf6 '[]'\cf5 )\cf2 ;\
+\
+                    \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+            \cf5 \}\cf2 , function \cf5 (err) \{\
+                \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroInstalacoesPortuarias'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                    \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+                    \cf6 'instalacao'\cf5 : instalacao\cf2 ,\
+                    \cf6 'modalidade'\cf5 : modalidade\
+                \}))\cf2 ;\
+                \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf4 alert\cf5 (\cf6 'gestorCarregarCadastroInstalacoesPortuarias' \cf5 + err.\cf8 message\cf5 )\cf2 ;\
+            \cf5 \})\cf2 ;\
+        \cf5 \})\
+\
+        \cf2 async function \cf4 secondFunction\cf5 () \{\
+            \cf2 let \cf5 result = \cf2 await \cf5 firstFunction\
+        \}\cf2 ;\
+\
+        await \cf4 secondFunction\cf5 ()\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroInstalacoesPortuarias'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+            \cf6 'instalacao'\cf5 : instalacao\cf2 ,\
+            \cf6 'modalidade'\cf5 : modalidade\
+        \}))\cf2 ;\
+    \cf5 \} \cf2 finally \cf5 \{\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 async function \cf4 gestorCarregarCadastroTrechoLinhaTipoTransporteListar\cf5 (nrinscricao\cf2 , \cf5 nrinstrumento\cf2 , \cf5 instalacao) \{\
+    \cf2 try \cf5 \{\
+        nrinscricao = \cf4 formatarCNPJ\cf5 (nrinscricao)\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  ID " \cf5 +\
+            \cf6 " ,INSTALACAO " \cf5 +\
+            \cf6 " ,MODALIDADE " \cf5 +\
+            \cf6 " ,IDTIPOTRANSPORTE " \cf5 +\
+            \cf6 " ,IDTRECHOLINHA " \cf5 +\
+            \cf6 " ,NRINSTRUMENTO " \cf5 +\
+            \cf6 " ,NRINSCRICAO " \cf5 +\
+            \cf6 " FROM TRECHOLINHATIPOTRANSPORTE " \cf5 +\
+            \cf6 " WHERE NRINSCRICAO = '" \cf5 + nrinscricao + \cf6 "'" \cf5 +\
+            \cf6 " AND NRINSTRUMENTO LIKE '%" \cf5 + nrinstrumento + \cf6 "%'" \cf5 +\
+            \cf6 " AND INSTALACAO LIKE '%" \cf5 + instalacao + \cf6 "%'" \cf5 +\
+            \cf6 " LIMIT 1"\cf2 ;\
+\
+        var \cf5 arData = \{\}\cf2 ;\
+        \cf5 arData.\cf8 Trecho \cf5 = []\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        \cf2 let \cf5 firstFunction = \cf2 new \cf4 Promise\cf5 (\cf2 function \cf5 (resolve\cf2 , \cf5 reject) \{\
+            \cf7 /*===============================================*/\
+            
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+                tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                    \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                        \cf7 //...\
+                        \cf5 arData.\cf8 Trecho\cf5 .\cf4 push\cf5 (\{\
+                            \cf8 Instalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).INSTALACAO\cf2 ,\
+                            \cf8 Modalidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 ,\
+                            \cf8 IDTipoTransporte\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDTIPOTRANSPORTE\cf2 ,\
+                            \cf8 IDTrechoLinha\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDTRECHOLINHA\cf2 ,\
+                            \cf8 NRInstrumento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO\cf2 ,\
+                            \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\
+                        \})\cf2 ;\
+                    \cf5 \}\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arData)\cf2 ;\
+\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 'arTrecho'\cf5 )\cf2 ;\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 'arTrecho'\cf2 , \cf5 angular.toJson(arData.\cf8 Trecho\cf5 ))\cf2 ;\
+\
+                    \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+            \cf5 \}\cf2 , function \cf5 (err) \{\
+                \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroTrechoLinhaTipoTransporteListar'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                    \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+                    \cf6 'nrinstrumento'\cf5 : nrinstrumento\cf2 ,\
+                    \cf6 'instalacao'\cf5 : instalacao\
+                \}))\cf2 ;\
+                \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf4 alert\cf5 (\cf6 'Erro ao carregar dados gestorCarregarCadastroTrechoLinhaTipoTransporteListar'\cf5 )\cf2 ;\
+            \cf5 \})\cf2 ;\
+        \cf5 \})\
+\
+        \cf2 async function \cf4 secondFunction\cf5 () \{\
+            \cf2 let \cf5 result = \cf2 await \cf5 firstFunction\
+        \}\cf2 ;\
+\
+        await \cf4 secondFunction\cf5 ()\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroTrechoLinhaTipoTransporteListar'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+            \cf6 'nrinstrumento'\cf5 : nrinstrumento\cf2 ,\
+            \cf6 'instalacao'\cf5 : instalacao\
+        \}))\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 async function \cf4 gestorCarregarCadastroTrechoLinhaTipoTransporteListar_OLD\cf5 (nrinscricao\cf2 , \cf5 nrinstrumento) \{\
+    \cf2 try \cf5 \{\
+        nrinscricao = \cf4 formatarCNPJ\cf5 (nrinscricao)\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  ID " \cf5 +\
+            \cf6 " ,INSTALACAO " \cf5 +\
+            \cf6 " ,MODALIDADE " \cf5 +\
+            \cf6 " ,IDTIPOTRANSPORTE " \cf5 +\
+            \cf6 " ,IDTRECHOLINHA " \cf5 +\
+            \cf6 " ,NRINSTRUMENTO " \cf5 +\
+            \cf6 " ,NRINSCRICAO " \cf5 +\
+            \cf6 " FROM TRECHOLINHATIPOTRANSPORTE " \cf5 +\
+            \cf6 " WHERE NRINSCRICAO = '" \cf5 + nrinscricao + \cf6 "'" \cf5 +\
+            \cf6 " AND NRINSTRUMENTO LIKE '%" \cf5 + nrinstrumento + \cf6 "%'"\cf2 ;\
+\
+        var \cf5 arData = \{\}\cf2 ;\
+        \cf5 arData.\cf8 Trecho \cf5 = []\cf2 ;\
+\
+        \cf7 /*===============================================*/\
+        \cf2 let \cf5 firstFunction = \cf2 new \cf4 Promise\cf5 (\cf2 function \cf5 (resolve\cf2 , \cf5 reject) \{\
+            \cf7 /*===============================================*/\
+            
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+                tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 []\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                    \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                        \cf7 //...\
+                        \cf5 arData.\cf8 Trecho\cf5 .\cf4 push\cf5 (\{\
+                            \cf8 Instalacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).INSTALACAO\cf2 ,\
+                            \cf8 Modalidade\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).MODALIDADE\cf2 ,\
+                            \cf8 IDTipoTransporte\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDTIPOTRANSPORTE\cf2 ,\
+                            \cf8 IDTrechoLinha\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDTRECHOLINHA\cf2 ,\
+                            \cf8 NRInstrumento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO\cf2 ,\
+                            \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\
+                        \})\cf2 ;\
+                    \cf5 \}\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arData)\cf2 ;\
+\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 'arTrecho'\cf5 )\cf2 ;\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 'arTrecho'\cf2 , \cf5 angular.toJson(arData.\cf8 Trecho\cf5 ))\cf2 ;\
+\
+                    \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+            \cf5 \}\cf2 , function \cf5 (err) \{\
+                resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf4 alert\cf5 (\cf6 'Erro ao carregar dados gestorCarregarCadastroTrechoLinhaTipoTransporteListar'\cf5 )\cf2 ;\
+            \cf5 \})\cf2 ;\
+        \cf5 \})\
+\
+        \cf2 async function \cf4 secondFunction\cf5 () \{\
+            \cf2 let \cf5 result = \cf2 await \cf5 firstFunction\
+        \}\cf2 ;\
+\
+        await \cf4 secondFunction\cf5 ()\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'gestorCarregarCadastroTrechoLinhaTipoTransporteListar'\cf2 , \cf5 erro.\cf8 message\cf5 )\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 async function \cf4 gestorCarregarCadastroFrotaAlocada\cf5 (nrinscricao\cf2 , \cf5 nrinstrumento) \{\
+    \cf2 try \cf5 \{\
+        nrinscricao = \cf4 formatarCNPJ\cf5 (nrinscricao)\cf2 ;\
+\
+        \cf4 preloadInit\cf5 (\cf6 "Carregando Dados"\cf5 )\cf2 ;\
+\
+        \cf4 openDB\cf5 ()\cf2 ;\
+\
+        var \cf5 query = \cf6 "SELECT " \cf5 +\
+            \cf6 "  ID " \cf5 +\
+            \cf6 " ,IDFROTA " \cf5 +\
+            \cf6 " ,TPINSCRICAO " \cf5 +\
+            \cf6 " ,IDEMBARCACAO " \cf5 +\
+            \cf6 " ,STEMBARCACAO " \cf5 +\
+            \cf6 " ,DTINICIO " \cf5 +\
+            \cf6 " ,DTTERMINO " \cf5 +\
+            \cf6 " ,TPAFRETAMENTO " \cf5 +\
+            \cf6 " ,STREGISTRO " \cf5 +\
+            \cf6 " ,IDFROTAPAI " \cf5 +\
+            \cf6 " ,STHOMOLOGACAO " \cf5 +\
+            \cf6 " ,NOEMBARCACAO " \cf5 +\
+            \cf6 " ,NRCAPITANIA " \cf5 +\
+            \cf6 " ,TIPOEMBARCACAO " \cf5 +\
+            \cf6 " ,NRINSCRICAO " \cf5 +\
+            \cf6 " ,NRINSTRUMENTO " \cf5 +\
+            \cf6 " FROM FROTAALOCADA " \cf5 +\
+            \cf6 " WHERE NRINSCRICAO = ?" \cf5 +\
+            \cf6 " AND NRINSTRUMENTO = ?"\
+\
+            \cf5 + \cf6 " ORDER BY NOEMBARCACAO "\cf2 ;\
+\
+        var \cf5 arData = []\cf2 ;\
+        \cf7 /*===============================================*/\
+        \cf2 let \cf5 firstFunction = \cf2 new \cf4 Promise\cf5 (\cf2 function \cf5 (resolve\cf2 , \cf5 reject) \{\
+\
+            \cf7 /*===============================================*/\
+            
+\f1\i\b \cf8 db
+\f0\i0\b0 \cf5 .\cf4 transaction\cf5 (\cf2 function \cf5 (tx) \{\
+                tx.\cf4 executeSql\cf5 (query\cf2 , \cf5 [nrinscricao\cf2 , \cf5 nrinstrumento]\cf2 , function \cf5 (tx\cf2 , \cf5 res) \{\
+                    \cf2 for \cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < res.\cf8 rows\cf5 .\cf8 length\cf2 ; \cf5 i++) \{\
+                        \cf7 //...\
+                        \cf5 arData.\cf4 push\cf5 (\{\
+                            \cf8 IDFrota\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDFROTA\cf2 ,\
+                            \cf8 TPInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).\cf8 TPINSCRICAO\cf2 ,\
+                            \cf8 IDEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDEMBARCACAO\cf2 ,\
+                            \cf8 STEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).STEMBARCACAO\cf2 ,\
+                            \cf8 DTInicio\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTINICIO\cf2 ,\
+                            \cf8 DTTermino\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).DTTERMINO\cf2 ,\
+                            \cf8 TPAfretamento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).TPAFRETAMENTO\cf2 ,\
+                            \cf8 STRegistro\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).STREGISTRO\cf2 ,\
+                            \cf8 IDFrotaPai\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).IDFROTAPAI\cf2 ,\
+                            \cf8 STHomologacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).STHOMOLOGACAO\cf2 ,\
+                            \cf8 NoEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NOEMBARCACAO\cf2 ,\
+                            \cf8 NRCapitania\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRCAPITANIA\cf2 ,\
+                            \cf8 TipoEmbarcacao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).TIPOEMBARCACAO\cf2 ,\
+                            \cf8 NRInscricao\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSCRICAO\cf2 ,\
+                            \cf8 NRInstrumento\cf5 : res.\cf8 rows\cf5 .\cf4 item\cf5 (i).NRINSTRUMENTO\
+                        \})\cf2 ;\
+                    \cf5 \}\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'ArDATA'\cf2 , \cf5 arData)\cf2 ;\
+\
+                    \cf7 //...\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 removeItem\cf5 (\cf6 "arEmbarcacao"\cf5 )\cf2 ;\
+                    
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "arEmbarcacao"\cf2 , \cf5 angular.toJson(arData))\cf2 ;\
+\
+                    \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf5 \})\cf2 ;\
+\
+            \cf5 \}\cf2 , function \cf5 (err) \{\
+                \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroFrotaAlocada'\cf2 , \cf5 err.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+                    \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+                    \cf6 'nrinstrumento'\cf5 : nrinstrumento\
+                \}))\cf2 ;\
+                \cf5 resolve(\cf2 true\cf5 )\cf2 ;\
+                \cf4 alert\cf5 (\cf6 'gestorCarregarCadastroFrotaAlocada' \cf5 + err.\cf8 message\cf5 )\cf2 ;\
+            \cf5 \})\cf2 ;\
+        \cf5 \})\
+\
+        \cf2 async function \cf4 secondFunction\cf5 () \{\
+            \cf2 let \cf5 result = \cf2 await \cf5 firstFunction\
+        \}\cf2 ;\
+\
+        await \cf4 secondFunction\cf5 ()\cf2 ;\
+    \cf5 \} \cf2 catch \cf5 (erro) \{\
+        \cf4 logErro\cf5 (\cf6 'gestorCarregarCadastroFrotaAlocada'\cf2 , \cf5 erro.\cf8 message\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\
+            \cf6 'nrinscricao'\cf5 : nrinscricao\cf2 ,\
+            \cf6 'nrinstrumento'\cf5 : nrinstrumento\
+        \}))\cf2 ;\
+    \cf5 \} \cf2 finally \cf5 \{\
+        \cf4 preloaderStop\cf5 ()\cf2 ;\
+    \cf5 \}\
+\}\
+\
+\cf2 async function \cf4 gestorCarregarInstalacaoNavInterior\cf5 (nrinscricao\cf2 , \cf5 nrinstrumento) \{\
+\
+    \cf2 var \cf5 resultSet = []\cf2 ;\
+    try \cf5 \{\
+\
+        \cf2 let \cf5 query = \cf6 ""\cf2 ;\
+        \cf5 query += \cf6 " SELECT \cf8 INSTALACAO\cf6  FROM EMPRESASAUTORIZADAS WHERE \cf8 NRINSCRICAO\cf6  = '" \cf5 + nrinscricao + \cf6 "' AND NRINSTRUMENTO = '" \cf5 + nrinstrumento.\cf4 replace\cf5 (\cf6 "TA - "\cf2 , \cf6 ""\cf5 ) + \cf6 "' GROUP BY INSTALACAO "\cf2 ;\
+\
+        \cf5 resultSet = \cf2 await \cf4 gestorExecuteReaderArray\cf5 (query)\cf2 ;\
+\
+    \cf5 \} \cf2 catch \cf5 (error) \{\
+\
+    \}\
+\
+    \cf2 return \cf5 resultSet\cf2 ;\
+\cf5 \}\
+\
+\cf2 function \cf4 unirTermosRepetidos\cf5 (Modalidade\cf2 , \cf5 NRInstrumento) \{\
+    \cf2 let \cf5 novoTermo = \cf6 ""\cf2 ;\
+\
+    try \cf5 \{\
+        \cf2 let \cf5 n = Modalidade.\cf4 includes\cf5 (\cf6 "Longo Curso"\cf5 )\cf2 ;\
+\
+        if \cf5 (n == \cf2 false\cf5 ) \{\
+            n = Modalidade.\cf4 includes\cf5 (\cf6 "Cabotagem"\cf5 )\cf2 ;\
+        \cf5 \}\
+\
+        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+            n = Modalidade.\cf4 includes\cf5 (\cf6 "Apoio Portuario"\cf5 )\cf2 ;\
+        \cf5 \}\
+\
+        \cf2 if \cf5 (n == \cf2 false\cf5 ) \{\
+            n = Modalidade.\cf4 includes\cf5 (\cf6 "Apoio Maritimo"\cf5 )\cf2 ;\
+        \cf5 \}\
+\
+\
+        \cf2 if \cf5 (n == \cf2 true\cf5 ) \{\
+            \cf7 //...\
+            \cf2 function \cf4 splitString\cf5 (stringToSplit) \{\
+                \cf2 try \cf5 \{\
+                    \cf7 //...\
+                    \cf2 const \cf5 arrayOfStrings = stringToSplit.\cf4 split\cf5 (\cf6 ','\cf5 )\cf2 ;\
+                    if \cf5 (arrayOfStrings.\cf8 length \cf5 > \cf9 0\cf5 ) \{\
+                        \cf2 for \cf5 (\cf2 let \cf5 i = \cf9 0\cf2 ; \cf5 i < arrayOfStrings.\cf8 length\cf2 ; \cf5 i++) \{\
+                            arrayOfStrings[i] = arrayOfStrings[i].\cf4 replace\cf5 (\cf6 "TA"\cf2 , \cf6 ""\cf5 ).\cf8 trim\cf5 ()\cf2 ;\
+                            \cf7 //arrayOfStrings[i] = arrayOfStrings[i].trim();\
+                        \cf5 \}\
+                    \}\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (arrayOfStrings)\cf2 ;\
+\
+                    \cf7 //...\
+                    \cf2 let \cf5 unique = [...\cf2 new \cf4 Set\cf5 (arrayOfStrings)]\cf2 ;\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (unique)\cf2 ;\
+\
+                    \cf7 //...\
+                    \cf2 let \cf5 tamanho = \cf9 0\cf2 ;\
+                    \cf5 tamanho = unique.\cf8 length\cf2 ;\
+\
+                    if \cf5 (tamanho > \cf9 0\cf5 ) \{\
+                        \cf2 for \cf5 (\cf2 let \cf5 i = \cf9 0\cf2 ; \cf5 i < tamanho\cf2 ; \cf5 i++) \{\
+                            novoTermo += unique[i]\cf2 ;\
+                            if \cf5 (tamanho >= \cf9 1\cf5 ) \{\
+                                novoTermo += \cf6 ", "\cf2 ;\
+                            \cf5 \}\
+                        \}\
+                    \}\
+\
+                    \cf7 //...\
+                    \cf2 let \cf5 novoTamanho = \cf9 0\cf2 ;\
+                    \cf5 novoTamanho = (novoTermo.\cf8 length \cf5 - \cf9 2\cf5 )\cf2 ;\
+                    \cf5 novoTermo = novoTermo.\cf4 substring\cf5 (\cf9 0\cf2 , \cf5 novoTamanho)\cf2 ;\
+\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (novoTermo)\cf2 ;\
+\
+\
+                \cf5 \} \cf2 catch \cf5 (error) \{\
+                    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+                \cf5 \}\
+            \}\
+\
+            \cf4 splitString\cf5 (NRInstrumento)\cf2 ;\
+        \cf5 \} \cf2 else \cf5 \{\
+            novoTermo = NRInstrumento\cf2 ;\
+        \cf5 \}\
+\
+    \} \cf2 catch \cf5 (error) \{\
+        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (error.\cf8 message\cf5 )\cf2 ;\
+    \cf5 \}\
+\
+    \cf2 return \cf5 novoTermo\cf2 ;\
+\cf5 \}\
+\
+\
+\
+\cf2 var 
+\f1\i\b \cf8 app 
+\f0\i0\b0 \cf5 = angular.\cf8 module\cf5 (\cf6 'app'\cf2 , \cf5 [])\cf2 ;\
+\
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf8 controller\cf5 (\cf6 'MainCtrl'\cf2 , function \cf5 ($scope\cf2 , \cf5 $http) \{\
+\
+    \cf7 //var url_string = window.location.href;\
+    //var url = new URL(url_string);\
+    //var filtro = url.searchParams.get("pesquisar");\
+    //var modalidade = url.searchParams.get("modalidade");\
+\
+    //var params = filtro;\
+    //if(modalidade) \{\
+    //  data = \{modalidade: modalidade, cnpjRazaosocial: '' \}\
+    //\}\
+    //if(filtro)\{\
+    //  data = \{ cnpjRazaosocial: filtro, modalidade: '' \}\
+    //\}\
+\
+    //document.addEventListener("deviceready", onDeviceReady, false);\
+\
+    \cf5 $scope.\cf4 pesquisar \cf5 = \cf2 function \cf5 () \{\
+        \cf2 let \cf5 valorPesquisa = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 getElementById\cf5 (\cf6 'pesquisar'\cf5 ).\cf8 value\cf2 ;\
+        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (valorPesquisa)\cf2 ;\
+        \cf7 //CarregarDadosAutorizadas(valorPesquisa);\
+        \cf4 gestorCarregarDadosAutorizadas\cf5 (valorPesquisa\cf2 , \cf6 'NORAZAOSOCIAL'\cf5 )\cf2 ;\
+\
+        \cf7 //armaneza os dados da empresa na storage session\
+        //sessionStorage.setItem('arEmpresa', angular.toJson(empresa));\
+    \cf5 \}\
+\
+    
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf8 body\cf5 .\cf8 style\cf5 .\cf8 backgroundColor \cf5 = \cf6 "white"\cf2 ;\
+    \
+\cf5 \})\
+\
+\
+\cf2 var 
+\f1\i\b \cf8 app 
+\f0\i0\b0 \cf5 = angular.\cf8 module\cf5 (\cf6 'app'\cf2 , \cf5 [])\cf2 ;\
+\
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf8 controller\cf5 (\cf6 'MainCtrl'\cf2 , function \cf5 ($scope\cf2 , \cf5 $http) \{\
+\
+    $scope.\cf4 pesquisar \cf5 = \cf2 function \cf5 () \{\
+        \cf2 let \cf5 valorPesquisa = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 getElementById\cf5 (\cf6 'pesquisar'\cf5 ).\cf8 value\cf2 ;\
+        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (valorPesquisa)\cf2 ;\
+        \cf4 gestorCarregarDadosAutorizadas\cf5 (valorPesquisa\cf2 ,\cf6 'INSTALACAO'\cf5 )\cf2 ;\
+\
+    \cf5 \}\
+\
+    
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf8 body\cf5 .\cf8 style\cf5 .\cf8 backgroundColor \cf5 = \cf6 "white"\cf2 ;\
+\
+\cf5 \})\
+\
+\
+\cf2 var 
+\f1\i\b \cf8 app 
+\f0\i0\b0 \cf5 = angular.\cf8 module\cf5 (\cf6 'app'\cf2 , \cf5 [])\cf2 ;\
+\
+function \cf4 incluirMascaraImoCapitania\cf5 ()\{\
+    \cf4 setTimeout\cf5 (\cf2 function\cf5 () \{\
+        \cf2 const \cf5 formatado = \cf4 formataImoCapitania\cf5 (\cf8 $\cf5 (\cf6 '#numero'\cf5 ).\cf4 val\cf5 ())\cf2 ;\
+        \cf8 $\cf5 (\cf6 '#numero'\cf5 ).\cf4 val\cf5 (formatado)\cf2 ;\
+    \cf5 \}\cf2 ,\cf9 1\cf5 )\cf2 ;\
+\cf5 \}\
+\
+\cf8 $\cf5 (
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 ).\cf8 ready\cf5 (\cf2 function\cf5 () \{\
+    \cf8 $\cf5 (\cf6 '#numero'\cf5 ).\cf4 on\cf5 (\cf6 "keyup"\cf2 , function\cf5 () \{\
+        \cf4 incluirMascaraImoCapitania\cf5 ()\cf2 ;\
+    \cf5 \})\cf2 ;\
+\cf5 \})\cf2 ;\
+\
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf8 controller\cf5 (\cf6 'MainCtrl'\cf2 , function \cf5 ($scope\cf2 , \cf5 $http) \{\
+\
+    $scope.\cf4 pesquisar \cf5 = \cf2 function \cf5 () \{\
+        \cf2 let \cf5 valorNumero = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 getElementById\cf5 (\cf6 'numero'\cf5 ).\cf8 value\cf2 ;\
+        let \cf5 valorNome = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 getElementById\cf5 (\cf6 'nome'\cf5 ).\cf8 value\cf2 ;\
+        
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (valorNumero\cf2 , \cf5 valorNome)\cf2 ;\
+        if \cf5 (!valorNumero && !valorNome) \{\
+            \cf2 var \cf5 mensagem = \cf6 '<p>Informe ao menos um filtro para seguir</p>'\cf2 ;\
+            \cf8 M\cf5 .\cf4 toast\cf5 (\{ \cf8 html\cf5 : mensagem\cf2 , \cf8 classes\cf5 : \cf6 "#c62828 red darken-3" \cf5 \})\cf2 ;\
+            return;\
+        \cf5 \}\
+        \cf4 gestorCarregarDadosEmbarcacoes\cf5 (valorNome\cf2 , \cf5 valorNumero)\cf2 ;\
+    \cf5 \}\
+\
+    
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf8 body\cf5 .\cf8 style\cf5 .\cf8 backgroundColor \cf5 = \cf6 "white"\cf2 ;\
+\
+\cf5 \})\
+\
+\
+\cf2 var 
+\f1\i\b \cf8 app 
+\f0\i0\b0 \cf5 = angular.\cf8 module\cf5 (\cf6 'app'\cf2 , \cf5 [])\cf2 ;\
+\
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf8 controller\cf5 (\cf6 'MainCtrl'\cf2 , function \cf5 ($scope\cf2 , \cf5 $http) \{\
+\
+    \cf2 var \cf5 arUsuario = angular.fromJson(
+\f1\i\b \cf8 localStorage
+\f0\i0\b0 \cf5 .\cf4 getItem\cf5 (\cf6 "arUsuario"\cf5 ))\cf2 ;\
+\
+    \cf5 $scope.\cf8 arUsuario \cf5 = arUsuario\cf2 ;\
+\
+	\cf5 $scope.\cf8 modalidades \cf5 = 
+\f1\i\b \cf8 modalidade
+\f0\i0\b0 \cf2 ;\
+\
+	
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 ($scope.\cf8 modalidades\cf5 )\cf2 ;\
+\
+	\cf5 $scope.\cf4 muda \cf5 = \cf2 function\cf5 ()\{\
+		\cf4 setTimeout\cf5 (\cf2 function\cf5 ()\{  \cf8 $\cf5 (\cf6 'select'\cf5 ).formSelect() \}\cf2 , \cf9 200\cf5 )\
+	\}\
+\
+    $scope.\cf4 proxima \cf5 = \cf2 function \cf5 (stModalidade) \{\
+    	\cf2 if\cf5 ($scope.\cf8 servico\cf5 )\{    	\
+      		\cf7 //window.location = "empresa.listarAutorizadas.html?modalidade="+$scope.servico;\
+      		\cf4 gestorCarregarDadosAutorizadas\cf5 ($scope.\cf8 servico\cf2 , \cf6 'MODALIDADE'\cf5 )\cf2 ;\
+  	 	\cf5 \}\
+    \}\cf2 ;\
+\
+    \
+    
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf8 body\cf5 .\cf8 style\cf5 .\cf8 backgroundColor \cf5 = \cf6 "white"\cf2 ;\
+\
+\cf5 \})\
+\
+\cf7 //aplic\'e7\'e3o do filtro da \'e1rea \
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf4 filter\cf5 (\cf6 'unique'\cf2 , function\cf5 () \{\
+   \cf7 // we will return a function which will take in a collection\
+   // and a keyname\
+	   \cf2 return function\cf5 (collection\cf2 , \cf5 keyname) \{\
+	      \cf7 // we define our output and keys array;\
+	      \cf2 var \cf5 output = []\cf2 , \
+	          \cf5 keys = []\cf2 ;\
+	      \
+	      \cf7 // we utilize angular's foreach function\
+	      // this takes in our original collection and an iterator function\
+	      \cf5 angular.\cf4 forEach\cf5 (collection\cf2 , function\cf5 (item) \{\
+	          \cf7 // we check to see whether our object exists\
+	          \cf2 var \cf5 key = item[keyname]\cf2 ;\
+	          \cf7 // if it's not already part of our keys array\
+	          \cf2 if\cf5 (keys.\cf4 indexOf\cf5 (key) === -\cf9 1\cf5 ) \{\
+	              \cf7 // add it to our keys array\
+	              \cf5 keys.\cf4 push\cf5 (key)\cf2 ; \
+	              \cf7 // push this item to our final output array\
+	              \cf5 output.\cf4 push\cf5 (item)\cf2 ;\
+	          \cf5 \}\
+	      \})\cf2 ;\
+	      \cf7 // return our array which should be devoid of\
+	      // any duplicates\
+	      \cf2 return \cf5 output\cf2 ;\
+	   \cf5 \}\cf2 ;\
+	\cf5 \})\cf2 ;\
+\
+\
+\
+\
+var 
+\f1\i\b \cf8 app 
+\f0\i0\b0 \cf5 = angular.\cf8 module\cf5 (\cf6 'app'\cf2 , \cf5 [])\cf2 ;\
+\
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf8 controller\cf5 (\cf6 'MainCtrl'\cf2 , function \cf5 ($scope\cf2 , \cf5 $http) \{\
+\
+\
+    $scope.\cf8 empresas \cf5 = \{\}\cf2 ;\
+    \cf5 $scope.\cf8 empresas \cf5 = angular.fromJson(
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 getItem\cf5 (\cf6 "arEmpresas"\cf5 ))\cf2 ;\
+    \cf5 $scope.\cf8 empresa \cf5 = \{\}\cf2 ;\
+\
+    \cf5 $scope.\cf8 historicoEmAndamento \cf5 = []\cf2 ;\
+    \cf5 $scope.\cf8 historicoJulgados \cf5 = []\cf2 ;\
+    \cf5 $scope.\cf8 historicoAutoInfracao \cf5 = []\cf2 ;\
+    \cf5 $scope.\cf8 historicoNotificacao \cf5 = []\cf2 ;\
+    \cf5 $scope.\cf8 acoesFiscalizadoras \cf5 = []\cf2 ;\
+    \cf5 $scope.\cf8 listaAnosAcoesFiscalizadoras \cf5 = []\cf2 ;\
+    \cf5 $scope.\cf8 anoReferenciaAcoesFiscalizadoras \cf5 = \cf6 "" \cf5 + \cf2 new \cf4 Date\cf5 ().\cf4 getFullYear\cf5 ()\cf2 ;\
+    \cf5 $scope.\cf8 embarcacoes \cf5 = angular.fromJson(
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 getItem\cf5 (\cf6 "arTrecho"\cf5 ))\cf2 ;\
+\
+    
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf8 body\cf5 .\cf8 style\cf5 .\cf8 backgroundColor \cf5 = \cf6 "white"\cf2 ;\
+\
+    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'Empresas'\cf2 ,\cf5 angular.fromJson(
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 getItem\cf5 (\cf6 "arEmpresas"\cf5 )))\
+    
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'Trechos'\cf2 ,\cf5 angular.fromJson(
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 getItem\cf5 (\cf6 "arTrecho"\cf5 )))\
+\
+    \cf2 try \cf5 \{\
+\
+        \cf2 var \cf5 msg = \cf2 null;\
+        var \cf5 qtd = $scope.\cf8 empresas\cf5 .\cf8 length\cf2 ;\
+\
+        if\cf5 (qtd > \cf9 1 \cf5 ) \{\
+          msg = \cf6 "<a>" \cf5 + qtd + \cf6 " Empresas encontradas.</a>"\cf2 ;\
+        \cf5 \}\
+        \cf2 else if\cf5 (qtd == \cf9 1 \cf5 ) \{\
+          msg = \cf6 "<a> 1 Empresa encontrada.</a>"\cf2 ;\
+        \cf5 \}\
+        \cf2 else if\cf5 (qtd == \cf9 0\cf5 ) \{\
+          msg = \cf6 "<a> Nenhuma empresa localizada.</a>"\cf2 ;\
+        \cf5 \}\
+\
+        
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 getElementById\cf5 (\cf6 "data-qtd"\cf5 ).\cf8 innerHTML \cf5 = msg\cf2 ;\
+\
+    \cf5 \} \cf2 catch\cf5 (ex) \{\
+      
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (ex.\cf8 message\cf5 )\cf2 ;\
+    \cf5 \}\
+\
+\
+    \cf4 preloaderStop\cf5 ()\cf2 ;\
+\
+    \cf7 //var url_string = window.location.href;\
+    //var url = new URL(url_string);\
+    //var filtro = url.searchParams.get("pesquisar");\
+    //var modalidade = url.searchParams.get("modalidade");\
+\
+    //var params = filtro;\
+    //if(modalidade) \{\
+    //  data = \{modalidade: modalidade, cnpjRazaosocial: '' \}\
+    //\}\
+    //if(filtro)\{\
+    //  data = \{ cnpjRazaosocial: filtro, modalidade: '' \}\
+    //\}\
+\
+    //$http(\{\
+    //    url: urlService() + 'ConsultarEmpresasAutorizadas',\
+    //    method: "POST",\
+    //    data: data\
+    //\})\
+    //  .then(function (response) \{\
+    //      $scope.empresas = response.data.d;\
+    //      $scope.filtro = params;\
+    //      console.log($scope.empresas);\
+    //      angular.forEach($scope.empresas, function (value, key) \{\
+    //          //acesso \'e0 util.js para montar os link e associar as normas... a util.js precisa estar na sua HTML\
+    //          $scope = verificaAutorizacao($scope, key);\
+    //      \});\
+    //      preloaderStop();\
+    //      console.log($scope.empresas);\
+    //  \},\
+    //  function (response) \{ // optional\
+    //      console.log(response.message);\
+    //  \});\
+\
+    \cf5 $scope.\cf4 detalhar \cf5 = \cf2 async function \cf5 (empresa) \{\
+        \cf7 //armaneza os dados da empresa na storage session\
+        
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 'arEmpresa'\cf2 , \cf5 angular.toJson(empresa))\cf2 ;\
+\
+        if\cf5 (empresa.\cf8 link \cf5 === \cf6 "empresa.geo.html"\cf5 )\
+        \{\
+          \cf4 gestorCarregarDadosInstalacoesPortuarias\cf5 (empresa.\cf8 NRInscricao\cf2 , \cf5 empresa.\cf8 Instalacao\cf2 , \cf5 empresa.\cf8 Modalidade\cf5 )\cf2 ;\
+        \cf5 \}\
+        \cf2 else if \cf5 (empresa.\cf8 link \cf5 === \cf6 "empresa.trecho.html"\cf5 )\
+        \{\
+           
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'trecho'\cf5 )\cf2 ;\
+           \cf4 gestorCarregarDadosTrechoLinhaTipoTransporteListar\cf5 (empresa.\cf8 NRInscricao\cf2 , \cf5 empresa.\cf8 NRInstrumento\cf2 , \cf5 empresa.\cf8 Instalacao\cf5 )\cf2 ;\
+        \cf5 \}\
+        \cf2 else if \cf5 (empresa.\cf8 link \cf5 === \cf6 "empresa.embarcacao.html"\cf5 )\
+        \{\
+            
+\f1\i\b \cf8 sessionStorage
+\f0\i0\b0 \cf5 .\cf4 setItem\cf5 (\cf6 "origemEmbarcacao"\cf2 , \cf6 "empresa.listarAutorizadas.html"\cf5 )\cf2 ;\
+            
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'embarcacao'\cf5 )\cf2 ;\
+            \cf4 gestorCarregarDadosFrotaAlocada\cf5 (empresa.\cf8 NRInscricao\cf2 , \cf5 empresa.\cf8 NRInstrumento\cf2 , \cf6 "F"\cf5 )\cf2 ;\
+        \cf5 \}\
+        \cf2 else\
+        \cf5 \{\
+           
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 location \cf5 = empresa.\cf8 link\cf2 ;\
+        \cf5 \}\
+    \}\
+\
+    $scope.\cf4 formatarNRCnpj \cf5 = \cf2 function \cf5 (nrCnpj) \{\
+      \cf2 if \cf5 (nrCnpj) \cf2 return \cf4 mCNPJ\cf5 (nrCnpj)\cf2 ;\
+      return \cf5 nrCnpj\cf2 ;\
+  \cf5 \}\
+\
+    $scope.\cf4 formatarData \cf5 = \cf2 function \cf5 (data) \{\
+        \cf2 if \cf5 (!data || data == \cf6 '01/01/1900 00:00:00'\cf5 ) \{\
+            \cf2 return null;\
+        \cf5 \} \cf2 else \cf5 \{\
+            \cf2 var \cf5 split = data.\cf4 split\cf5 (\cf6 '/'\cf5 )\cf2 ;\
+            var \cf5 ano = split[\cf9 2\cf5 ].\cf4 split\cf5 (\cf6 ' '\cf5 )\
+            \cf2 var \cf5 novadata = split[\cf9 0\cf5 ] + \cf6 "/" \cf5 + split[\cf9 1\cf5 ] + \cf6 "/" \cf5 + ano[\cf9 0\cf5 ]\cf2 ;\
+            return \cf5 novadata\cf2 ;\
+        \cf5 \}\
+    \}\
+\
+    $scope.\cf4 selecionarPasso \cf5 = \cf2 function\cf5 (passoSelecionar) \{\
+      \cf8 $\cf5 (\cf6 '.\cf10 modal-passo\cf6 '\cf5 ).\cf4 addClass\cf5 (\cf6 "hide"\cf5 )\cf2 ;\
+      \cf8 $\cf5 (passoSelecionar).\cf4 removeClass\cf5 (\cf6 "hide"\cf5 )\cf2 ;\
+      \cf8 $\cf5 (\cf6 "#modal_historico"\cf5 ).\cf8 scrollTop\cf5 (\cf9 0\cf5 )\cf2 ;\
+    \cf5 \}\cf2 ;\
+\
+    \cf5 $scope.\cf4 muda \cf5 = \cf2 function\cf5 ()\{\
+      \cf4 setTimeout\cf5 (\cf2 function\cf5 ()\{\
+              \cf8 $\cf5 (\cf6 'select'\cf5 ).formSelect()\cf2 ;\
+              let \cf5 acoesFiscalizadoras = $scope.\cf8 acoesFiscalizadoras\cf5 .\cf4 filter\cf5 ((item) => \{\
+                  \cf2 return \cf5 item.NRAnoFiscalizacao == $scope.\cf8 anoReferenciaAcoesFiscalizadoras\cf2 ;\
+              \cf5 \})\cf2 ;\
+              
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 myPie\cf5 .\cf4 destroy\cf5 ()\cf2 ;\
+              \cf5 $scope.\cf4 graficoAcoesFiscalizadoras\cf5 (acoesFiscalizadoras)\cf2 ;\
+          \cf5 \}\cf2 , \cf9 200\cf5 )\
+    \}\
+\
+    $scope.\cf4 listaPeriodoReferencia \cf5 = \cf2 async function \cf5 (acoesFiscalizadoras) \{\
+        \cf2 try \cf5 \{\
+\
+            \cf2 let \cf5 periodo = []\cf2 ;\
+            let \cf5 existeAno = \cf2 false;\
+\
+            if \cf5 (acoesFiscalizadoras.\cf8 length \cf5 > \cf9 0\cf5 )\
+            \{\
+              acoesFiscalizadoras.\cf4 forEach\cf5 (\cf2 function\cf5 (item) \{\
+                    \cf2 let \cf5 ano = item.NRAnoFiscalizacao\cf2 ;\
+                    if \cf5 ($scope.\cf8 anoReferenciaAcoesFiscalizadoras \cf5 == ano)\
+                        existeAno = \cf2 true;\
+                    if \cf5 (periodo.\cf4 indexOf\cf5 (ano) < \cf9 0\cf5 )\
+                        periodo.\cf4 push\cf5 (ano)\cf2 ;\
+                \cf5 \})\cf2 ;\
+            \cf5 \}\
+\
+           $scope.\cf8 listaAnosAcoesFiscalizadoras \cf5 = periodo\cf2 ;\
+           if \cf5 (!existeAno && periodo.\cf8 length \cf5 > \cf9 0\cf5 )\
+                $scope.\cf8 anoReferenciaAcoesFiscalizadoras \cf5 = periodo[periodo.\cf8 length \cf5 -\cf9 1\cf5 ]\cf2 ;\
+           \cf5 $scope.$apply()\cf2 ;\
+\
+            \cf4 setTimeout\cf5 (\cf2 function\cf5 ()\{\
+                \cf8 $\cf5 (\cf6 'select'\cf5 ).formSelect()\cf2 ;\
+            \cf5 \}\cf2 , \cf9 1000\cf5 )\
+\
+        \} \cf2 catch \cf5 (error) \{\
+            
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 (\cf6 'listaPeriodoReferencia' \cf5 + error.\cf8 message\cf5 )\cf2 ;\
+        \cf5 \}\
+    \}\
+\
+    $scope.\cf4 graficoAcoesFiscalizadoras \cf5 = \cf2 function\cf5 (acoesFiscalizadoras) \{\
+      \cf2 const \cf5 chartColors = [\
+          \cf6 'rgb(255, 99, 132)'\cf2 , \cf7 // red\
+          \cf6 'rgb(255, 159, 64)'\cf2 , \cf7 // orange\
+          \cf6 'rgb(255, 205, 86)'\cf2 , \cf7 // yellow\
+          \cf6 'rgb(75, 192, 192)'\cf2 , \cf7 // green\
+          \cf6 'rgb(54, 162, 235)'\cf2 , \cf7 // blue\
+          \cf6 'rgb(153, 102, 255)'\cf2 , \cf7 // purple\
+          \cf6 'rgb(201, 203, 207)'\cf2 , \cf7 // grey\
+          \cf6 'rgb(187,204,226)'\cf2 , \cf7 // blue01\
+          \cf6 'rgb(116,162,220)'\cf2 , \cf7 // blue02\
+          \cf6 'rgb(89,124,169)'\cf2 , \cf7 // blue03\
+          \cf6 'rgb(49,68,92)' \cf7 // blue04\
+      \cf5 ]\cf2 ;\
+\
+      const \cf5 totalAcoes = acoesFiscalizadoras.\cf4 reduce\cf5 ((n\cf2 , \cf5 \{QTFiscalizacao\}) => n + QTFiscalizacao\cf2 , \cf9 0\cf5 )\cf2 ;\
+      var \cf5 arData = []\cf2 ;\
+      var \cf5 arLabels = []\cf2 ;\
+      var \cf5 arColors = []\cf2 ;\
+      for\cf5 (\cf2 var \cf5 i = \cf9 0\cf2 ; \cf5 i < acoesFiscalizadoras.\cf8 length\cf2 ; \cf5 i++) \{\
+        \cf2 let \cf5 valor = (acoesFiscalizadoras[i].QTFiscalizacao*\cf9 100\cf5 /totalAcoes).\cf4 toFixed\cf5 (\cf9 0\cf5 )\cf2 ;\
+        \cf5 arData.\cf4 push\cf5 (valor)\cf2 ;\
+        \cf5 arLabels.\cf4 push\cf5 (acoesFiscalizadoras[i].TipoFiscalizacao)\cf2 ;\
+        \cf5 arColors.\cf4 push\cf5 (chartColors[i])\cf2 ;\
+      \cf5 \}\
+\
+      \cf2 var \cf5 config = \{\
+        \cf8 type\cf5 : \cf6 'doughnut'\cf2 ,\
+        \cf8 data\cf5 : \{\
+            \cf8 datasets\cf5 : [\{\
+                \cf8 data\cf5 : arData\cf2 ,\
+                \cf8 backgroundColor\cf5 : arColors\cf2 ,\
+                \cf8 label\cf5 : \cf6 'A\'e7\'f5es Fiscalizadoras'\
+            \cf5 \}]\cf2 ,\
+            \cf8 labels\cf5 : arLabels\
+        \}\cf2 ,\
+        \cf8 options\cf5 : \{\
+            \cf8 responsive\cf5 : \cf2 true,\
+            \cf8 maintainAspectRatio\cf5 : \cf2 false,\
+            \cf8 tooltips\cf5 : \{\
+              \cf8 callbacks\cf5 : \{\
+                \cf4 label\cf5 : \cf2 function\cf5 (tooltipItem\cf2 , \cf5 data) \{\
+                  \cf2 return \cf6 ' ' \cf5 + data.\cf8 labels\cf5 [tooltipItem.\cf8 index\cf5 ] + \cf6 ': ' \cf5 + data.\cf8 datasets\cf5 [tooltipItem.\cf8 datasetIndex\cf5 ].\cf8 data\cf5 [tooltipItem.\cf8 index\cf5 ] + \cf6 '%'\cf2 ;\
+                \cf5 \}\
+              \}\
+            \}\cf2 ,\
+            \cf8 legend\cf5 : \{\
+                \cf8 display\cf5 : \cf2 true,\
+                \cf8 labels\cf5 : \{\
+                    \cf8 fontColor\cf5 : \cf6 'rgb(114,114,114)'\cf2 ,\
+                    \cf8 fontSize\cf5 : \cf9 16\
+                \cf5 \}\
+            \}\cf2 ,\
+        \cf5 \}\
+      \}\cf2 ;\
+\
+      var \cf5 ctx = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 getElementById\cf5 (\cf6 'chart-area'\cf5 ).\cf4 getContext\cf5 (\cf6 '2d'\cf5 )\cf2 ;\
+      
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 myPie \cf5 = \cf2 new 
+\f1\i\b \cf8 Chart
+\f0\i0\b0 \cf5 (ctx\cf2 , \cf5 config)\cf2 ;\
+    \cf5 \}\
+\
+    $scope.\cf4 modalHistoricoFiscalizacoes \cf5 = \cf2 function\cf5 (historicoFiscalizacoes) \{\
+      $scope.\cf8 historicoEmAndamento \cf5 = []\cf2 ;\
+      \cf5 $scope.\cf8 historicoJulgados \cf5 = []\cf2 ;\
+      \cf5 $scope.\cf8 historicoAutoInfracao \cf5 = []\cf2 ;\
+      \cf5 $scope.\cf8 historicoNotificacao \cf5 = []\cf2 ;\
+      \cf5 $scope.\cf8 acoesFiscalizadoras \cf5 = []\cf2 ;\
+\
+      \cf7 // console.log(historicoFiscalizacoes);\
+      \cf2 if \cf5 (historicoFiscalizacoes.HistoricoProcessosEmpresa) \{\
+          $scope.\cf8 historicoEmAndamento \cf5 = historicoFiscalizacoes.HistoricoProcessosEmpresa.\cf4 filter\cf5 ((historico) => \{\
+              \cf2 return \cf5 historico.TPHistorico == \cf6 "1"\cf2 ;\
+          \cf5 \})\cf2 ;\
+          \cf5 $scope.\cf8 historicoJulgados \cf5 = historicoFiscalizacoes.HistoricoProcessosEmpresa.\cf4 filter\cf5 ((historico) => \{\
+              \cf2 return \cf5 historico.TPHistorico == \cf6 "2"\cf2 ;\
+          \cf5 \})\cf2 ;\
+          \cf5 $scope.\cf8 historicoAutoInfracao \cf5 = historicoFiscalizacoes.HistoricoProcessosEmpresa.\cf4 filter\cf5 ((historico) => \{\
+              \cf2 return \cf5 historico.TPHistorico == \cf6 "3"\cf2 ;\
+          \cf5 \})\cf2 ;\
+          \cf5 $scope.\cf8 historicoNotificacao \cf5 = historicoFiscalizacoes.HistoricoProcessosEmpresa.\cf4 filter\cf5 ((historico) => \{\
+              \cf2 return \cf5 historico.TPHistorico == \cf6 "4"\cf2 ;\
+          \cf5 \})\cf2 ;\
+      \cf5 \}\
+      \cf2 if \cf5 (historicoFiscalizacoes.HistoricoAcoesFiscalizadoras && historicoFiscalizacoes.HistoricoAcoesFiscalizadoras.\cf8 length \cf5 > \cf9 0\cf5 ) \{\
+        $scope.\cf8 acoesFiscalizadoras \cf5 = historicoFiscalizacoes.HistoricoAcoesFiscalizadoras\cf2 ;\
+        \cf5 $scope.\cf4 listaPeriodoReferencia\cf5 ($scope.\cf8 acoesFiscalizadoras\cf5 )\cf2 ;\
+        \cf4 setTimeout\cf5 (\cf2 function\cf5 ()\{\
+          \cf4 inicializarMaterializeSelect\cf5 ()\cf2 ;\
+          let \cf5 acoesFiscalizadoras = $scope.\cf8 acoesFiscalizadoras\cf5 .\cf4 filter\cf5 ((item) => \{\
+              \cf2 return \cf5 item.NRAnoFiscalizacao == $scope.\cf8 anoReferenciaAcoesFiscalizadoras\cf2 ;\
+          \cf5 \})\cf2 ;\
+          \cf5 $scope.\cf4 graficoAcoesFiscalizadoras\cf5 (acoesFiscalizadoras)\cf2 ;\
+        \cf5 \}\cf2 , \cf9 200\cf5 )\
+      \}\
+\
+      $scope.\cf4 selecionarPasso\cf5 (\cf6 '#passoProcessosAndamento'\cf5 )\cf2 ;\
+      var \cf5 elemento = \cf8 $\cf5 (\cf6 "#modal_historico"\cf5 )\cf2 ;\
+      var \cf5 instance = \cf8 M\cf5 .\cf8 Modal\cf5 .getInstance(elemento)\cf2 ;\
+      \cf5 instance.\cf4 open\cf5 ()\cf2 ;\
+    \cf5 \}\cf2 ;\
+\
+    \cf7 //...\
+    \cf5 $scope.\cf4 exibirHistorico \cf5 = \cf2 async function \cf5 (empresa) \{\
+\
+        $scope.\cf8 empresa \cf5 = empresa\cf2 ;\
+        \cf4 preloadInit\cf5 (\cf4 getMensagemVersaoTrainee\cf5 (\cf6 "Consultando hist\'f3rico da empresa"\cf2 , \cf6 "."\cf5 ))\cf2 ;\
+        var \cf5 arData = \{ \cf8 nrinscricao\cf5 : empresa.\cf8 NRInscricao \cf5 \}\cf2 ;\
+\
+        \cf5 $http(\{\
+            \cf8 url\cf5 : \cf4 urlService\cf5 () + \cf6 'ConsultarHistoricoFiscalizacoesPorEmpresa'\cf2 ,\
+            \cf8 method\cf5 : \cf6 "POST"\cf2 ,\
+            \cf8 data\cf5 : arData\
+        \}).\cf4 then\cf5 (\cf2 async function\cf5 (response) \{\
+                \cf7 // console.log(response);\
+\
+                /*.......*/\
+                \cf2 var \cf5 arHistorico = response.\cf8 data\cf5 .\cf8 d\cf2 ;\
+\
+                \cf7 /*.......*/\
+                \cf4 preloaderStop\cf5 ()\cf2 ;\
+                if \cf5 (response.\cf8 status \cf5 == \cf9 200\cf5 ) \{\
+                    \cf2 if \cf5 (arHistorico.\cf8 length \cf5 == \cf9 0\cf5 ) \{\
+                      $scope.\cf8 empresa \cf5 = \{\}\cf2 ;\
+                      \cf4 notificar\cf5 (response.\cf8 data\cf5 .Message\cf2 , \cf6 "Erro consultar hist\'f3rico de fiscaliza\'e7\'f5es!"\cf2 , \cf6 'exibirHistorico->ConsultarHistoricoFiscalizacoesPorEmpresa'\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'response'\cf5 :response\cf2 , \cf6 'arData'\cf5 :arData\}) )\cf2 ;\
+                    \cf5 \}\
+                    \cf2 else\
+                        \cf5 $scope.\cf4 modalHistoricoFiscalizacoes\cf5 (arHistorico)\cf2 ;\
+                \cf5 \} \cf2 else \cf5 \{\
+                  $scope.\cf8 empresa \cf5 = \{\}\cf2 ;\
+                  \cf4 notificar\cf5 (response.\cf8 data\cf5 .Message\cf2 , \cf6 "Erro consultar hist\'f3rico de fiscaliza\'e7\'f5es!"\cf2 , \cf6 'exibirHistorico->ConsultarHistoricoFiscalizacoesPorEmpresa'\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'response'\cf5 :response\cf2 , \cf6 'arData'\cf5 :arData\}) )\cf2 ;\
+                \cf5 \}\
+            \}\cf2 ,\
+            function\cf5 (response) \{\
+                $scope.\cf8 empresa \cf5 = \{\}\cf2 ;\
+                \cf4 preloaderStop\cf5 ()\cf2 ;\
+                \cf4 notificar\cf5 (response.\cf8 data\cf5 .Message\cf2 , \cf6 "Erro consultar hist\'f3rico de fiscaliza\'e7\'f5es!"\cf2 , \cf6 'exibirHistorico->ConsultarHistoricoFiscalizacoesPorEmpresa'\cf2 , 
+\f1\i\b \cf8 JSON
+\f0\i0\b0 \cf5 .\cf4 stringify\cf5 (\{\cf6 'response'\cf5 :response\cf2 , \cf6 'arData'\cf5 :arData\}) )\cf2 ;\
+            \cf5 \})\cf2 ;\
+    \cf5 \}\
+\
+    $scope.\cf4 fechar \cf5 = \cf2 function \cf5 (modal) \{\
+        \cf2 var \cf5 elemento = \cf8 $\cf5 (\cf6 "#"\cf5 +modal)\cf2 ;\
+        var \cf5 instance = \cf8 M\cf5 .\cf8 Modal\cf5 .getInstance(elemento)\cf2 ;\
+        \cf5 instance.\cf4 close\cf5 ()\cf2 ;\
+    \cf5 \}\
+\
+\})\
+\
+\cf7 // function onDeviceReady()\
+// \{\
+//   CarregarDadosAutorizadas();\
+// \}\
+\
+// function CarregarDadosAutorizadas()\
+// \{\
+//   try\
+//   \{\
+//       preloadInit("Carregando Dados");\
+\
+//       db = openDB();\
+\
+//       var query = "SELECT "\
+//         +"  ID "\
+//         +" ,AREAPPF "\
+//         +" ,DSBAIRRO "\
+//         +" ,DSENDERECO "\
+//         +" ,DTADITAMENTO "\
+//         +" ,DTOUTORGA "\
+//         +" ,EMAIL "\
+//         +" ,INSTALACAO "\
+//         +" ,LISTATIPOEMPRESA "\
+//         +" ,MODALIDADE "\
+//         +" ,NOMUNICIPIO "\
+//         +" ,NORAZAOSOCIAL "\
+//         +" ,NRADITAMENTO "\
+//         +" ,NRCEP "\
+//         +" ,NRINSCRICAO "\
+//         +" ,NRINSTRUMENTO "\
+//         +" ,NOMECONTATO "\
+//         +" ,QTDEMBARCACAO "\
+//         +" ,SGUF "\
+//         +" ,TPINSCRICAO "\
+//       +" FROM EMPRESASAUTORIZADAS"\
+//       +" WHERE UPPER(NORAZAOSOCIAL) LIKE UPPER('%PIPES%')";\
+\
+//       var arData = \{\};\
+//       arData.empresas = [];\
+\
+//       /*===============================================*/\
+//       db.transaction(function(tx) \{\
+//         tx.executeSql(query, [], function(tx,res) \{\
+//             for(var i = 0; i < res.rows.length; i++)\
+//             \{\
+//               //...\
+//                 arData.empresas.push(\{\
+//                   //ID: res.rows.item(i).ID\
+//                   AreaPPF: res.rows.item(i).AREAPPF,\
+//                   DSBairro: res.rows.item(i).DSBAIRRO,\
+//                   DSEndereco: res.rows.item(i).DSENDERECO,\
+//                   DTAditamento: res.rows.item(i).DTADITAMENTO,\
+//                   DTOutorga: res.rows.item(i).DIAUTORGA,\
+//                   Email: res.rows.item(i).EMAIL,\
+//                   Instalacao: res.rows.item(i).INSTALACAO,\
+//                   ListaTipoEmpresa:res.rows.item(i).LISTATIPOEMPRESA,\
+//                   Modalidade: res.rows.item(i).MODALIDADE,\
+//                   NOMunicipio: res.rows.item(i).NOMUNICIPIO,\
+//                   NORazaoSocial: res.rows.item(i).NORAZAOSOCIAL,\
+//                   NRAditamento: res.rows.item(i).NRADITAMENTO,\
+//                   NRCEP: res.rows.item(i).NRCEP,\
+//                   NRInscricao: res.rows.item(i).NRINSCRICAO,\
+//                   NRInstrumento: res.rows.item(i).NRINSTRUMENTO,\
+//                   NomeContato: res.rows.item(i).NOMECONTATO,\
+//                   QTDEmbarcacao: res.rows.item(i).QTDEMBARCACAO,\
+//                   SGUF: res.rows.item(i).SGUF,\
+//                   TPInscricao: res.rows.item(i).TPINSCRICAO\
+//                 \});\
+//             \}\
+\
+//             //...\
+//             //$scope.empresas = arData;\
+//             console.log(arData.empresas);\
+\
+//             //...\
+//             angular.forEach(arData.empresas, function (value, key) \{\
+//                       arData = verificaAutorizacao(arData, key);\
+//             \});\
+\
+//             console.log(arData.empresas);\
+//         \}\
+//      );\
+\
+\
+//     \}, function(err)\{\
+//         alert('CarregarDadosAutorizadas: An error occured while displaying saved notes');\
+//     \});\
+//   \}\
+//   catch (erro)\
+//   \{\
+//     console.log('CarregarDadosAutorizadas', erro.message);\
+//   \}\
+//   finally\
+//   \{\
+//     preloaderStop();\
+//   \}\
+// \}\
+\
+\
+\
+\
+\
+\
+\cf2 var 
+\f1\i\b \cf8 app 
+\f0\i0\b0 \cf5 = angular.\cf8 module\cf5 (\cf6 'app'\cf2 , \cf5 [])\cf2 ;\
+\
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf8 controller\cf5 (\cf6 'MainCtrl'\cf2 , function \cf5 ($scope\cf2 , \cf5 $http) \{\
+\
+    \cf2 var \cf5 arUsuario = angular.fromJson(
+\f1\i\b \cf8 localStorage
+\f0\i0\b0 \cf5 .\cf4 getItem\cf5 (\cf6 "arUsuario"\cf5 ))\cf2 ;\
+\
+    \cf5 $scope.\cf8 arUsuario \cf5 = arUsuario\cf2 ;\
+\
+	\cf5 $scope.\cf8 modalidades \cf5 = 
+\f1\i\b \cf8 modalidade
+\f0\i0\b0 \cf2 ;\
+\
+	
+\f1\i\b \cf8 console
+\f0\i0\b0 \cf5 .\cf4 log\cf5 ($scope.\cf8 modalidades\cf5 )\cf2 ;\
+\
+	\cf5 $scope.\cf4 muda \cf5 = \cf2 function\cf5 ()\{\
+		\cf4 setTimeout\cf5 (\cf2 function\cf5 ()\{  \cf8 $\cf5 (\cf6 'select'\cf5 ).formSelect() \}\cf2 , \cf9 200\cf5 )\
+	\}\
+\
+    $scope.\cf4 proxima \cf5 = \cf2 function \cf5 (stModalidade) \{\
+    	\cf2 if\cf5 ($scope.\cf8 servico\cf5 )\{    	\
+      		\cf7 //window.location = "empresa.listarAutorizadas.html?modalidade="+$scope.servico;\
+      		\cf4 gestorCarregarDadosAutorizadas\cf5 ($scope.\cf8 servico\cf2 , \cf6 'MODALIDADE'\cf5 )\cf2 ;\
+  	 	\cf5 \}\
+    \}\cf2 ;\
+\
+    \
+    
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf8 body\cf5 .\cf8 style\cf5 .\cf8 backgroundColor \cf5 = \cf6 "white"\cf2 ;\
+\
+\cf5 \})\
+\
+\cf7 //aplic\'e7\'e3o do filtro da \'e1rea \
+
+\f1\i\b \cf8 app
+\f0\i0\b0 \cf5 .\cf4 filter\cf5 (\cf6 'unique'\cf2 , function\cf5 () \{\
+   \cf7 // we will return a function which will take in a collection\
+   // and a keyname\
+	   \cf2 return function\cf5 (collection\cf2 , \cf5 keyname) \{\
+	      \cf7 // we define our output and keys array;\
+	      \cf2 var \cf5 output = []\cf2 , \
+	          \cf5 keys = []\cf2 ;\
+	      \
+	      \cf7 // we utilize angular's foreach function\
+	      // this takes in our original collection and an iterator function\
+	      \cf5 angular.\cf4 forEach\cf5 (collection\cf2 , function\cf5 (item) \{\
+	          \cf7 // we check to see whether our object exists\
+	          \cf2 var \cf5 key = item[keyname]\cf2 ;\
+	          \cf7 // if it's not already part of our keys array\
+	          \cf2 if\cf5 (keys.\cf4 indexOf\cf5 (key) === -\cf9 1\cf5 ) \{\
+	              \cf7 // add it to our keys array\
+	              \cf5 keys.\cf4 push\cf5 (key)\cf2 ; \
+	              \cf7 // push this item to our final output array\
+	              \cf5 output.\cf4 push\cf5 (item)\cf2 ;\
+	          \cf5 \}\
+	      \})\cf2 ;\
+	      \cf7 // return our array which should be devoid of\
+	      // any duplicates\
+	      \cf2 return \cf5 output\cf2 ;\
+	   \cf5 \}\cf2 ;\
+	\cf5 \})\cf2 ;\
+\
+\
+\
+\
+\cf7 \
+\
+\
+\cf10 <!DOCTYPE \cf11 html\cf10 >\
+<html \cf11 lang\cf12 ="pt-br"\cf10 >\
+<head>\
+    \cf7 <!--\
+    Customize this policy to fit your own app's needs. For more guidance, see:\
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy\
+    Some notes:\
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication\
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly\
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:\
+            * Enable inline JS: add 'unsafe-inline' to default-src\
+            key maps: AIzaSyDhAuix_PObNq-igBovZz-ciYWcCHzXcRU\
+\
+            cordova plugin add cordova-plugin-googlemaps - -variable API_KEY_FOR_ANDROID="AIzaSyCU9rN7vVvIm560yVT1AI8_QUWcG_22KDg"\
+\
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->\
+\
+    \cf10 <meta \cf11 name\cf12 ="format-detection" \cf11 content\cf12 ="telephone=no"\cf10 >\
+    <meta \cf11 name\cf12 ="msapplication-tap-highlight" \cf11 content\cf12 ="no"\cf10 >\
+    <meta \cf11 name\cf12 ="viewport" \cf11 content\cf12 ="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width"\cf10 >\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/style.css"\cf10 >\
+    \cf7 <!--Import Google Icon Font-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="fonts/material-icons.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    \cf7 <!--Import materialize.css-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="css/materialize.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/padrao.css"\cf10 >\
+    <title>\cf5 Consultar Autorizadas\cf10 </title>\
+\
+</head>\
+<body \cf11 ng-app\cf12 ="app"\cf10 >\
+\
+    <div \cf11 ng-controller\cf12 ="MainCtrl"\cf10 >\
+        <div \cf11 class\cf12 ="navbar-fixed"\cf10 >\
+            <nav \cf11 class\cf12 ="nav"\cf10 >\
+                <a \cf11 href\cf12 ="home.html" \cf11 data-target\cf12 ="slide-out" \cf11 class\cf12 ="sidenav-trigger"\cf10 ><i \cf11 class\cf12 ="material-icons"\cf10 >\cf5 arrow_back\cf10 </i></a>\
+                <a \cf11 href\cf12 ="#" \cf11 class\cf12 ="brand-logo left nav-text"\cf10 > \cf5 Consultar \cf10 </a>\
+            </nav>\
+        </div>\
+\
+        <div \cf11 id\cf12 ="deviceready" \cf11 class\cf12 ="blink"\cf10 >\
+\
+        </div>\
+        <p \cf11 class\cf12 ="pergunta"\cf10 > \cf5 Consultar por Instala\'e7\'e3o\cf10 </p>\
+        <div \cf11 class\cf12 ="app"\cf10 >\
+            <form \cf11 id\cf12 ="form" \cf11 ng-submit\cf12 ="pesquisar()"\cf10 >\
+                <div \cf11 class\cf12 ="row"\cf10 >\
+                    <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                        <input \cf11 id\cf12 ="pesquisar" \cf11 name\cf12 ="pesquisar" \cf11 ng-model\cf12 ="pesquisa" \cf11 required type\cf12 ="text" \cf11 class\cf12 ="validate"\cf10 >\
+                        <label \cf11 id\cf12 ="label-pesquisa" \cf11 class\cf12 ="active" \cf11 for\cf12 ="pesquisar"\cf10 >\cf5 Nome\cf10 </label>\
+                    </div>\
+                </div>\
+                <button \cf11 type\cf12 ="submit" \cf11 id\cf12 ="pesquisar" \cf11 class\cf12 ="waves-effect waves-blue btn botao"\cf10 >\
+                    \cf5 PESQUISAR\
+                \cf10 </button>\
+            </form>\
+            <div \cf11 id\cf12 ="fechar" \cf11 class\cf12 ="fechar"\cf10 ></div>\
+        </div>\
+    </div>\
+    \cf7 <!--JavaScript at end of body for optimized loading-->\
+    \cf10 <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="cordova.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/jquery.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/angular.min.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/materialize.min.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/util.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/gestor_bd.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/empresa.consultaInstalacao.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript"\cf10 >\
+        
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 addEventListener\cf5 (\cf6 'DOMContentLoaded'\cf2 , function \cf5 () \{\
+            \cf2 var \cf5 options = \cf2 null;\
+\
+            var \cf5 elems = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 querySelectorAll\cf5 (\cf6 '\cb13 .sidenav\cb3 '\cf5 )\cf2 ;\
+            var \cf5 instances = \cf8 M\cf5 .\cf8 Sidenav\cf5 .\cf4 init\cf5 (elems\cf2 , \cf5 options)\cf2 ;\
+        \cf5 \})\cf2 ;\
+    \cf10 </script>\
+\
+</body>\
+<script \cf11 type\cf12 ="text/javascript"\cf10 >\
+    
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 onerror \cf5 = \cf2 function \cf5 (message\cf2 , \cf5 url\cf2 , \cf5 lineNumber) \{\
+        \cf4 alert\cf5 (\cf6 "Error: " \cf5 + message + \cf6 " in " \cf5 + url + \cf6 " at line " \cf5 + lineNumber)\cf2 ;\
+    \cf5 \}\
+\cf10 </script>\
+</html>\
+\
+<!DOCTYPE \cf11 html\cf10 >\
+<html \cf11 lang\cf12 ="pt-br"\cf10 >\
+<head>\
+    \cf7 <!--\
+    Customize this policy to fit your own app's needs. For more guidance, see:\
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy\
+    Some notes:\
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication\
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly\
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:\
+            * Enable inline JS: add 'unsafe-inline' to default-src\
+            key maps: AIzaSyDhAuix_PObNq-igBovZz-ciYWcCHzXcRU\
+\
+            cordova plugin add cordova-plugin-googlemaps - -variable API_KEY_FOR_ANDROID="AIzaSyCU9rN7vVvIm560yVT1AI8_QUWcG_22KDg"\
+\
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->\
+\
+    \cf10 <meta \cf11 name\cf12 ="format-detection" \cf11 content\cf12 ="telephone=no"\cf10 >\
+    <meta \cf11 name\cf12 ="msapplication-tap-highlight" \cf11 content\cf12 ="no"\cf10 >\
+    <meta \cf11 name\cf12 ="viewport" \cf11 content\cf12 ="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width"\cf10 >\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/style.css"\cf10 >\
+    \cf7 <!--Import Google Icon Font-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="fonts/material-icons.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    \cf7 <!--Import materialize.css-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="css/materialize.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/padrao.css"\cf10 >\
+    <title>\cf5 Consultar Autorizadas\cf10 </title>\
+\
+</head>\
+<body \cf11 ng-app\cf12 ="app"\cf10 >\
+\
+    <div \cf11 ng-controller\cf12 ="MainCtrl"\cf10 >\
+        <div \cf11 class\cf12 ="navbar-fixed"\cf10 >\
+            <nav \cf11 class\cf12 ="nav"\cf10 >\
+                <a \cf11 href\cf12 ="home.html" \cf11 data-target\cf12 ="slide-out" \cf11 class\cf12 ="sidenav-trigger"\cf10 ><i \cf11 class\cf12 ="material-icons"\cf10 >\cf5 arrow_back\cf10 </i></a>\
+                <a \cf11 href\cf12 ="#" \cf11 class\cf12 ="brand-logo left nav-text"\cf10 > \cf5 Consultar \cf10 </a>\
+            </nav>\
+        </div>\
+\
+        <div \cf11 id\cf12 ="deviceready" \cf11 class\cf12 ="blink"\cf10 >\
+\
+        </div>\
+        <p \cf11 class\cf12 ="pergunta"\cf10 > \cf5 Consultar por Embarca\'e7\'e3o\cf10 </p>\
+        <div \cf11 class\cf12 ="app"\cf10 >\
+            <form \cf11 id\cf12 ="form" \cf11 ng-submit\cf12 ="pesquisar()"\cf10 >\
+                <div \cf11 class\cf12 ="row"\cf10 >\
+                    <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                        <input \cf11 id\cf12 ="numero" \cf11 name\cf12 ="numero" \cf11 ng-model\cf12 ="numero" \cf11 type\cf12 ="text" \cf11 maxlength\cf12 ="10" \cf11 class\cf12 ="validate"\cf10 >\
+                        <label \cf11 id\cf12 ="label-numero" \cf11 class\cf12 ="active" \cf11 for\cf12 ="numero"\cf10 >\cf5 IMO / N\'famero Capitania\cf10 </label>\
+                    </div>\
+                </div>\
+                <div \cf11 class\cf12 ="row"\cf10 >\
+                    <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                        <input \cf11 id\cf12 ="nome" \cf11 name\cf12 ="nome" \cf11 ng-model\cf12 ="nome" \cf11 type\cf12 ="text" \cf11 class\cf12 ="validate"\cf10 >\
+                        <label \cf11 id\cf12 ="label-nome" \cf11 class\cf12 ="active" \cf11 for\cf12 ="nome"\cf10 >\cf5 Nome\cf10 </label>\
+                    </div>\
+                </div>\
+                <button \cf11 type\cf12 ="submit" \cf11 id\cf12 ="pesquisar" \cf11 class\cf12 ="waves-effect waves-blue btn botao"\cf10 >\
+                    \cf5 PESQUISAR\
+                \cf10 </button>\
+            </form>\
+            <div \cf11 id\cf12 ="fechar" \cf11 class\cf12 ="fechar"\cf10 ></div>\
+        </div>\
+    </div>\
+    \cf7 <!--JavaScript at end of body for optimized loading-->\
+    \cf10 <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="cordova.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/jquery.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/angular.min.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/materialize.min.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/util.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/gestor_bd.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/empresa.consultaEmbarcacao.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript"\cf10 >\
+        
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 addEventListener\cf5 (\cf6 'DOMContentLoaded'\cf2 , function \cf5 () \{\
+            \cf2 var \cf5 options = \cf2 null;\
+\
+            var \cf5 elems = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 querySelectorAll\cf5 (\cf6 '\cb13 .sidenav\cb3 '\cf5 )\cf2 ;\
+            var \cf5 instances = \cf8 M\cf5 .\cf8 Sidenav\cf5 .\cf4 init\cf5 (elems\cf2 , \cf5 options)\cf2 ;\
+        \cf5 \})\cf2 ;\
+\
+\
+    \cf10 </script>\
+\
+</body>\
+<script \cf11 type\cf12 ="text/javascript"\cf10 >\
+    
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 onerror \cf5 = \cf2 function \cf5 (message\cf2 , \cf5 url\cf2 , \cf5 lineNumber) \{\
+        \cf4 alert\cf5 (\cf6 "Error: " \cf5 + message + \cf6 " in " \cf5 + url + \cf6 " at line " \cf5 + lineNumber)\cf2 ;\
+    \cf5 \}\
+\cf10 </script>\
+</html>\
+\cf7 \
+\
+\
+\
+\cf10 <!DOCTYPE \cf11 html\cf10 >\
+\
+<html>\
+<head>\
+    <meta \cf11 name\cf12 ="format-detection" \cf11 content\cf12 ="telephone=no"\cf10 >\
+    <meta \cf11 name\cf12 ="msapplication-tap-highlight" \cf11 content\cf12 ="no"\cf10 >\
+    <meta \cf11 name\cf12 ="viewport" \cf11 content\cf12 ="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width"\cf10 >\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/style.css"\cf10 >\
+    \cf7 <!--Import Google Icon Font-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="fonts/material-icons.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    \cf7 <!--Import materialize.css-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="css/materialize.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/padrao.css"\cf10 >\
+\
+\
+\
+    <title>\cf5 Tipo Consulta\cf10 </title>\
+\
+</head>\
+<body \cf11 ng-app\cf12 ="app"\cf10 >\
+\
+    <div \cf11 ng-controller\cf12 ="MainCtrl"\cf10 >\
+        <div \cf11 class\cf12 ="navbar-fixed"\cf10 >\
+            <nav \cf11 class\cf12 ="nav"\cf10 >\
+                <a \cf11 href\cf12 ="empresa.tipoConsulta.html" \cf11 data-target\cf12 ="slide-out" \cf11 class\cf12 ="sidenav-trigger"\cf10 ><i \cf11 class\cf12 ="material-icons"\cf10 >\cf5 arrow_back\cf10 </i></a>\
+                <a \cf11 href\cf12 ="#" \cf11 class\cf12 ="brand-logo left nav-text"\cf10 > \cf5 \'c1rea de Consulta \cf10 </a>\
+            </nav>\
+        </div>\
+        <div \cf11 id\cf12 ="deviceready" \cf11 class\cf12 ="blink"\cf10 ></div>\
+\
+        <p \cf11 class\cf12 ="titulo"\cf10 > \cf5 Selecione a \'e1rea de consulta. \cf10 </p>\
+        <div \cf11 class\cf12 ="app"\cf10 >\
+\
+\
+                <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                    <select \cf11 name\cf12 ="area" \cf11 id\cf12 ="area" \cf11 ng-model\cf12 ="area" \cf11 ng-change\cf12 ="muda()"\cf10 >\
+                        <option \cf11 value\cf12 ="" \cf11 disabled selected\cf10 >\cf5 \'c1rea\cf10 </option>\
+                        <option \cf11 ng-repeat\cf12 ="modalidade in modalidades | unique:'area'" \cf11 value\cf12 ="\{\{modalidade.area\}\}"\cf10 > \cf5 \{\{modalidade.area\}\} \cf10 </option>\
+                    </select>\
+                </div>\
+\
+                <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                    <select \cf11 name\cf12 ="tipo" \cf11 id\cf12 ="tipo" \cf11 ng-model\cf12 ="tipo" \cf11 ng-change\cf12 ="muda()"\cf10 >\
+                        <option \cf11 value\cf12 ="" \cf11 disabled selected\cf10 >\cf5 Tipo\cf10 </option>\
+                        <option \cf11 ng-repeat\cf12 ="modalidade in modalidades | unique:'tipo' | filter:area" \cf11 value\cf12 ="\{\{modalidade.tipo\}\}"\cf10 > \cf5 \{\{modalidade.tipo\}\} \cf10 </option>\
+                    </select>\
+                </div>\
+\
+                <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                    <select \cf11 name\cf12 ="servico" \cf11 id\cf12 ="servico" \cf11 ng-model\cf12 ="servico" \cf11 ng-change\cf12 ="proxima()"\cf10 >\
+                        <option \cf11 value\cf12 ="" \cf11 disabled selected\cf10 >\cf5 Modalidade\cf10 </option>\
+                        <option \cf11 ng-repeat\cf12 ="modalidade in modalidades | filter:tipo" \cf11 value\cf12 ="\{\{modalidade.servico\}\}"\cf10 > \cf5 \{\{modalidade.servico\}\} \cf10 </option>\
+                    </select>\
+                </div>\
+       </div>\
+    </div>\
+\
+    \cf7 <!--JavaScript at end of body for optimized loading-->\
+    \cf10 <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="cordova.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/jquery.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/angular.min.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/util.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/gestor_bd.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/materialize.min.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/modalidade.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/empresa.consultaArea.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript"\cf10 >\
+        \cf8 $\cf5 (
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 ).\cf8 ready\cf5 (\cf2 function\cf5 ()\{\
+            \cf4 inicializarMaterializeSelect\cf5 ()\cf2 ;\
+        \cf5 \})\cf2 ;\
+        
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 addEventListener\cf5 (\cf6 'DOMContentLoaded'\cf2 , function \cf5 () \{\
+            \cf2 var \cf5 options = \cf2 null;\
+\
+            var \cf5 elems = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 querySelectorAll\cf5 (\cf6 '\cb13 .sidenav\cb3 '\cf5 )\cf2 ;\
+            var \cf5 instances = \cf8 M\cf5 .\cf8 Sidenav\cf5 .\cf4 init\cf5 (elems\cf2 , \cf5 options)\cf2 ;\
+        \cf5 \})\cf2 ;\
+    \cf10 </script>\
+</body>\
+</html>\
+\
+<!DOCTYPE \cf11 html\cf10 >\
+\
+<html>\
+<head>\
+    \cf7 <!--\
+    Customize this policy to fit your own app's needs. For more guidance, see:\
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy\
+    Some notes:\
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication\
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly\
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:\
+            * Enable inline JS: add 'unsafe-inline' to default-src\
+            key maps: AIzaSyDhAuix_PObNq-igBovZz-ciYWcCHzXcRU\
+\
+            cordova plugin add cordova-plugin-googlemaps - -variable API_KEY_FOR_ANDROID="AIzaSyCU9rN7vVvIm560yVT1AI8_QUWcG_22KDg"\
+\
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">-->\
+\
+    \cf10 <meta \cf11 name\cf12 ="format-detection" \cf11 content\cf12 ="telephone=no"\cf10 >\
+    <meta \cf11 name\cf12 ="msapplication-tap-highlight" \cf11 content\cf12 ="no"\cf10 >\
+    <meta \cf11 name\cf12 ="viewport" \cf11 content\cf12 ="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width"\cf10 >\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/style.css"\cf10 >\
+    \cf7 <!--Import Google Icon Font-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="fonts/material-icons.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    \cf7 <!--Import materialize.css-->\
+    \cf10 <link \cf11 type\cf12 ="text/css" \cf11 rel\cf12 ="stylesheet" \cf11 href\cf12 ="css/materialize.css" \cf11 media\cf12 ="screen,projection" \cf10 />\
+    <link \cf11 rel\cf12 ="stylesheet" \cf11 type\cf12 ="text/css" \cf11 href\cf12 ="css/padrao.css"\cf10 >\
+    <title>\cf5 Consultar Autorizadas\cf10 </title>\
+\
+</head>\
+<body \cf11 ng-app\cf12 ="app"\cf10 >\
+\
+    <div \cf11 ng-controller\cf12 ="MainCtrl"\cf10 >\
+        <div \cf11 class\cf12 ="navbar-fixed"\cf10 >\
+            <nav \cf11 class\cf12 ="nav"\cf10 >\
+                <a \cf11 href\cf12 ="home.html" \cf11 data-target\cf12 ="slide-out" \cf11 class\cf12 ="sidenav-trigger"\cf10 ><i \cf11 class\cf12 ="material-icons"\cf10 >\cf5 arrow_back\cf10 </i></a>\
+                <a \cf11 href\cf12 ="#" \cf11 class\cf12 ="brand-logo left nav-text"\cf10 > \cf5 Fiscaliza\'e7\'f5es de Rotina \cf10 </a>\
+            </nav>\
+        </div>\
+        \cf7 <!-- <nav class="nav">\
+            <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>\
+            <a href="#" class="brand-logo left"><img align="middle" src="img/logo-navbar2.png"></a>\
+\
+            <ul id="nav-mobile" class="right">\
+                    <li>\
+                      <div id="ex1">\
+                        <i class="fa fa-envelope fa-5x fa-border icon-grey badgeNav"><i class="material-icons" >notifications</i></i>\
+                      </div>\
+                    </li>\
+                    <li><a href="#"><i class="material-icons">refresh</i></a></li>\
+\
+            </ul>\
+\
+        </nav>-->\
+\
+        <!--<ul id="slide-out" class="sidenav">\
+            <li>\
+                <div class="user-view">\
+                    <div class="background">\
+                        <img src="img/fundo.png">\
+                    </div>\
+                    <a href="#user"><img src="img/logo-navbar2@1,5x.png"></a>\
+                    <a href="#name"><span class="white-text name">\{\{arUsuario.servidor.NOUsuario\}\}</span></a>\
+                    <a href="index.html"><span class="sair white-text right"><img src="img/icon-sair.png"> Sair </span></a>\
+\
+                    <a href="#email"><span class="white-text email">\{\{arUsuario.EEFuncionario\}\}</span></a>\
+\
+                </div>\
+\
+            </li>\
+            <div class="menu">\
+                <li><a href="home.html"><i class="material-icons ">home</i>Inicio</a></li>\
+                <li><a href="minhasfiscalizacoes.listar.html"><i class="material-icons ">assignment</i>Minhas Fiscaliza\'e7\'f5es</a></li>\
+                <li><a href="empresa.consultarAutorizadas.html?tipofis=rotina"><i class="material-icons ">assignment_turned_in</i>Rotina</a></li>\
+                <li><a href="empresa.consultarAutorizadas.html?tipofis=consulta"><i class="material-icons ">business</i>Consultar Autorizadas</a></li>\
+                <li><a href="#!"><i class="material-icons ">folder_special</i>Tutorial</a></li>\
+                <li><a href="#!"><i class="material-icons ">info</i>A ANTAQ</a></li>\
+\
+            </div>\
+        </ul>-->\
+\
+        \cf10 <div \cf11 id\cf12 ="deviceready" \cf11 class\cf12 ="blink"\cf10 >\
+\
+        </div>\
+        <p \cf11 class\cf12 ="pergunta"\cf10 > \cf5 Consultar Empresa Autorizada \cf10 </p>\
+        <p \cf11 class\cf12 ="subtitulo"\cf10 > \cf5 Informe a Raz\'e3o Social ou palavra chave dela ou CNPJ da empresa autorizada \cf10 </p>\
+        <div \cf11 class\cf12 ="app"\cf10 >\
+            \cf7 <!--<form id="form" action="empresa.listarAutorizadas.html">-->\
+                \cf10 <form \cf11 id\cf12 ="form" \cf11 ng-submit\cf12 ="pesquisar()"\cf10 >\
+                <div \cf11 class\cf12 ="row"\cf10 >\
+                    <div \cf11 class\cf12 ="input-field col s12"\cf10 >\
+                        <input \cf11 id\cf12 ="pesquisar" \cf11 name\cf12 ="pesquisar" \cf11 ng-model\cf12 ="pesquisa" \cf11 required type\cf12 ="text" \cf11 class\cf12 ="validate"\cf10 >\
+                        <label \cf11 id\cf12 ="label-pesquisa" \cf11 class\cf12 ="active" \cf11 for\cf12 ="pesquisar"\cf10 >\cf5 Digite o CNPJ ou Raz\'e3o Social\cf10 </label>\
+                    </div>\
+                </div>\
+                <button \cf11 type\cf12 ="submit" \cf11 id\cf12 ="responder" \cf11 class\cf12 ="waves-effect waves-blue btn botao"\cf10 >\
+                    \cf5 PESQUISAR \{\{pesquisa\}\}\
+                \cf10 </button>\
+            </form>\
+            <div \cf11 id\cf12 ="qrcode" \cf11 class\cf12 ="qrcode"\cf10 >\
+                <img \cf11 src\cf12 ="img/qr-code@1,5x.png"\cf10 >\
+                <p \cf11 class\cf12 ="text-qrcode"\cf10 > \cf5 PREFIRO INFORMAR O QRCODE\cf10 </p>\
+            </div>\
+            <div \cf11 id\cf12 ="fechar" \cf11 class\cf12 ="fechar"\cf10 ></div>\
+        </div>\
+    </div>\
+    \cf7 <!--JavaScript at end of body for optimized loading-->\
+    \cf10 <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="cordova.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/angular.min.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/qrcode.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/materialize.min.js"\cf10 ></script>\
+    <script \cf11 src\cf12 ="js/util.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/gestor_bd.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript" \cf11 src\cf12 ="js/empresa.consultarAutorizadas.js"\cf10 ></script>\
+    <script \cf11 type\cf12 ="text/javascript"\cf10 >\
+        
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 addEventListener\cf5 (\cf6 'DOMContentLoaded'\cf2 , function \cf5 () \{\
+            \cf2 var \cf5 options = \cf2 null;\
+\
+            var \cf5 elems = 
+\f1\i\b \cf8 document
+\f0\i0\b0 \cf5 .\cf4 querySelectorAll\cf5 (\cf6 '\cb13 .sidenav\cb3 '\cf5 )\cf2 ;\
+            var \cf5 instances = \cf8 M\cf5 .\cf8 Sidenav\cf5 .\cf4 init\cf5 (elems\cf2 , \cf5 options)\cf2 ;\
+        \cf5 \})\cf2 ;\
+\
+\
+    \cf10 </script>\
+\
+</body>\
+<script \cf11 type\cf12 ="text/javascript"\cf10 >\
+    
+\f1\i\b \cf8 window
+\f0\i0\b0 \cf5 .\cf8 onerror \cf5 = \cf2 function \cf5 (message\cf2 , \cf5 url\cf2 , \cf5 lineNumber) \{\
+        \cf4 alert\cf5 (\cf6 "Error: " \cf5 + message + \cf6 " in " \cf5 + url + \cf6 " at line " \cf5 + lineNumber)\cf2 ;\
+    \cf5 \}\
+\cf10 </script>\
+</html>\
+\
+}

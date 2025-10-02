@@ -272,7 +272,7 @@ function validaEmbarcacao(empresa, linkEmbarcacao, linkTerminal) {
         return linkEmbarcacao;
     }
 }
-
+verificaAutorizacao,
 function validaEmbarcacao_old(empresa, linkEmbarcacao, linkTerminal) {
     // body...
     if (!empresa.QTDEmbarcacao) {

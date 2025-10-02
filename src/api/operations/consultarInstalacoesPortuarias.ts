@@ -128,34 +128,6 @@ function extractInstalacoesArray(parsed: any): any[] {
   return [];
 }
 
-function extractInstalacoesArray(parsed: any): any[] {
-  const candidates = [
-    parsed?.InstalacoesPortuariasSIGTAQ ?? parsed?.instalacoesPortuariasSIGTAQ,
-    parsed?.d,
-  ];
-
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    if (Array.isArray(candidate)) return candidate;
-    if (typeof candidate === 'object') {
-      const nested =
-        candidate.InstalacoesPortuariasSIGTAQ ?? candidate.instalacoesPortuariasSIGTAQ;
-      if (Array.isArray(nested)) return nested;
-      if (nested) return [nested];
-    }
-  }
-
-  if (Array.isArray(parsed)) return parsed;
-  if (parsed && typeof parsed === 'object') {
-    const values = Object.values(parsed);
-    if (values.length && values.every(value => typeof value !== 'object')) {
-      return [parsed];
-    }
-  }
-
-  return [];
-}
-
 function mapInstalacaoPortuaria(raw: any): InstalacaoPortuaria {
   return {
     id: str(raw?.id ?? raw?.ID),

@@ -18,10 +18,13 @@ export default function Notificacoes() {
   useEffect(() => {
     async function fetchData() {
       const session = await loadSession();
+      console.log('A',session);
       const idPerfil = session?.usuario?.IDPerfilFiscalizacao;
       if (!idPerfil) return;
       try {
-        const res = await listarMensagensPush(idPerfil);
+        const res = await listarMensagensPush({
+          IDPerfilFiscalizacao: String(idPerfil),
+        });
         const parseDate = (s: string) => {
           const [date, time] = s.split(' ');
           const [d, m, y] = date.split('/').map(Number);
