@@ -1,4 +1,4 @@
-import { soapRequest, extractSoapResult } from "./antaq";
+import { soapRequest, extractSoapResult } from "./api";
 
 export type MensagemPush = {
   IDMensagemPush: number;

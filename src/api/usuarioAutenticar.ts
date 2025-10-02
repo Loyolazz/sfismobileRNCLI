@@ -1,4 +1,4 @@
-import { soapRequest } from "./antaq";
+import { soapRequest } from "./api";
 
 /** Estrutura típica que volta do serviço (ajuste/estenda se necessário) */
 export type Servidor = {

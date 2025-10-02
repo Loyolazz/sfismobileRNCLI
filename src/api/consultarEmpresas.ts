@@ -1,7 +1,7 @@
 // src/api/consultarEmpresas.ts
 import NetInfo from '@react-native-community/netinfo';
 
-import { soapRequest, extractSoapResult } from '@/api/antaq';
+import { soapRequest, extractSoapResult } from './api';
 import {
   listEmpresasAutorizadasAsync,
   listEmpresasPorEmbarcacaoAsync,

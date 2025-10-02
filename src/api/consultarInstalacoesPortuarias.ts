@@ -1,4 +1,4 @@
-import { extractSoapResult, soapRequest } from '@/api/antaq';
+import { extractSoapResult, soapRequest } from './api';
 
 export type InstalacaoPortuaria = {
   id?: string;

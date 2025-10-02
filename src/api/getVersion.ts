@@ -1,5 +1,5 @@
 // src/services/getversion.ts
-import { soapRequest, extractSoapResult } from "./antaq";
+import { soapRequest, extractSoapResult } from "./api";
 
 /** Chama o método GetVersion e retorna a string de versão */
 export async function getVersion(): Promise<string> {
