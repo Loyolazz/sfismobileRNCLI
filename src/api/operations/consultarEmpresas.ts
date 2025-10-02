@@ -107,10 +107,17 @@ export type ConsultarEmpresasResult = {
 };
 
 type FiltroAutorizadas = {
-  cnpjRazaosocial?: string;
-  modalidade?: string;
-  embarcacao?: string;
-  instalacao?: string;
+  cnpjRazaosocial?: string | null;
+  modalidade?: string | null;
+  embarcacao?: string | null;
+  instalacao?: string | null;
+};
+
+type NormalizedFiltroAutorizadas = {
+  cnpjRazaosocial: string;
+  modalidade: string;
+  embarcacao: string;
+  instalacao: string;
 };
 
 export async function consultarEmpresas(
@@ -140,15 +147,27 @@ export async function buscarEmpresasAutorizadas(
   termo: string,
   modalidade: string = '',
 ): Promise<Empresa[]> {
-  console.log('[API] buscarEmpresasAutorizadas chamada', { termo, modalidade });
-  const result = await consultarEmpresasAutorizadas({ cnpjRazaosocial: termo, modalidade });
+  const filtro = termo?.trim();
+  const filtroModalidade = modalidade?.trim();
+  console.log('[API] buscarEmpresasAutorizadas chamada', {
+    termo: filtro,
+    modalidade: filtroModalidade,
+  });
+  const result = await consultarEmpresasAutorizadas({
+    cnpjRazaosocial: filtro,
+    modalidade: filtroModalidade,
+  });
   console.log('[API] buscarEmpresasAutorizadas retorno', result);
   return result;
 }
 
 export async function consultarPorModalidade(modalidade: string): Promise<Empresa[]> {
-  console.log('[API] consultarPorModalidade chamada', { modalidade });
-  const result = await consultarEmpresasAutorizadas({ modalidade });
+  const filtro = modalidade?.trim();
+  console.log('[API] consultarPorModalidade chamada', { modalidade: filtro });
+  const result = await consultarEmpresasAutorizadas({
+    cnpjRazaosocial: '',
+    modalidade: filtro,
+  });
   console.log('[API] consultarPorModalidade retorno', result);
   return result;
 }
@@ -167,19 +186,37 @@ export async function consultarPorInstalacao(instalacao: string): Promise<Empres
   return result;
 }
 
+function normalizeFiltroAutorizadas(payload: FiltroAutorizadas): NormalizedFiltroAutorizadas {
+  return {
+    cnpjRazaosocial: payload.cnpjRazaosocial?.trim() ?? '',
+    modalidade: payload.modalidade?.trim() ?? '',
+    embarcacao: payload.embarcacao?.trim() ?? '',
+    instalacao: payload.instalacao?.trim() ?? '',
+  };
+}
+
 async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise<Empresa[]> {
+  const filtro = normalizeFiltroAutorizadas(payload);
+
   if (await shouldUseOfflineData()) {
-    return consultarEmpresasAutorizadasOffline(payload);
+    return consultarEmpresasAutorizadasOffline(filtro);
+  }
+
+  if (filtro.embarcacao || filtro.instalacao) {
+    return consultarEmpresasAutorizadasOffline(filtro);
   }
 
   try {
-    console.log('[API] consultarEmpresasAutorizadas SOAP', payload);
-    const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', payload);
+    console.log('[API] consultarEmpresasAutorizadas SOAP', filtro);
+    const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
+      cnpjRazaosocial: filtro.cnpjRazaosocial,
+      modalidade: filtro.modalidade,
+    });
     const itens = Array.isArray(parsed?.d) ? parsed.d : parsed?.Empresa ?? parsed;
     const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
 
     if (!list.length) {
-      const offline = await consultarEmpresasAutorizadasOffline(payload);
+      const offline = await consultarEmpresasAutorizadasOffline(filtro);
       console.log('[API] consultarEmpresasAutorizadas retorno offline (sem dados online)', offline);
       return offline;
     }
@@ -189,7 +226,7 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
     return mapped;
   } catch (error) {
     console.log('[API] consultarEmpresasAutorizadas erro SOAP', error);
-    const fallback = await consultarEmpresasAutorizadasOffline(payload);
+    const fallback = await consultarEmpresasAutorizadasOffline(filtro);
     if (fallback.length > 0) {
       console.log('[API] consultarEmpresasAutorizadas retorno offline (fallback)', fallback);
       return fallback;
@@ -198,7 +235,9 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
   }
 }
 
-async function consultarEmpresasAutorizadasOffline(payload: FiltroAutorizadas): Promise<Empresa[]> {
+async function consultarEmpresasAutorizadasOffline(
+  payload: NormalizedFiltroAutorizadas,
+): Promise<Empresa[]> {
   const { cnpjRazaosocial, modalidade, instalacao, embarcacao } = payload;
 
   if (embarcacao) {
