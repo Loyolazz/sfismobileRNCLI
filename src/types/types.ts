@@ -28,9 +28,9 @@ export type ConsultarAutorizadasStackParamList = {
     Embarcacao: undefined;
     Instalacao: undefined;
     Detalhes: {
-        empresa: import('@/api/consultarEmpresas').Empresa;
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
     };
     Mapa: {
-        empresa: import('@/api/consultarEmpresas').Empresa;
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
     };
 };

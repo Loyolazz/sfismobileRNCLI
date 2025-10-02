@@ -10,7 +10,7 @@ import LinearGradient from 'react-native-linear-gradient';
 
 import Icon from '@/components/Icon';
 import { loadSession, clearSession } from '@/services/session';
-import type { Servidor } from '@/api/usuarioAutenticar';
+import type { Servidor } from '@/api/operations/usuarioAutenticar';
 import styles, { DRAWER_BANNER_GRADIENT } from '@/screens/HomeFiscalizacao/styles';
 import theme from '@/theme';
 

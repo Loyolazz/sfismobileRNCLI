@@ -1,7 +1,7 @@
 import { Linking } from "react-native";
 import { Toast } from "toastify-react-native";
 
-import { getVersion as fetchVersion } from "../api/getVersion";
+import { getVersion as fetchVersion } from "../api/operations/getVersion";
 import appInfo from "../../package.json";
 
 //DES

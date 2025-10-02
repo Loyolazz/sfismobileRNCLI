@@ -1,4 +1,61 @@
+import NetInfo from '@react-native-community/netinfo';
+
 import { callSoapAction, type SoapRequestOptions } from '../api';
+
+import {
+  listEmpresasAutorizadasAsync,
+  listEmpresasPorEmbarcacaoAsync,
+  type EmpresaAutorizada,
+  type ListEmpresasParams,
+} from '@/data/gestordb/empresasRepository';
+import { ensureEmpresaPayload } from '@/utils/payload';
+
+export type TipoEmpresa = {
+  IDTipoEmpresa: number;
+  DSTipoEmpresa: string;
+  NRinscricao?: string;
+};
+
+export type Empresa = {
+  NORazaoSocial: string;
+  TPInscricao?: number;
+  NRInscricao: string;
+  DSEndereco?: string;
+  SGUF?: string;
+  NOMunicipio?: string;
+  DSBairro?: string;
+  NRCEP?: string | number;
+  QTDEmbarcacao?: number;
+  AreaPPF?: string;
+
+  Modalidade?: string;
+  NRInstrumento?: string;
+  DescricaoNRInstrumento?: string;
+  DTAditamento?: string;
+  NRAditamento?: string;
+  Instalacao?: string;
+  NRInscricaoInstalacao?: string;
+  NORazaoSocialInstalacao?: string;
+  IDTipoInstalacaoPortuaria?: string;
+
+  icone?: string;
+  norma?: string | number;
+
+  isAutoridadePortuaria?: boolean;
+  NomeContato?: string;
+  Email?: string;
+  AutoridadePortuaria?: string;
+  NRResolucao?: string;
+  NRDocumentoSEI?: string;
+  NRTelefone?: string;
+  NORepresentante?: string;
+  EERepresentante?: string;
+  STIntimacaoViaTelefone?: boolean;
+  STIntimacaoViaEmail?: boolean;
+  IDContratoArrendamento?: number;
+
+  ListaTipoEmpresa?: TipoEmpresa[] | null;
+};
 
 export type ConsultarEmpresasParams = {
   cnpjRazaosocial: string;
@@ -49,6 +106,300 @@ export type ConsultarEmpresasResult = {
   }>;
 };
 
-export async function consultarEmpresas(params: ConsultarEmpresasParams, options?: SoapRequestOptions) {
-  return callSoapAction<ConsultarEmpresasResult>('ConsultarEmpresas', params, options);
+type FiltroAutorizadas = {
+  cnpjRazaosocial?: string;
+  modalidade?: string;
+  embarcacao?: string;
+  instalacao?: string;
+};
+
+export async function consultarEmpresas(
+  params: ConsultarEmpresasParams,
+  options?: SoapRequestOptions,
+) {
+  console.log('[API] consultarEmpresas chamada', params);
+  const result = await callSoapAction<ConsultarEmpresasResult>('ConsultarEmpresas', params, options);
+  console.log('[API] consultarEmpresas retorno', result);
+  return result;
+}
+
+export async function buscarEmpresasCnpjRazao(termo: string): Promise<Empresa[]> {
+  console.log('[API] buscarEmpresasCnpjRazao chamada', { termo });
+  const parsed = await callSoapAction<ConsultarEmpresasResult | { Empresa?: unknown; d?: unknown }>(
+    'ConsultarEmpresas',
+    { cnpjRazaosocial: termo },
+  );
+  const empresa = (parsed as any)?.Empresa ?? (parsed as any)?.d ?? parsed;
+  const list = Array.isArray(empresa) ? empresa : [empresa].filter(Boolean);
+  const mapped = list.map(mapEmpresaResumo);
+  console.log('[API] buscarEmpresasCnpjRazao retorno', mapped);
+  return mapped;
+}
+
+export async function buscarEmpresasAutorizadas(
+  termo: string,
+  modalidade: string = '',
+): Promise<Empresa[]> {
+  console.log('[API] buscarEmpresasAutorizadas chamada', { termo, modalidade });
+  const result = await consultarEmpresasAutorizadas({ cnpjRazaosocial: termo, modalidade });
+  console.log('[API] buscarEmpresasAutorizadas retorno', result);
+  return result;
+}
+
+export async function consultarPorModalidade(modalidade: string): Promise<Empresa[]> {
+  console.log('[API] consultarPorModalidade chamada', { modalidade });
+  const result = await consultarEmpresasAutorizadas({ modalidade });
+  console.log('[API] consultarPorModalidade retorno', result);
+  return result;
+}
+
+export async function consultarPorEmbarcacao(embarcacao: string): Promise<Empresa[]> {
+  console.log('[API] consultarPorEmbarcacao chamada', { embarcacao });
+  const result = await consultarEmpresasAutorizadas({ embarcacao });
+  console.log('[API] consultarPorEmbarcacao retorno', result);
+  return result;
+}
+
+export async function consultarPorInstalacao(instalacao: string): Promise<Empresa[]> {
+  console.log('[API] consultarPorInstalacao chamada', { instalacao });
+  const result = await consultarEmpresasAutorizadas({ instalacao });
+  console.log('[API] consultarPorInstalacao retorno', result);
+  return result;
+}
+
+async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise<Empresa[]> {
+  if (await shouldUseOfflineData()) {
+    return consultarEmpresasAutorizadasOffline(payload);
+  }
+
+  try {
+    console.log('[API] consultarEmpresasAutorizadas SOAP', payload);
+    const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', payload);
+    const itens = Array.isArray(parsed?.d) ? parsed.d : parsed?.Empresa ?? parsed;
+    const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
+
+    if (!list.length) {
+      const offline = await consultarEmpresasAutorizadasOffline(payload);
+      console.log('[API] consultarEmpresasAutorizadas retorno offline (sem dados online)', offline);
+      return offline;
+    }
+
+    const mapped = list.map(mapEmpresaAutorizadaLikeCordova);
+    console.log('[API] consultarEmpresasAutorizadas retorno SOAP', mapped);
+    return mapped;
+  } catch (error) {
+    console.log('[API] consultarEmpresasAutorizadas erro SOAP', error);
+    const fallback = await consultarEmpresasAutorizadasOffline(payload);
+    if (fallback.length > 0) {
+      console.log('[API] consultarEmpresasAutorizadas retorno offline (fallback)', fallback);
+      return fallback;
+    }
+    throw error;
+  }
+}
+
+async function consultarEmpresasAutorizadasOffline(payload: FiltroAutorizadas): Promise<Empresa[]> {
+  const { cnpjRazaosocial, modalidade, instalacao, embarcacao } = payload;
+
+  if (embarcacao) {
+    const porEmbarcacao = await listEmpresasPorEmbarcacaoAsync(embarcacao);
+    if (porEmbarcacao.length > 0) {
+      return porEmbarcacao.map(mapEmpresaAutorizadaOffline);
+    }
+  }
+
+  const params: ListEmpresasParams = {};
+
+  if (cnpjRazaosocial) {
+    params.busca = cnpjRazaosocial;
+  } else if (instalacao) {
+    params.instalacao = instalacao;
+  } else if (embarcacao) {
+    params.busca = embarcacao;
+  }
+
+  if (modalidade) {
+    params.modalidade = modalidade;
+  }
+
+  const empresas = await listEmpresasAutorizadasAsync(params);
+  return empresas.map(mapEmpresaAutorizadaOffline);
+}
+
+async function shouldUseOfflineData(): Promise<boolean> {
+  try {
+    const state = await NetInfo.fetch();
+    if (!state) return false;
+    if (!state.isConnected) return true;
+    if (state.type === 'none' || state.type === 'unknown') return true;
+    if (state.isInternetReachable === false) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
+function mapEmpresaAutorizadaOffline(row: EmpresaAutorizada): Empresa {
+  const payload = ensureEmpresaPayload(row.payload, {
+    NORazaoSocial: row.NORAZAOSOCIAL,
+    TPInscricao: coerceNumber(row.TPINSCRICAO) ?? row.TPINSCRICAO,
+    NRInscricao: row.NRINSCRICAO,
+    DSEndereco: row.DSENDERECO,
+    SGUF: row.SGUF,
+    NOMunicipio: row.NOMUNICIPIO,
+    DSBairro: row.DSBAIRRO,
+    NRCEP: row.NRCEP,
+    QTDEmbarcacao: coerceNumber(row.QTDEMBARCACAO),
+    AreaPPF: row.AREAPPF,
+    Instalacao: row.INSTALACAO,
+    Modalidade: row.MODALIDADE,
+    NRInstrumento: row.NRINSTRUMENTO,
+    DTOutorga: row.DTOUTORGA,
+    DTAditamento: row.DTADITAMENTO,
+    NRAditamento: row.NRADITAMENTO,
+    NomeContato: row.NOMECONTATO,
+    Email: row.EMAIL,
+    IDContratoArrendamento: coerceNumber(row.IDCONTRATOARRENDAMENTO) ?? row.IDCONTRATOARRENDAMENTO,
+    VLMontanteInvestimento: row.VLMONTANTEINVESTIMENTO,
+    NRTLO: row.NRTLO,
+    NRResolucao: row.NRRESOLUCAO,
+    AutoridadePortuaria: row.AUTORIDADEPORTUARIA,
+    NRInscricaoInstalacao: row.NRINSCRICAOINSTALACAO,
+    NORazaoSocialInstalacao: row.NORAZAOSOCIALINSTALACAO,
+    NORepresentante: row.NOREPRESENTANTE,
+    NRTelefone: row.NRTELEFONE,
+    EERepresentante: row.EEREPRESENTANTE,
+    NRDocumentoSEI: row.NRDOCUMENTOSEI,
+  });
+
+  if (payload.ListaTipoEmpresa == null && row.LISTATIPOEMPRESA) {
+    payload.ListaTipoEmpresa = row.LISTATIPOEMPRESA;
+  }
+
+  if (payload.QTDEmbarcacao == null) {
+    payload.QTDEmbarcacao = coerceNumber(row.QTDEMBARCACAO);
+  }
+
+  return mapEmpresaAutorizadaLikeCordova(payload);
+}
+
+function mapEmpresaResumo(x: any): Empresa {
+  return {
+    NORazaoSocial: str(x?.NORazaoSocial),
+    TPInscricao: num(x?.TPInscricao),
+    NRInscricao: str(x?.NRInscricao),
+    DSEndereco: str(x?.DSEndereco),
+    SGUF: str(x?.SGUF),
+    NOMunicipio: str(x?.NOMunicipio),
+    DSBairro: str(x?.DSBairro),
+    NRCEP: str(x?.NRCEP),
+    QTDEmbarcacao: num(x?.QTDEmbarcacao),
+    ListaTipoEmpresa: normalizeListaTipoEmpresa(x?.ListaTipoEmpresa),
+  };
+}
+
+function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
+  const modalidade = str(x?.Modalidade);
+  const idInstPort = str(x?.IDTipoInstalacaoPortuaria);
+  const isAutoridadePortuaria = !!idInstPort;
+
+  const numeroInstrumento = str(x?.NRInstrumento).trim();
+  const descInstrumento = numeroInstrumento
+    ? modalidade?.match(/Cabotagem|Apoio Portuario|Apoio Maritimo/i)
+      ? `Termo de Autorização: ${numeroInstrumento}`
+      : `Instrumento: ${numeroInstrumento}`
+    : '';
+
+  const icone = isAutoridadePortuaria ? 'img/icon-terminal.png' : 'img/icon-embarca.png';
+
+  return {
+    NORazaoSocial: str(x?.NORazaoSocial),
+    TPInscricao: num(x?.TPInscricao),
+    NRInscricao: str(x?.NRInscricao),
+    DSEndereco: str(x?.DSEndereco),
+    SGUF: str(x?.SGUF),
+    NOMunicipio: str(x?.NOMunicipio),
+    DSBairro: str(x?.DSBairro),
+    NRCEP: str(x?.NRCEP),
+    QTDEmbarcacao: num(x?.QTDEmbarcacao),
+    AreaPPF: str(x?.AreaPPF),
+
+    Modalidade: modalidade,
+    NRInstrumento: numeroInstrumento,
+    DescricaoNRInstrumento: descInstrumento,
+    DTAditamento: str(x?.DTAditamento),
+    NRAditamento: str(x?.NRAditamento),
+    Instalacao: str(x?.Instalacao),
+    NRInscricaoInstalacao: str(x?.NRInscricaoInstalacao),
+    NORazaoSocialInstalacao: str(x?.NORazaoSocialInstalacao),
+    IDTipoInstalacaoPortuaria: idInstPort,
+
+    icone,
+    norma: x?.norma,
+    isAutoridadePortuaria,
+    NomeContato: str(x?.NomeContato),
+    Email: str(x?.Email),
+    AutoridadePortuaria: str(x?.AutoridadePortuaria),
+    NRResolucao: str(x?.NRResolucao),
+    NRDocumentoSEI: str(x?.NRDocumentoSEI),
+    NRTelefone: str(x?.NRTelefone),
+    NORepresentante: str(x?.NORepresentante),
+    EERepresentante: str(x?.EERepresentante),
+    STIntimacaoViaTelefone: bool(x?.STIntimacaoViaTelefone),
+    STIntimacaoViaEmail: bool(x?.STIntimacaoViaEmail),
+    IDContratoArrendamento: num(x?.IDContratoArrendamento),
+  };
+}
+
+function normalizeListaTipoEmpresa(src: any): TipoEmpresa[] | null {
+  if (!src) return null;
+
+  if (typeof src === 'string') {
+    try {
+      const parsed = JSON.parse(src);
+      return normalizeListaTipoEmpresa(parsed);
+    } catch {
+      return null;
+    }
+  }
+
+  const itens = Array.isArray(src)
+    ? src
+    : Array.isArray(src?.TipoEmpresa)
+      ? src.TipoEmpresa
+      : [src?.TipoEmpresa].filter(Boolean);
+
+  if (!itens.length) return null;
+
+  return itens.map((t: any) => ({
+    IDTipoEmpresa: num(t?.IDTipoEmpresa),
+    DSTipoEmpresa: str(t?.DSTipoEmpresa),
+    NRinscricao: str(t?.NRinscricao),
+  }));
+}
+
+function coerceNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function str(v: any): string {
+  if (v == null) return '';
+  if (typeof v === 'object' && v['@_nil']) return '';
+  return String(v);
+}
+
+function num(v: any): number | undefined {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function bool(v: any): boolean | undefined {
+  if (v == null) return undefined;
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v === 1;
+  if (typeof v === 'string') return v.toLowerCase() === 'true' || v === '1';
+  return undefined;
 }

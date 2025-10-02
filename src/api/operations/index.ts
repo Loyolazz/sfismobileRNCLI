@@ -5,6 +5,7 @@ export * from './consultarContato';
 export * from './consultarDocumentoContratoArredamento';
 export * from './consultarEmbarcacoesPorNomeOuCapitania';
 export * from './consultarEmpresas';
+export * from './consultarInstalacoesPortuarias';
 export * from './consultarEmpresasAutorizadas';
 export * from './consultarEmpresasFiscalizadas';
 export * from './consultarEquipeDaFiscalizacao';

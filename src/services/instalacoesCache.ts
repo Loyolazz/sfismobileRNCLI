@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { InstalacaoPortuaria } from '@/api/consultarInstalacoesPortuarias';
+import type { InstalacaoPortuaria } from '@/api/operations/consultarInstalacoesPortuarias';
 
 const KEY_PREFIX = 'sfis.instalacoes';
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias

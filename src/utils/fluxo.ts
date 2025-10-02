@@ -1,4 +1,4 @@
-import type { Empresa } from '@/api/consultarEmpresas';
+import type { Empresa } from '@/api/operations/consultarEmpresas';
 
 export type FluxoTipo = 'MAPA' | 'FROTA' | 'TRAVESSIA';
 

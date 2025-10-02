@@ -4,7 +4,7 @@ import { TextInput, Pressable, Text, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { consultarPorEmbarcacao, type Empresa } from '@/api/consultarEmpresas';
+import { consultarPorEmbarcacao, type Empresa } from '@/api/operations/consultarEmpresas';
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import { formatImoCapitania, hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
