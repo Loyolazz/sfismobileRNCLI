@@ -81,15 +81,39 @@ export async function consultarInstalacoesPortuarias(
   }
 
   const parsed = await callSoapAction<any>('ConsultarInstalacoesPortuarias', payload, options);
-  const items = Array.isArray(parsed?.d)
-    ? parsed?.d
-    : Array.isArray(parsed)
-      ? parsed
-      : [parsed?.d ?? parsed].filter(Boolean);
+  const items = extractInstalacoesArray(parsed);
 
   const mapped = items.map(mapInstalacaoPortuaria);
   console.log('[API] consultarInstalacoesPortuarias retorno', mapped);
   return mapped;
+}
+
+function extractInstalacoesArray(parsed: any): any[] {
+  const candidates = [
+    parsed?.InstalacoesPortuariasSIGTAQ ?? parsed?.instalacoesPortuariasSIGTAQ,
+    parsed?.d,
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (Array.isArray(candidate)) return candidate;
+    if (typeof candidate === 'object') {
+      const nested =
+        candidate.InstalacoesPortuariasSIGTAQ ?? candidate.instalacoesPortuariasSIGTAQ;
+      if (Array.isArray(nested)) return nested;
+      if (nested) return [nested];
+    }
+  }
+
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === 'object') {
+    const values = Object.values(parsed);
+    if (values.length && values.every(value => typeof value !== 'object')) {
+      return [parsed];
+    }
+  }
+
+  return [];
 }
 
 function mapInstalacaoPortuaria(raw: any): InstalacaoPortuaria {
