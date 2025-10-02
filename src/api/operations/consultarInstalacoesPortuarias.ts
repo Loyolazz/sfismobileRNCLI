@@ -1,4 +1,4 @@
-import { extractSoapResult, soapRequest } from './api';
+import { callSoapAction, type SoapRequestOptions } from '../api';
 
 export type InstalacaoPortuaria = {
   id?: string;
@@ -23,6 +23,12 @@ export type InstalacaoPortuaria = {
   cnpj?: string;
   cdTerminal?: string;
   cdInstalacaoPortuaria?: string;
+};
+
+export type ConsultarInstalacoesPortuariasParams = {
+  cnpj?: string;
+  instalacao?: string;
+  modalidade?: string;
 };
 
 type ConsultaPayload = {
@@ -54,15 +60,12 @@ const str = (value: any): string => {
   return String(value);
 };
 
-export async function consultarInstalacoesPortuarias({
-  cnpj,
-  instalacao,
-  modalidade,
-}: {
-  cnpj?: string;
-  instalacao?: string;
-  modalidade?: string;
-}): Promise<InstalacaoPortuaria[]> {
+export async function consultarInstalacoesPortuarias(
+  { cnpj, instalacao, modalidade }: ConsultarInstalacoesPortuariasParams,
+  options?: SoapRequestOptions,
+): Promise<InstalacaoPortuaria[]> {
+  console.log('[API] consultarInstalacoesPortuarias chamada', { cnpj, instalacao, modalidade });
+
   const payload: ConsultaPayload = {
     ...EMPTY_PAYLOAD,
     cnpj: digitsOnly(cnpj) ?? '',
@@ -77,16 +80,16 @@ export async function consultarInstalacoesPortuarias({
     payload.TPInstalacaoPortuaria = modalidade.trim();
   }
 
-  const parsed = await soapRequest('ConsultarInstalacoesPortuarias', payload);
-  const result = extractSoapResult(parsed, 'ConsultarInstalacoesPortuarias');
+  const parsed = await callSoapAction<any>('ConsultarInstalacoesPortuarias', payload, options);
+  const items = Array.isArray(parsed?.d)
+    ? parsed?.d
+    : Array.isArray(parsed)
+      ? parsed
+      : [parsed?.d ?? parsed].filter(Boolean);
 
-  const items = Array.isArray(result?.d)
-    ? result?.d
-    : Array.isArray(result)
-      ? result
-      : [result?.d ?? result].filter(Boolean);
-
-  return items.map(mapInstalacaoPortuaria);
+  const mapped = items.map(mapInstalacaoPortuaria);
+  console.log('[API] consultarInstalacoesPortuarias retorno', mapped);
+  return mapped;
 }
 
 function mapInstalacaoPortuaria(raw: any): InstalacaoPortuaria {

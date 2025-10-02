@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import SelectField, { type SelectOption } from '@/components/SelectField';
-import { consultarPorModalidade, type Empresa } from '@/api/consultarEmpresas';
+import { consultarPorModalidade, type Empresa } from '@/api/operations/consultarEmpresas';
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 import {

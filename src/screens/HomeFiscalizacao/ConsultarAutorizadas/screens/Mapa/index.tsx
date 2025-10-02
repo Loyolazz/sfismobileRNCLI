@@ -7,11 +7,11 @@ import NetInfo from '@react-native-community/netinfo';
 import { WebView } from 'react-native-webview';
 
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
-import type { Empresa } from '@/api/consultarEmpresas';
+import type { Empresa } from '@/api/operations/consultarEmpresas';
 import {
   consultarInstalacoesPortuarias,
   type InstalacaoPortuaria,
-} from '@/api/consultarInstalacoesPortuarias';
+} from '@/api/operations/consultarInstalacoesPortuarias';
 import {
   carregarInstalacoesCache,
   salvarInstalacoesCache,

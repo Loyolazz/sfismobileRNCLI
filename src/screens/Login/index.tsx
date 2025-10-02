@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Toast } from "toastify-react-native";
 
-import { usuarioAutenticar } from "@/api/usuarioAutenticar";
+import { usuarioAutenticar } from "@/api/operations/usuarioAutenticar";
 import { saveSession, loadSession } from "@/services/session";
 import type { RootStackParamList } from "@/types/types";
 import Icon from "@/components/Icon";

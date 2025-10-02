@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 import Icon from '@/components/Icon';
-import { listarMensagensPush, MensagemPush } from '@/api/notificacoes';
+import { listarMensagensPush, type MensagemPush } from '@/api/operations/listarMensagensPush';
 import { loadSession } from '@/services/session';
 import type { DrawerParamList } from '@/types/types';
 import theme from '@/theme';

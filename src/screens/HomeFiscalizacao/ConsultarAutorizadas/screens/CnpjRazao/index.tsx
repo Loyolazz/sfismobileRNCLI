@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { buscarEmpresasAutorizadas, type Empresa } from '@/api/consultarEmpresas';
+import { buscarEmpresasAutorizadas, type Empresa } from '@/api/operations/consultarEmpresas';
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
