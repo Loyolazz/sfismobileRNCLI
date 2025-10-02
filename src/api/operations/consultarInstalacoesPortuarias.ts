@@ -53,6 +53,17 @@ const EMPTY_PAYLOAD: ConsultaPayload = {
 };
 
 const digitsOnly = (value?: string) => (value ? value.replace(/\D/g, '') : undefined);
+const normalizeDigits = (value?: string) => {
+  const digits = digitsOnly(value);
+  return digits ? digits.replace(/^0+/, '') : undefined;
+};
+
+const formatCnpjForRequest = (value?: string) => {
+  const digits = digitsOnly(value);
+  if (!digits) return '';
+  const normalized = digits.slice(-14);
+  return normalized.padStart(14, '0');
+};
 
 const str = (value: any): string => {
   if (value == null) return '';
@@ -68,7 +79,7 @@ export async function consultarInstalacoesPortuarias(
 
   const payload: ConsultaPayload = {
     ...EMPTY_PAYLOAD,
-    cnpj: digitsOnly(cnpj) ?? '',
+    cnpj: formatCnpjForRequest(cnpj),
   };
 
   if (instalacao?.trim()) {
@@ -81,15 +92,40 @@ export async function consultarInstalacoesPortuarias(
   }
 
   const parsed = await callSoapAction<any>('ConsultarInstalacoesPortuarias', payload, options);
-  const items = Array.isArray(parsed?.d)
-    ? parsed?.d
-    : Array.isArray(parsed)
-      ? parsed
-      : [parsed?.d ?? parsed].filter(Boolean);
+  const items = extractInstalacoesArray(parsed);
 
   const mapped = items.map(mapInstalacaoPortuaria);
-  console.log('[API] consultarInstalacoesPortuarias retorno', mapped);
-  return mapped;
+  const filtered = filterInstalacoes(mapped, { cnpj, instalacao, modalidade });
+  console.log('[API] consultarInstalacoesPortuarias retorno', filtered);
+  return filtered;
+}
+
+function extractInstalacoesArray(parsed: any): any[] {
+  const candidates = [
+    parsed?.InstalacoesPortuariasSIGTAQ ?? parsed?.instalacoesPortuariasSIGTAQ,
+    parsed?.d,
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (Array.isArray(candidate)) return candidate;
+    if (typeof candidate === 'object') {
+      const nested =
+        candidate.InstalacoesPortuariasSIGTAQ ?? candidate.instalacoesPortuariasSIGTAQ;
+      if (Array.isArray(nested)) return nested;
+      if (nested) return [nested];
+    }
+  }
+
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && typeof parsed === 'object') {
+    const values = Object.values(parsed);
+    if (values.length && values.every(value => typeof value !== 'object')) {
+      return [parsed];
+    }
+  }
+
+  return [];
 }
 
 function mapInstalacaoPortuaria(raw: any): InstalacaoPortuaria {
@@ -117,4 +153,41 @@ function mapInstalacaoPortuaria(raw: any): InstalacaoPortuaria {
     cdTerminal: str(raw?.cdterminal ?? raw?.CDTerminal),
     cdInstalacaoPortuaria: str(raw?.cdinstalacaoportuaria ?? raw?.CDInstalacaoPortuaria),
   };
+}
+
+function filterInstalacoes(
+  instalacoes: InstalacaoPortuaria[],
+  { cnpj, instalacao, modalidade }: ConsultarInstalacoesPortuariasParams,
+): InstalacaoPortuaria[] {
+  let result = [...instalacoes];
+
+  const normalizedCnpj = normalizeDigits(cnpj);
+  const searchTerm = instalacao?.trim().toLowerCase();
+  const modalidadeTerm = modalidade?.trim().toLowerCase();
+
+  const anyFilter = Boolean(normalizedCnpj || searchTerm || modalidadeTerm);
+
+  if (normalizedCnpj) {
+    result = result.filter(item => normalizeDigits(item.cnpj) === normalizedCnpj);
+  }
+
+  if (searchTerm) {
+    result = result.filter(item => {
+      const nome = item.nome?.toLowerCase() ?? '';
+      const localizacao = item.localizacao?.toLowerCase() ?? '';
+      return nome.includes(searchTerm) || localizacao.includes(searchTerm);
+    });
+  }
+
+  if (modalidadeTerm) {
+    result = result.filter(
+      item => (item.modalidade ?? '').toLowerCase() === modalidadeTerm,
+    );
+  }
+
+  if (!anyFilter) {
+    return instalacoes;
+  }
+
+  return result;
 }
