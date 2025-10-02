@@ -9,6 +9,7 @@ import {
   type ListEmpresasParams,
 } from '@/data/gestordb/empresasRepository';
 import { ensureEmpresaPayload } from '@/utils/payload';
+import { aplicarPrefixoInstrumento, obterRegraModalidade, ICONES_AUTORIZACAO } from '@/utils/autorizacao';
 
 export type TipoEmpresa = {
   IDTipoEmpresa: number;
@@ -340,17 +341,22 @@ function mapEmpresaResumo(x: any): Empresa {
 
 function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
   const modalidade = str(x?.Modalidade);
-  const idInstPort = str(x?.IDTipoInstalacaoPortuaria);
-  const isAutoridadePortuaria = !!idInstPort;
+  const regraModalidade = obterRegraModalidade(modalidade);
+  const idInstPortOriginal = str(x?.IDTipoInstalacaoPortuaria);
+  const idInstPort = regraModalidade.idTipoInstalacaoPortuaria ?? idInstPortOriginal;
 
-  const numeroInstrumento = str(x?.NRInstrumento).trim();
+  const numeroInstrumentoOriginal = str(x?.NRInstrumento).trim();
+  const numeroInstrumento = aplicarPrefixoInstrumento(numeroInstrumentoOriginal, regraModalidade.prefixoInstrumento).trim();
   const descInstrumento = numeroInstrumento
     ? modalidade?.match(/Cabotagem|Apoio Portuario|Apoio Maritimo/i)
       ? `Termo de Autorização: ${numeroInstrumento}`
       : `Instrumento: ${numeroInstrumento}`
     : '';
 
-  const icone = isAutoridadePortuaria ? 'img/icon-terminal.png' : 'img/icon-embarca.png';
+  const iconePadrao = idInstPort ? ICONES_AUTORIZACAO.TERMINAL : ICONES_AUTORIZACAO.EMBARCACAO;
+  const icone = regraModalidade.icone ?? iconePadrao;
+  const norma = regraModalidade.norma ?? str(x?.norma);
+  const isAutoridadePortuaria = Boolean(idInstPort) || regraModalidade.forcarMapa === true;
 
   return {
     NORazaoSocial: str(x?.NORazaoSocial),
@@ -375,7 +381,7 @@ function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
     IDTipoInstalacaoPortuaria: idInstPort,
 
     icone,
-    norma: x?.norma,
+    norma,
     isAutoridadePortuaria,
     NomeContato: str(x?.NomeContato),
     Email: str(x?.Email),
