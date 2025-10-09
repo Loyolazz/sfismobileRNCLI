@@ -12,6 +12,8 @@ import LinearGradient from "react-native-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+import { Toast } from "toastify-react-native";
+
 import { ensureLatestVersion } from "@/lib/version";
 import { extractSoapResult, soapRequest } from "@/api/antaq";
 import type { RootStackParamList } from "@/types/types";
@@ -87,8 +89,14 @@ export default function Splash() {
 
     useEffect(() => {
         (async () => {
-            const ok = await ensureLatestVersion();
-            if (ok) {
+            try {
+                const ok = await ensureLatestVersion();
+                if (ok) {
+                    navigation.replace("Login");
+                }
+            } catch (error) {
+                console.error("Falha ao verificar versão do aplicativo:", error);
+                Toast.error("Não foi possível validar a versão. Prosseguindo...");
                 navigation.replace("Login");
             }
         })();

@@ -32,14 +32,29 @@ export function getBuildNumber() {
     return (appInfo as any)?.buildNumber ?? "";
 }
 
+async function safeFetchLatestVersion() {
+  try {
+    return await fetchVersion();
+  } catch (error) {
+    console.error("Erro ao buscar versão mais recente do app:", error);
+    Toast.error("Não foi possível verificar a versão mais recente.");
+    return null;
+  }
+}
+
 export async function ensureLatestVersion() {
   const current = getAppVersion();
-  const latest = await fetchVersion();
+  const latest = await safeFetchLatestVersion();
 
   console.log("Versão atual do app:", current);
   console.log("Versão disponibilizada pela API:", latest);
 
-  if (latest && latest !== current) {
+  if (latest == null) {
+    Toast.info("Não foi possível validar a versão. Prosseguindo com a versão atual.");
+    return true;
+  }
+
+  if (latest !== current) {
     Toast.error("Versão desatualizada. Baixe a versão mais recente.");
     const url = `${APK_HOST}${APK_PATH}/${APK_NAME}-${latest}.apk`;
     await Linking.openURL(url);
