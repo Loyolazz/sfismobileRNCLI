@@ -116,7 +116,7 @@ android {
                     reset()
                     enable true
                     universalApk false // não gera um único APK com tudo
-                    include "armeabi-v7a", "arm64-v8a", "x86_64"
+                    include "arm64-v8a"
                 }
             }
 
