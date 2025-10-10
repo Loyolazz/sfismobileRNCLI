@@ -90,46 +90,46 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            // APK de produção assinado!
-            signingConfig signingConfigs.release
+                    // APK assinado com sua keystore de release
+                    signingConfig signingConfigs.release
 
-            // Shrinker/ProGuard (desligado por padrão; ligue se quiser reduzir tamanho)
-            minifyEnabled enableProguardInReleaseBuilds
-            shrinkResources enableProguardInReleaseBuilds
+                    // Otimizações (pode ativar mais tarde)
+                    minifyEnabled false
+                    shrinkResources false
 
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+                    // Arquivos de regras para o shrinker/ProGuard
+                    proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
 
-            // Opcional: se for distribuir várias arquiteturas em APKs separados
-            // (melhora tamanho quando for instalar fora da Play Store)
-            // ndk {
-            //     abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+                    // Opcional: se for distribuir um único APK com ABIs específicas
+                    // ndk {
+                    //     abiFilters "armeabi-v7a", "arm64-v8a"
+                    // }
+                }
+            }
+
+            /**
+             * Gera um APK separado por arquitetura (vários arquivos menores)
+             * Ideal para distribuição fora da Play Store.
+             */
+            splits {
+                abi {
+                    reset()
+                    enable true
+                    universalApk false // não gera um único APK com tudo
+                    include "armeabi-v7a", "arm64-v8a", "x86_64"
+                }
+            }
+
+            /**
+             * (Opcional) evitar conflitos de libs nativas.
+             * Deixe desativado se não precisar.
+             */
+            // packagingOptions {Ò
+            //     jniLibs {
+            //         useLegacyPackaging = true
+            //     }
             // }
         }
-    }
-
-    /**
-     * Opcional: em alguns casos evita conflitos de libs nativas.
-     * Deixe comentado se não precisar.
-     */
-    // packagingOptions {
-    //     jniLibs {
-    //         useLegacyPackaging = true
-    //     }
-    // }
-
-    /**
-     * (Opcional) splits por ABI para gerar um APK por arquitetura:
-     * Descomente se quiser APKs menores (fora da Play).
-     */
-    // splits {
-    //     abi {
-    //         reset()
-    //         enable true
-    //         universalApk false
-    //         include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-    //     }
-    // }
-}
 
 dependencies {
     // A versão do react-android é gerenciada pelo plugin do RN
