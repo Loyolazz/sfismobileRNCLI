@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Pressable, Text, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,7 @@ export default function Instalacao() {
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
   const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
@@ -24,16 +25,28 @@ export default function Instalacao() {
     [navigation],
   );
 
+  const handleOpenHistorico = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Historico', { empresa });
+    },
+    [navigation],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Empresa }) => (
-      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+      <EmpresaCard
+        empresa={item}
+        onPress={() => handleOpenEmpresa(item)}
+        onHistorico={() => handleOpenHistorico(item)}
+      />
     ),
-    [handleOpenEmpresa],
+    [handleOpenEmpresa, handleOpenHistorico],
   );
 
   const handleSearch = useCallback(async () => {
+    setTouched(true);
     if (!hasText(query)) {
-      Alert.alert('Atenção', 'Informe o nome da instalação.');
+      Alert.alert('Atenção', 'Preencha este campo!');
       return;
     }
     try {
@@ -48,16 +61,31 @@ export default function Instalacao() {
     }
   }, [query]);
 
+  const inputStyles = useMemo(() => {
+    const base = [styles.input];
+    if (hasText(query)) {
+      base.push(styles.inputValid);
+    } else if (touched) {
+      base.push(styles.inputInvalid);
+    }
+    return base;
+  }, [query, touched]);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <Text style={styles.title}>Informe a instalação</Text>
       <TextInput
         value={query}
-        onChangeText={setQuery}
+        onChangeText={(text) => {
+          setQuery(text);
+          if (!touched && hasText(text)) {
+            setTouched(true);
+          }
+        }}
         placeholder="Nome"
         autoCapitalize="characters"
         autoCorrect={false}
-        style={styles.input}
+        style={inputStyles}
         editable={!loading}
       />
       <Pressable
@@ -67,7 +95,7 @@ export default function Instalacao() {
           !hasText(query) && styles.buttonDisabled,
         ]}
         onPress={handleSearch}
-        disabled={loading || !hasText(query)}
+        disabled={loading}
       >
         <Text style={styles.buttonText}>
           {loading ? 'Pesquisando...' : 'Pesquisar'}

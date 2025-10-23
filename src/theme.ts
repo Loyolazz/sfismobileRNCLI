@@ -9,6 +9,7 @@ const colors = {
   text: "#0B1F33",
   muted: "#64748B",
   error: "#D62828",
+  success: "#1BAA6A",
   warning: "#FFDB00",
 };
 

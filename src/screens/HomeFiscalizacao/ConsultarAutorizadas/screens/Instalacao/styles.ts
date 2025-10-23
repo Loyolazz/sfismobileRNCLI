@@ -13,6 +13,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     backgroundColor: theme.colors.background,
   },
+  inputValid: {
+    borderColor: theme.colors.success,
+  },
+  inputInvalid: {
+    borderColor: theme.colors.error,
+  },
   button: {
     backgroundColor: theme.colors.primary,
     padding: theme.spacing.sm,
@@ -22,7 +28,7 @@ const styles = StyleSheet.create({
   },
   buttonPressed: { opacity: 0.85 },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { ...theme.typography.button },
+  buttonText: { ...theme.typography.button, color: theme.colors.surface, textTransform: 'uppercase' },
   emptyContainer: { flexGrow: 1 },
   empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
   count: { ...theme.typography.caption, color: theme.colors.muted, marginBottom: theme.spacing.sm },
