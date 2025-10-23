@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Pressable, Text, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +17,7 @@ export default function Embarcacao() {
   const [data, setData] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
   const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
@@ -25,16 +26,28 @@ export default function Embarcacao() {
     [navigation],
   );
 
+  const handleOpenHistorico = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Historico', { empresa });
+    },
+    [navigation],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Empresa }) => (
-      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+      <EmpresaCard
+        empresa={item}
+        onPress={() => handleOpenEmpresa(item)}
+        onHistorico={() => handleOpenHistorico(item)}
+      />
     ),
-    [handleOpenEmpresa],
+    [handleOpenEmpresa, handleOpenHistorico],
   );
 
   const handleSearch = useCallback(async () => {
+    setTouched(true);
     if (!hasText(numero) && !hasText(nome)) {
-      Alert.alert('Atenção', 'Informe ao menos um filtro para pesquisar.');
+      Alert.alert('Atenção', 'Preencha este campo!');
       return;
     }
     try {
@@ -55,25 +68,55 @@ export default function Embarcacao() {
     }
   }, [nome, numero]);
 
+  const numeroStyles = useMemo(() => {
+    const base = [styles.input];
+    if (hasText(numero)) {
+      base.push(styles.inputValid);
+    } else if (touched) {
+      base.push(styles.inputInvalid);
+    }
+    return base;
+  }, [numero, touched]);
+
+  const nomeStyles = useMemo(() => {
+    const base = [styles.input];
+    if (hasText(nome)) {
+      base.push(styles.inputValid);
+    } else if (touched && !hasText(numero)) {
+      base.push(styles.inputInvalid);
+    }
+    return base;
+  }, [nome, touched, numero]);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <Text style={styles.title}>Informe a embarcação</Text>
       <TextInput
         value={numero}
-        onChangeText={(text) => setNumero(formatImoCapitania(text))}
+        onChangeText={(text) => {
+          setNumero(formatImoCapitania(text));
+          if (!touched && hasText(text)) {
+            setTouched(true);
+          }
+        }}
         placeholder="IMO / Número Capitania"
         autoCapitalize="characters"
         autoCorrect={false}
-        style={styles.input}
+        style={numeroStyles}
         editable={!loading}
       />
       <TextInput
         value={nome}
-        onChangeText={setNome}
+        onChangeText={(text) => {
+          setNome(text);
+          if (!touched && hasText(text)) {
+            setTouched(true);
+          }
+        }}
         placeholder="Nome"
         autoCapitalize="characters"
         autoCorrect={false}
-        style={styles.input}
+        style={nomeStyles}
         editable={!loading}
       />
       <Pressable
@@ -83,7 +126,7 @@ export default function Embarcacao() {
           !hasText(numero) && !hasText(nome) && styles.buttonDisabled,
         ]}
         onPress={handleSearch}
-        disabled={loading || (!hasText(numero) && !hasText(nome))}
+        disabled={loading}
       >
         <Text style={styles.buttonText}>{loading ? 'Pesquisando...' : 'Pesquisar'}</Text>
       </Pressable>

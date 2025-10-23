@@ -48,11 +48,22 @@ export default function Modalidade(): React.JSX.Element {
     [navigation],
   );
 
+  const handleOpenHistorico = useCallback(
+    (empresa: Empresa) => {
+      navigation.navigate('Historico', { empresa });
+    },
+    [navigation],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Empresa }) => (
-      <EmpresaCard empresa={item} onPress={() => handleOpenEmpresa(item)} />
+      <EmpresaCard
+        empresa={item}
+        onPress={() => handleOpenEmpresa(item)}
+        onHistorico={() => handleOpenHistorico(item)}
+      />
     ),
-    [handleOpenEmpresa],
+    [handleOpenEmpresa, handleOpenHistorico],
   );
 
   const handleSelectArea = useCallback((option: SelectOption<ModalidadeArea>) => {
