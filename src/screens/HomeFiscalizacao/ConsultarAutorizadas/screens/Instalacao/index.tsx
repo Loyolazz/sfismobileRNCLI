@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Pressable, Text, FlatList, Alert } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -61,14 +62,14 @@ export default function Instalacao() {
     }
   }, [query]);
 
-  const inputStyles = useMemo(() => {
-    const base = [styles.input];
+  const inputStyles = useMemo<StyleProp<TextStyle>>(() => {
     if (hasText(query)) {
-      base.push(styles.inputValid);
-    } else if (touched) {
-      base.push(styles.inputInvalid);
+      return [styles.input, styles.inputValid];
     }
-    return base;
+    if (touched) {
+      return [styles.input, styles.inputInvalid];
+    }
+    return styles.input;
   }, [query, touched]);
 
   return (

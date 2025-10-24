@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Pressable, Text, FlatList, Alert } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -68,24 +69,24 @@ export default function Embarcacao() {
     }
   }, [nome, numero]);
 
-  const numeroStyles = useMemo(() => {
-    const base = [styles.input];
+  const numeroStyles = useMemo<StyleProp<TextStyle>>(() => {
     if (hasText(numero)) {
-      base.push(styles.inputValid);
-    } else if (touched) {
-      base.push(styles.inputInvalid);
+      return [styles.input, styles.inputValid];
     }
-    return base;
+    if (touched) {
+      return [styles.input, styles.inputInvalid];
+    }
+    return styles.input;
   }, [numero, touched]);
 
-  const nomeStyles = useMemo(() => {
-    const base = [styles.input];
+  const nomeStyles = useMemo<StyleProp<TextStyle>>(() => {
     if (hasText(nome)) {
-      base.push(styles.inputValid);
-    } else if (touched && !hasText(numero)) {
-      base.push(styles.inputInvalid);
+      return [styles.input, styles.inputValid];
     }
-    return base;
+    if (touched && !hasText(numero)) {
+      return [styles.input, styles.inputInvalid];
+    }
+    return styles.input;
   }, [nome, touched, numero]);
 
   return (
