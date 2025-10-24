@@ -1,5 +1,14 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Alert, FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -69,14 +78,14 @@ export default function CnpjRazao() {
     [data.length, pesquisaRealizada],
   );
 
-  const inputStyles = useMemo(() => {
-    const base = [styles.input];
+  const inputStyles = useMemo<StyleProp<TextStyle>>(() => {
     if (hasText(query)) {
-      base.push(styles.inputValid);
-    } else if (touched) {
-      base.push(styles.inputInvalid);
+      return [styles.input, styles.inputValid];
     }
-    return base;
+    if (touched) {
+      return [styles.input, styles.inputInvalid];
+    }
+    return styles.input;
   }, [query, touched]);
 
   const handleOpenQrModal = useCallback(() => {
