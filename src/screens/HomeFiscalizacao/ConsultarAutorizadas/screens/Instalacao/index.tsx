@@ -9,6 +9,7 @@ import { consultarPorInstalacao, type Empresa } from '@/api/operations/consultar
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import { navegarParaFluxo } from '../../utils/navegacaoFluxo';
 import styles from './styles';
 
 export default function Instalacao() {
@@ -21,7 +22,7 @@ export default function Instalacao() {
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
-      navigation.navigate('Detalhes', { empresa });
+      navegarParaFluxo(navigation, empresa);
     },
     [navigation],
   );

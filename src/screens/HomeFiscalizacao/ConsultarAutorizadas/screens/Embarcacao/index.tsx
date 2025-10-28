@@ -9,6 +9,7 @@ import { consultarPorEmbarcacao, type Empresa } from '@/api/operations/consultar
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import { formatImoCapitania, hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import { navegarParaFluxo } from '../../utils/navegacaoFluxo';
 import styles from './styles';
 
 export default function Embarcacao() {
@@ -22,7 +23,7 @@ export default function Embarcacao() {
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
-      navigation.navigate('Detalhes', { empresa });
+      navegarParaFluxo(navigation, empresa);
     },
     [navigation],
   );

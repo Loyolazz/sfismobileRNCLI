@@ -8,6 +8,7 @@ import SelectField, { type SelectOption } from '@/components/SelectField';
 import { consultarPorModalidade, type Empresa } from '@/api/operations/consultarEmpresas';
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import { navegarParaFluxo } from '../../utils/navegacaoFluxo';
 import {
   AREAS_DE_CONSULTA,
   normalizarBusca,
@@ -43,7 +44,7 @@ export default function Modalidade(): React.JSX.Element {
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
-      navigation.navigate('Detalhes', { empresa });
+      navegarParaFluxo(navigation, empresa);
     },
     [navigation],
   );
