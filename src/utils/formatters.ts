@@ -1,9 +1,18 @@
-export function formatCnpj(raw: string): string {
+export function normalizeCnpj(raw: string | null | undefined): string | null {
   const digits = (raw ?? '').replace(/\D/g, '');
-  if (!digits) return raw ?? '';
+  if (!digits) return null;
 
-  const normalized = digits.length === 14 ? digits : digits.length >= 12 ? digits.padStart(14, '0') : digits;
-  if (normalized.length !== 14) return raw ?? '';
+  if (digits.length > 14) {
+    return digits.slice(-14);
+  }
+
+  const padded = digits.padStart(14, '0');
+  return padded.length === 14 ? padded : null;
+}
+
+export function formatCnpj(raw: string | null | undefined): string {
+  const normalized = normalizeCnpj(raw);
+  if (!normalized) return raw ?? '';
 
   return `${normalized.slice(0, 2)}.${normalized.slice(2, 5)}.${normalized.slice(5, 8)}/${normalized.slice(8, 12)}-${normalized.slice(12)}`;
 }
