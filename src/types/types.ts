@@ -30,6 +30,10 @@ export type ConsultarAutorizadasStackParamList = {
     Detalhes: {
         empresa: import('@/api/operations/consultarEmpresas').Empresa;
     };
+    Frota: {
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
+        fluxoTipo?: 'FROTA' | 'TRAVESSIA';
+    };
     Mapa: {
         empresa: import('@/api/operations/consultarEmpresas').Empresa;
     };
