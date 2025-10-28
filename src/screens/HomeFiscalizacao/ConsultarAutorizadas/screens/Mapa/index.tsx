@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -457,10 +457,6 @@ export default function MapaInstalacao(): React.JSX.Element {
     return () => { cancelado = true; };
   }, [NRInscricao, infoTerminal, mapsApiKey, online]);
 
-  const handleSelecionar = useCallback((index: number) => {
-    setSelecionada(index);
-  }, []);
-
   const descricaoFonte = useMemo(() => {
     switch (fonteDados) {
       case 'online':
@@ -491,34 +487,6 @@ export default function MapaInstalacao(): React.JSX.Element {
 
   const snapshotAspectRatio = snapshot ? snapshot.width / snapshot.height : 1.5;
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: InstalacaoPortuaria; index: number }) => {
-      const ativo = index === selecionada;
-      const titulo = item.nome || item.localizacao || `Instalação ${index + 1}`;
-      const descricao = formatEndereco(item);
-      const possuiCoordenadas = temCoordenadasValidas(item);
-      return (
-        <Pressable
-          onPress={() => handleSelecionar(index)}
-          style={({ pressed }) => [
-            styles.instalacaoItem,
-            ativo && styles.instalacaoItemAtivo,
-            pressed && styles.instalacaoItemPressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={`Selecionar instalação ${titulo}`}
-        >
-          <Text style={[styles.instalacaoTitulo, ativo && styles.instalacaoTituloAtivo]}>{titulo}</Text>
-          {descricao ? <Text style={styles.instalacaoDescricao}>{descricao}</Text> : null}
-          {!possuiCoordenadas ? (
-            <Text style={styles.instalacaoAviso}>Coordenadas não informadas</Text>
-          ) : null}
-        </Pressable>
-      );
-    },
-    [handleSelecionar, selecionada],
-  );
-
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View style={styles.header}>
@@ -542,22 +510,6 @@ export default function MapaInstalacao(): React.JSX.Element {
       {carregando ? (
         <View style={styles.loader}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      ) : null}
-
-      {!carregando && instalacoes.length > 1 ? (
-        <View style={styles.listaWrapper}>
-          <Text style={styles.listaTitulo}>Instalações disponíveis</Text>
-          <FlatList
-            data={instalacoes}
-            keyExtractor={(item, index) =>
-              `${item.cdInstalacaoPortuaria || item.cnpj || item.nome || 'instalacao'}-${index}`
-            }
-            renderItem={renderItem}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.listaContainer}
-          />
         </View>
       ) : null}
 
