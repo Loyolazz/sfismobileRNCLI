@@ -18,7 +18,7 @@ import {
   type ConsultarFrotaResult,
   type ConsultarFrotaAlocadaResult,
 } from '@/api/operations';
-import { formatCnpj } from '@/utils/formatters';
+import { formatCnpj, normalizeCnpj } from '@/utils/formatters';
 import styles from './styles';
 import theme from '@/theme';
 
@@ -112,7 +112,7 @@ export default function Frota(): React.JSX.Element {
       setLoading(true);
       setError(null);
 
-      const cnpj = empresa.NRInscricao?.trim();
+      const cnpj = normalizeCnpj(empresa.NRInscricao);
       if (!cnpj) {
         setError('CNPJ da empresa não informado.');
         setEmbarcacoes([]);
