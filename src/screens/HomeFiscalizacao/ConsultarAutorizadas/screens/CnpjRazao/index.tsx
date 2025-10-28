@@ -17,6 +17,7 @@ import { buscarEmpresasAutorizadas, type Empresa } from '@/api/operations/consul
 import EmpresaCard from '../../../../../components/EmpresaCard';
 import { hasText } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import { navegarParaFluxo } from '../../utils/navegacaoFluxo';
 import styles from './styles';
 
 export default function CnpjRazao() {
@@ -31,7 +32,7 @@ export default function CnpjRazao() {
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
-      navigation.navigate('Detalhes', { empresa });
+      navegarParaFluxo(navigation, empresa);
     },
     [navigation],
   );
