@@ -4,40 +4,71 @@ export type ConsultarHistoricoFiscalizacoesPorEmpresaParams = {
   nrinscricao: string;
 };
 
-export type ConsultarHistoricoFiscalizacoesPorEmpresaResult = {
-  HistoricoAcoesFiscalizadoras: {
-    HistoricoAcoesFiscalizadoras: Array<{
-      NRAnoFiscalizacao: string;
-      NRInscricao: string;
-      QTFiscalizacao: number;
-      TipoFiscalizacao: string;
-      TPFiscalizacao: string;
-    }>;
-  };
-  HistoricoProcessosEmpresa: {
-    HistoricoProcessosEmpresa: Array<{
-      CodProcesso: string;
-      CodProcessoFormatado: string;
-      DSIrregularidadeIE: string;
-      DTCiencia: string;
-      NRAutoInfracao: string;
-      NRInscricao: string;
-      NRNotificacao: string;
-      SituacaoProcesso: string;
-      STCorrigida: boolean;
-      STProcesso: number;
-      TipoDecisao: string;
-      TipoFiscalizacao: string;
-      TipoInfracao: string;
-      TPDecisao: number;
-      TPFiscalizacao: string;
-      TPHistorico: string;
-      TPInfracao: number;
-      VLMulta: string;
-    }>;
-  };
+export type HistoricoProcessoEmpresa = {
+  CodProcesso?: string;
+  CodProcessoFormatado?: string;
+  DSIrregularidadeIE?: string;
+  DTCiencia?: string;
+  NRAutoInfracao?: string;
+  NRInscricao?: string;
+  NRNotificacao?: string;
+  SituacaoProcesso?: string;
+  STCorrigida?: boolean | string;
+  STProcesso?: number | string;
+  TipoDecisao?: string;
+  TipoFiscalizacao?: string;
+  TipoInfracao?: string;
+  TPDecisao?: number | string;
+  TPFiscalizacao?: string;
+  TPHistorico?: string;
+  TPInfracao?: number | string;
+  VLMulta?: string;
 };
 
-export async function consultarHistoricoFiscalizacoesPorEmpresa(params: ConsultarHistoricoFiscalizacoesPorEmpresaParams, options?: SoapRequestOptions) {
-  return callSoapAction<ConsultarHistoricoFiscalizacoesPorEmpresaResult>('ConsultarHistoricoFiscalizacoesPorEmpresa', params, options);
+export type HistoricoAcaoFiscalizadora = {
+  NRAnoFiscalizacao?: string;
+  NRInscricao?: string;
+  QTFiscalizacao?: number | string;
+  TipoFiscalizacao?: string;
+  TPFiscalizacao?: string;
+};
+
+type SoapHistoricoProcessosEmpresa = {
+  HistoricoProcessosEmpresa?: HistoricoProcessoEmpresa | HistoricoProcessoEmpresa[] | null;
+} | null;
+
+type SoapHistoricoAcoesFiscalizadoras = {
+  HistoricoAcoesFiscalizadoras?: HistoricoAcaoFiscalizadora | HistoricoAcaoFiscalizadora[] | null;
+} | null;
+
+type ConsultarHistoricoFiscalizacoesPorEmpresaSoapResult = {
+  HistoricoProcessosEmpresa?: SoapHistoricoProcessosEmpresa;
+  HistoricoAcoesFiscalizadoras?: SoapHistoricoAcoesFiscalizadoras;
+};
+
+export type ConsultarHistoricoFiscalizacoesPorEmpresaResult = {
+  processos: HistoricoProcessoEmpresa[];
+  acoes: HistoricoAcaoFiscalizadora[];
+  raw?: ConsultarHistoricoFiscalizacoesPorEmpresaSoapResult;
+};
+
+const normalizarLista = <T,>(value: T | T[] | null | undefined): T[] => {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+};
+
+export async function consultarHistoricoFiscalizacoesPorEmpresa(
+  params: ConsultarHistoricoFiscalizacoesPorEmpresaParams,
+  options?: SoapRequestOptions,
+): Promise<ConsultarHistoricoFiscalizacoesPorEmpresaResult> {
+  const raw = await callSoapAction<ConsultarHistoricoFiscalizacoesPorEmpresaSoapResult>(
+    'ConsultarHistoricoFiscalizacoesPorEmpresa',
+    params,
+    options,
+  );
+
+  const processos = normalizarLista(raw?.HistoricoProcessosEmpresa?.HistoricoProcessosEmpresa);
+  const acoes = normalizarLista(raw?.HistoricoAcoesFiscalizadoras?.HistoricoAcoesFiscalizadoras);
+
+  return { processos, acoes, raw };
 }
