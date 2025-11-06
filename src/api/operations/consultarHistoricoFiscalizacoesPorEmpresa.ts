@@ -81,6 +81,48 @@ export type ConsultarHistoricoFiscalizacoesPorEmpresaParams = {
   nrinscricao: string;
 };
 
+export type HistoricoProcessoEmpresa = {
+  CodProcesso?: string;
+  CodProcessoFormatado?: string;
+  DSIrregularidadeIE?: string;
+  DTCiencia?: string;
+  NRAutoInfracao?: string;
+  NRInscricao?: string;
+  NRNotificacao?: string;
+  SituacaoProcesso?: string;
+  STCorrigida?: boolean | string;
+  STProcesso?: number | string;
+  TipoDecisao?: string;
+  TipoFiscalizacao?: string;
+  TipoInfracao?: string;
+  TPDecisao?: number | string;
+  TPFiscalizacao?: string;
+  TPHistorico?: string;
+  TPInfracao?: number | string;
+  VLMulta?: string;
+};
+
+export type HistoricoAcaoFiscalizadora = {
+  NRAnoFiscalizacao?: string;
+  NRInscricao?: string;
+  QTFiscalizacao?: number | string;
+  TipoFiscalizacao?: string;
+  TPFiscalizacao?: string;
+};
+
+type SoapHistoricoProcessosEmpresa = {
+  HistoricoProcessosEmpresa?: HistoricoProcessoEmpresa | HistoricoProcessoEmpresa[] | null;
+} | null;
+
+type SoapHistoricoAcoesFiscalizadoras = {
+  HistoricoAcoesFiscalizadoras?: HistoricoAcaoFiscalizadora | HistoricoAcaoFiscalizadora[] | null;
+} | null;
+
+type ConsultarHistoricoFiscalizacoesPorEmpresaSoapResult = {
+  HistoricoProcessosEmpresa?: SoapHistoricoProcessosEmpresa;
+  HistoricoAcoesFiscalizadoras?: SoapHistoricoAcoesFiscalizadoras;
+};
+
 export type ConsultarHistoricoFiscalizacoesPorEmpresaResult = {
   processos: HistoricoProcessoEmpresa[];
   acoes: HistoricoAcaoFiscalizadora[];
