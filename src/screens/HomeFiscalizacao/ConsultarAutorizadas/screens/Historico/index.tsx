@@ -8,20 +8,17 @@ import theme from '@/theme';
 import { formatCnpj, formatDate } from '@/utils/formatters';
 import {
   consultarHistoricoFiscalizacoesPorEmpresa,
-  type ConsultarHistoricoFiscalizacoesPorEmpresaResult,
+  type HistoricoAcaoFiscalizadora,
+  type HistoricoProcessoEmpresa,
 } from '@/api/operations/consultarHistoricoFiscalizacoesPorEmpresa';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 import styles from './styles';
 
 type HistoricoRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Historico'>;
 
-type ProcessoHistorico = NonNullable<
-  ConsultarHistoricoFiscalizacoesPorEmpresaResult['HistoricoProcessosEmpresa']
->['HistoricoProcessosEmpresa'][number];
+type ProcessoHistorico = HistoricoProcessoEmpresa;
 
-type AcaoHistorico = NonNullable<
-  ConsultarHistoricoFiscalizacoesPorEmpresaResult['HistoricoAcoesFiscalizadoras']
->['HistoricoAcoesFiscalizadoras'][number];
+type AcaoHistorico = HistoricoAcaoFiscalizadora;
 
 type ProcessosAgrupados = {
   emAndamento: ProcessoHistorico[];
@@ -30,15 +27,20 @@ type ProcessosAgrupados = {
   notificacoes: ProcessoHistorico[];
 };
 
-function normalizarLista<T>(value: T | T[] | null | undefined): T[] {
-  if (!value) return [];
-  return Array.isArray(value) ? value : [value];
-}
+const safeTrim = (texto: string): string => texto.replace(/^\s+|\s+$/g, '');
+
+const normalizarTipoHistorico = (valor: ProcessoHistorico['TPHistorico']): string => {
+  if (valor === null || valor === undefined) return '';
+  const texto = safeTrim(String(valor));
+  if (!texto || texto === '[object Object]') return '';
+  const numerico = Number(texto);
+  return Number.isNaN(numerico) ? texto : String(numerico);
+};
 
 function agruparProcessos(processos: ProcessoHistorico[]): ProcessosAgrupados {
   return processos.reduce<ProcessosAgrupados>(
     (acc, item) => {
-      const tipo = item?.TPHistorico?.trim();
+      const tipo = normalizarTipoHistorico(item?.TPHistorico);
       switch (tipo) {
         case '1':
           acc.emAndamento.push(item);
@@ -76,14 +78,32 @@ const formatCurrency = (value?: string): string => {
   return amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-const getProcessoNumero = (item: ProcessoHistorico): string =>
-  item?.CodProcessoFormatado?.trim() || item?.CodProcesso?.trim() || '—';
+const normalizarTexto = (valor?: string | number | null): string => {
+  if (valor === null || valor === undefined) return '';
+  if (typeof valor === 'string') return safeTrim(valor);
+  if (typeof valor === 'number') return String(valor);
+  return '';
+};
 
-const linha = (label: string, valor?: string): React.JSX.Element | null => {
-  if (!valor) return null;
+const getAcaoKey = (acao: AcaoHistorico, index: number): string =>
+  [acao.NRInscricao, acao.TipoFiscalizacao, acao.NRAnoFiscalizacao, index]
+    .map((parte) => (parte === null || parte === undefined ? '' : String(parte)))
+    .join('-');
+
+const getProcessoNumero = (item: ProcessoHistorico): string =>
+  normalizarTexto(item?.CodProcessoFormatado) ||
+  normalizarTexto(item?.CodProcesso) ||
+  '—';
+
+const linha = (
+  label: string,
+  valor?: string | number | null,
+): React.JSX.Element | null => {
+  const texto = normalizarTexto(valor);
+  if (!texto) return null;
   return (
     <Text style={styles.infoText}>
-      {label}: <Text style={styles.infoValue}>{valor}</Text>
+      {label}: <Text style={styles.infoValue}>{texto}</Text>
     </Text>
   );
 };
@@ -104,10 +124,13 @@ export default function Historico(): React.JSX.Element {
       const response = await consultarHistoricoFiscalizacoesPorEmpresa({
         nrinscricao: empresa.NRInscricao,
       });
-      const listaProcessos = normalizarLista(response?.HistoricoProcessosEmpresa?.HistoricoProcessosEmpresa);
-      const listaAcoes = normalizarLista(response?.HistoricoAcoesFiscalizadoras?.HistoricoAcoesFiscalizadoras);
-      setProcessos(listaProcessos);
-      setAcoes(listaAcoes);
+      console.log('[Historico] resposta da API normalizada', {
+        processos: response.processos,
+        acoes: response.acoes,
+      });
+      console.log('[Historico] payload bruto retornado pela API', response.raw);
+      setProcessos(response.processos);
+      setAcoes(response.acoes);
     } catch (error) {
       console.log('[Historico] erro ao consultar histórico', error);
       setErro('Não foi possível carregar o histórico de fiscalizações.');
@@ -140,19 +163,28 @@ export default function Historico(): React.JSX.Element {
   }, [carregarHistorico]);
 
   const renderProcessoCard = useCallback(
-    (item: ProcessoHistorico, extras: Array<[string, string | undefined]>) => (
+    (
+      item: ProcessoHistorico,
+      extras: Array<[string, string | number | null | undefined]>,
+    ) => (
       <View key={`${item.CodProcesso}-${item.NRAutoInfracao}-${item.NRNotificacao}`} style={styles.card}>
         {linha('Nº do processo', getProcessoNumero(item))}
-        {linha('Tipo de fiscalização', item.TipoFiscalizacao?.trim())}
-        {linha('Situação', item.SituacaoProcesso?.trim())}
-        {extras.map(([label, valor]) => linha(label, valor?.trim()))}
+        {linha('Tipo de fiscalização', item.TipoFiscalizacao)}
+        {linha('Situação', item.SituacaoProcesso)}
+        {extras.map(([label, valor]) => linha(label, valor))}
       </View>
     ),
     [],
   );
 
   const renderSecaoProcessos = useCallback(
-    (titulo: string, itens: ProcessoHistorico[], extrasMapper: (item: ProcessoHistorico) => Array<[string, string | undefined]>) => {
+    (
+      titulo: string,
+      itens: ProcessoHistorico[],
+      extrasMapper: (
+        item: ProcessoHistorico,
+      ) => Array<[string, string | number | null | undefined]>,
+    ) => {
       if (itens.length === 0) return null;
       return (
         <View style={styles.section} key={titulo}>
@@ -223,7 +255,7 @@ export default function Historico(): React.JSX.Element {
                   <Text style={styles.empty}>Não existem Ações Fiscalizadoras.</Text>
                 ) : (
                   acoes.map((acao, index) => (
-                    <View style={styles.card} key={`${acao.TipoFiscalizacao}-${acao.NRInscricao}-${index}`}>
+                    <View style={styles.card} key={getAcaoKey(acao, index)}>
                       {linha('Tipo de fiscalização', acao.TipoFiscalizacao)}
                       {linha('Quantidade de ações', acao.QTFiscalizacao != null ? String(acao.QTFiscalizacao) : undefined)}
                       {linha('Ano', acao.NRAnoFiscalizacao)}
