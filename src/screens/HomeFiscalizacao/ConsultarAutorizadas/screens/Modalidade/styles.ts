@@ -25,6 +25,10 @@ const styles = StyleSheet.create({
   contador: { ...theme.typography.caption, color: theme.colors.muted, marginBottom: theme.spacing.sm },
   nenhumResultado: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
   listaVazia: { flexGrow: 1 },
+  listContent: { paddingVertical: theme.spacing.md, paddingBottom: theme.spacing.lg, gap: theme.spacing.md },
+  headerLista: { gap: theme.spacing.xs, marginBottom: theme.spacing.sm },
+  alerta: { ...theme.typography.caption, color: theme.colors.error },
+  separator: { height: theme.spacing.md },
 });
 
 export default styles;

@@ -39,6 +39,8 @@ const styles = StyleSheet.create({
   emptyContainer: { flexGrow: 1 },
   empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.md },
   count: { ...theme.typography.caption, color: theme.colors.muted, marginBottom: theme.spacing.sm },
+  listContent: { paddingBottom: theme.spacing.lg, gap: theme.spacing.md },
+  separator: { height: theme.spacing.md },
 });
 
 export default styles;

@@ -1,12 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import NetInfo from '@react-native-community/netinfo';
 import { WebView } from 'react-native-webview';
 
-import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import type { ConsultarAutorizadasStackParamList, DrawerParamList } from '@/types/types';
 import type { Empresa } from '@/api/operations/consultarEmpresas';
 import {
   consultarInstalacoesPortuarias,
@@ -26,8 +28,14 @@ import {
 } from '@/services/mapSnapshotCache';
 import styles from './styles';
 import theme from '@/theme';
+import { empresaEhNavegacaoMaritima, mensagemBloqueioNavegacaoMaritima } from '@/utils/empresas';
 
 type MapaRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Mapa'>;
+
+type MapaNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ConsultarAutorizadasStackParamList>,
+  DrawerNavigationProp<DrawerParamList>
+>;
 
 type DataSource = 'online' | 'cache' | 'cache-stale' | 'empty';
 
@@ -258,6 +266,7 @@ function construirHtmlMapaGeocode(query: string, infoHtml: string) {
 
 export default function MapaInstalacao(): React.JSX.Element {
   const route = useRoute<MapaRouteProp>();
+  const navigation = useNavigation<MapaNavigationProp>();
   const empresa = route.params.empresa;
   const {
     Instalacao,
@@ -280,6 +289,16 @@ export default function MapaInstalacao(): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<MapSnapshot | null>(null);
   const [carregandoSnapshot, setCarregandoSnapshot] = useState(false);
   const [erroSnapshot, setErroSnapshot] = useState<string | null>(null);
+
+  const fiscalizacaoBloqueada = useMemo(() => empresaEhNavegacaoMaritima(empresa), [empresa]);
+
+  const handleIniciarFiscalizacao = useCallback(() => {
+    if (fiscalizacaoBloqueada) {
+      Alert.alert('Fiscalização indisponível', mensagemBloqueioNavegacaoMaritima);
+      return;
+    }
+    navigation.navigate('Equipe', { empresa });
+  }, [empresa, fiscalizacaoBloqueada, navigation]);
 
   useEffect(() => {
     let ativo = true;
@@ -547,6 +566,25 @@ export default function MapaInstalacao(): React.JSX.Element {
             <ActivityIndicator size="small" color={theme.colors.primary} />
             <Text style={styles.snapshotLoaderTexto}>Atualizando cópia offline do mapa…</Text>
           </View>
+        ) : null}
+      </View>
+
+      <View style={styles.actions}>
+        <Pressable
+          onPress={handleIniciarFiscalizacao}
+          disabled={carregando}
+          style={({ pressed }) => [
+            styles.actionButton,
+            (pressed || carregando) && styles.actionButtonPressed,
+            (carregando || fiscalizacaoBloqueada) && styles.actionButtonDisabled,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Iniciar fiscalização"
+        >
+          <Text style={styles.actionButtonText}>Iniciar Fiscalização</Text>
+        </Pressable>
+        {fiscalizacaoBloqueada ? (
+          <Text style={styles.actionHelper}>{mensagemBloqueioNavegacaoMaritima}</Text>
         ) : null}
       </View>
     </SafeAreaView>

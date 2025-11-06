@@ -17,6 +17,7 @@ import {
   type ModalidadeTipo,
 } from '../../../../../utils/modalidades';
 import styles from './styles';
+import { mensagemBloqueioNavegacaoMaritima } from '@/utils/empresas';
 
 export default function Modalidade(): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
@@ -56,15 +57,24 @@ export default function Modalidade(): React.JSX.Element {
     [navigation],
   );
 
+  const bloqueioMaritimo = useMemo(
+    () => selectedArea?.id === 'navegacao' && selectedType?.id === 'maritima',
+    [selectedArea, selectedType],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Empresa }) => (
       <EmpresaCard
         empresa={item}
-        onPress={() => handleOpenEmpresa(item)}
-        onHistorico={() => handleOpenHistorico(item)}
+        onPress={
+          bloqueioMaritimo ? undefined : () => handleOpenEmpresa(item)
+        }
+        onHistorico={
+          bloqueioMaritimo ? undefined : () => handleOpenHistorico(item)
+        }
       />
     ),
-    [handleOpenEmpresa, handleOpenHistorico],
+    [bloqueioMaritimo, handleOpenEmpresa, handleOpenHistorico],
   );
 
   const handleSelectArea = useCallback((option: SelectOption<ModalidadeArea>) => {
@@ -113,6 +123,25 @@ export default function Modalidade(): React.JSX.Element {
       ? '1 empresa encontrada.'
       : `${empresas.length} empresas encontradas.`;
   }, [empresas.length]);
+
+  const bloqueioMensagem = useMemo(() => {
+    if (!bloqueioMaritimo) return null;
+    return `${mensagemBloqueioNavegacaoMaritima} Consulte o sistema legado.`;
+  }, [bloqueioMaritimo]);
+
+  const renderHeader = useCallback(() => {
+    if (!headerMessage && !bloqueioMensagem) {
+      return null;
+    }
+    return (
+      <View style={styles.headerLista}>
+        {bloqueioMensagem ? <Text style={styles.alerta}>{bloqueioMensagem}</Text> : null}
+        {headerMessage ? <Text style={styles.contador}>{headerMessage}</Text> : null}
+      </View>
+    );
+  }, [bloqueioMensagem, headerMessage]);
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -173,18 +202,16 @@ export default function Modalidade(): React.JSX.Element {
         keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
         renderItem={renderItem}
         contentContainerStyle={[
+          styles.listContent,
           empresas.length === 0 && searchCompleted ? styles.listaVazia : null,
-          { paddingVertical: 12 },
         ]}
-        ListHeaderComponent={
-          headerMessage ? <Text style={styles.contador}>{headerMessage}</Text> : null
-        }
+        ListHeaderComponent={renderHeader}
         ListEmptyComponent={
           !loading && searchCompleted ? (
             <Text style={styles.nenhumResultado}>Nenhuma empresa encontrada.</Text>
           ) : null
         }
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+        ItemSeparatorComponent={renderSeparator}
       />
     </SafeAreaView>
   );

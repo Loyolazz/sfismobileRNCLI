@@ -1,16 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Pressable,
   RefreshControl,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp, RouteProp } from '@react-navigation/native-stack';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
 
-import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import type { ConsultarAutorizadasStackParamList, DrawerParamList } from '@/types/types';
 import type { Empresa } from '@/api/operations/consultarEmpresas';
 import {
   consultarFrota,
@@ -21,6 +25,7 @@ import {
 import { formatCnpj, normalizeCnpj } from '@/utils/formatters';
 import styles from './styles';
 import theme from '@/theme';
+import { empresaEhNavegacaoMaritima, mensagemBloqueioNavegacaoMaritima } from '@/utils/empresas';
 
 type FrotaRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Frota'>;
 
@@ -98,14 +103,22 @@ const normalizarEmbarcacao = (item: EmbarcacaoFrota, index: number): EmbarcacaoN
   };
 };
 
+type FrotaNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ConsultarAutorizadasStackParamList>,
+  DrawerNavigationProp<DrawerParamList>
+>;
+
 export default function Frota(): React.JSX.Element {
   const route = useRoute<FrotaRouteProp>();
+  const navigation = useNavigation<FrotaNavigationProp>();
   const empresa = useMemo<Empresa>(() => route.params.empresa, [route.params.empresa]);
   const fluxoTipo = route.params.fluxoTipo ?? 'FROTA';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [embarcacoes, setEmbarcacoes] = useState<EmbarcacaoNormalizada[]>([]);
+
+  const fiscalizacaoBloqueada = useMemo(() => empresaEhNavegacaoMaritima(empresa), [empresa]);
 
   const carregarEmbarcacoes = useCallback(async () => {
     try {
@@ -186,6 +199,47 @@ export default function Frota(): React.JSX.Element {
 
   const keyExtractor = useCallback((item: EmbarcacaoNormalizada) => item.id, []);
 
+  const handleNaoSeAplica = useCallback(() => {
+    if (fiscalizacaoBloqueada) {
+      Alert.alert('Fiscalização indisponível', mensagemBloqueioNavegacaoMaritima);
+      return;
+    }
+    navigation.navigate('Equipe', { empresa });
+  }, [empresa, fiscalizacaoBloqueada, navigation]);
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, []);
+
+  const headerComponent = useMemo(() => {
+    return (
+      <View style={styles.header}>
+        <Text style={styles.title}>{empresa.NORazaoSocial}</Text>
+        <Text style={styles.subtitle}>{`CNPJ ${formatCnpj(empresa.NRInscricao)}`}</Text>
+        {empresa.Modalidade ? (
+          <Text style={styles.helper}>{`Modalidade: ${empresa.Modalidade}`}</Text>
+        ) : null}
+        {empresa.Instalacao ? (
+          <Text style={styles.helper}>{`Instalação: ${empresa.Instalacao}`}</Text>
+        ) : null}
+        <Text style={styles.description}>{headerDescricao}</Text>
+        <Pressable
+          onPress={handleNaoSeAplica}
+          style={({ pressed }) => [
+            styles.actionButton,
+            pressed && styles.actionButtonPressed,
+            fiscalizacaoBloqueada && styles.actionButtonDisabled,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Marcar fiscalização como não se aplica"
+        >
+          <Text style={styles.actionButtonText}>Não se aplica</Text>
+        </Pressable>
+        {fiscalizacaoBloqueada ? (
+          <Text style={styles.actionHelper}>{mensagemBloqueioNavegacaoMaritima}</Text>
+        ) : null}
+      </View>
+    );
+  }, [empresa, fiscalizacaoBloqueada, handleNaoSeAplica, headerDescricao]);
+
   const renderEmpty = useCallback(() => {
     if (loading) {
       return (
@@ -219,20 +273,9 @@ export default function Frota(): React.JSX.Element {
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.title}>{empresa.NORazaoSocial}</Text>
-            <Text style={styles.subtitle}>{`CNPJ ${formatCnpj(empresa.NRInscricao)}`}</Text>
-            {empresa.Modalidade ? (
-              <Text style={styles.helper}>{`Modalidade: ${empresa.Modalidade}`}</Text>
-            ) : null}
-            {empresa.Instalacao ? (
-              <Text style={styles.helper}>{`Instalação: ${empresa.Instalacao}`}</Text>
-            ) : null}
-            <Text style={styles.description}>{headerDescricao}</Text>
-          </View>
-        }
+        ListHeaderComponent={headerComponent}
         ListEmptyComponent={renderEmpty}
+        ItemSeparatorComponent={renderSeparator}
         refreshControl={
           <RefreshControl
             refreshing={loading && !embarcacoes.length}

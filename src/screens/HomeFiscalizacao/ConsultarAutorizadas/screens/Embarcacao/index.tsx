@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextInput, Pressable, Text, FlatList, Alert } from 'react-native';
+import { TextInput, Pressable, Text, FlatList, Alert, View } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -90,6 +90,8 @@ export default function Embarcacao() {
     return styles.input;
   }, [vesselName, touched, registration]);
 
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, []);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <Text style={styles.title}>Informe a embarcação</Text>
@@ -145,14 +147,16 @@ export default function Embarcacao() {
             </Text>
           ) : null
         }
-        contentContainerStyle={
-          empresas.length === 0 && searchCompleted ? styles.emptyContainer : undefined
-        }
+        contentContainerStyle={[
+          styles.listContent,
+          empresas.length === 0 && searchCompleted ? styles.emptyContainer : null,
+        ]}
         ListEmptyComponent={
           !loading && searchCompleted ? (
             <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
           ) : null
         }
+        ItemSeparatorComponent={renderSeparator}
       />
     </SafeAreaView>
   );

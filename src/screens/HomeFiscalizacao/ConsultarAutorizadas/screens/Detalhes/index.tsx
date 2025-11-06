@@ -2,9 +2,9 @@ import React, { useCallback, useMemo } from 'react';
 import { ScrollView, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { formatCnpj, formatDate } from '@/utils/formatters';
 import type { ConsultarAutorizadasStackParamList, DrawerParamList } from '@/types/types';
@@ -34,13 +34,13 @@ const formatBool = (value?: boolean): string | undefined => {
 
 type DetalhesRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Detalhes'>;
 
-type StackNav = NativeStackNavigationProp<ConsultarAutorizadasStackParamList>;
-type DrawerNav = DrawerNavigationProp<DrawerParamList>;
-
+type StackNav = CompositeNavigationProp<
+  NativeStackNavigationProp<ConsultarAutorizadasStackParamList>,
+  DrawerNavigationProp<DrawerParamList>
+>;
 export default function Detalhes(): React.JSX.Element {
   const route = useRoute<DetalhesRouteProp>();
   const navigation = useNavigation<StackNav>();
-  const drawerNavigation = navigation.getParent<DrawerNav>();
 
   const empresa = useMemo<Empresa>(() => route.params.empresa, [route.params.empresa]);
   const fluxo = useMemo<FluxoMigracao>(() => mapearFluxoMigracao(empresa), [empresa]);
@@ -52,8 +52,8 @@ export default function Detalhes(): React.JSX.Element {
   }, [empresa.DescricaoNRInstrumento, empresa.NRInstrumento]);
 
   const handleAbrirRotina = useCallback(() => {
-    drawerNavigation?.navigate('FiscalizacaoRotina');
-  }, [drawerNavigation]);
+    navigation.navigate('Equipe', { empresa });
+  }, [empresa, navigation]);
 
   const handleAbrirMapa = useCallback(() => {
     navigation.navigate('Mapa', { empresa });
@@ -128,7 +128,7 @@ export default function Detalhes(): React.JSX.Element {
           <Text style={styles.sectionTitle}>Próximos passos na migração</Text>
           <Text style={styles.sectionDescription}>
             Utilize este mapeamento para planejar as telas equivalentes em React Native e validar com a equipe de fiscalização.
-            O botão abaixo já direciona para a tela de rotina da equipe, substituindo o atalho do arquivo rotina.equipe.js.
+            O botão abaixo direciona para a tela da equipe em desenvolvimento, substituindo o atalho do arquivo rotina.equipe.js.
           </Text>
           <View style={styles.extraInfo}>
             {infoLinha('Contato principal', empresa.NomeContato)}

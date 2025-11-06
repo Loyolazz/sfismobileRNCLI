@@ -59,6 +59,26 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   snapshotLoaderTexto: { ...theme.typography.caption, color: theme.colors.muted },
+  actions: {
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  actionButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonPressed: { opacity: 0.85 },
+  actionButtonDisabled: { opacity: 0.5 },
+  actionButtonText: { ...theme.typography.button, color: theme.colors.surface, fontSize: 16 },
+  actionHelper: {
+    ...theme.typography.caption,
+    color: theme.colors.error,
+    textAlign: 'center',
+  },
 });
 
 export default styles;
