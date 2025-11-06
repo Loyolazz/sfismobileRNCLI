@@ -20,27 +20,27 @@ import styles from './styles';
 
 export default function Modalidade(): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
-  const [areaSelecionada, setAreaSelecionada] = useState<ModalidadeArea | null>(null);
-  const [tipoSelecionado, setTipoSelecionado] = useState<ModalidadeTipo | null>(null);
-  const [modalidadeSelecionada, setModalidadeSelecionada] = useState<ModalidadeItem | null>(null);
+  const [selectedArea, setSelectedArea] = useState<ModalidadeArea | null>(null);
+  const [selectedType, setSelectedType] = useState<ModalidadeTipo | null>(null);
+  const [selectedModality, setSelectedModality] = useState<ModalidadeItem | null>(null);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
 
   const areaOptions = useMemo<Array<SelectOption<ModalidadeArea>>>(
     () => AREAS_DE_CONSULTA.map((area) => ({ label: area.label, value: area })),
     [],
   );
 
-  const tipoOptions = useMemo<Array<SelectOption<ModalidadeTipo>>>(() => {
-    if (!areaSelecionada) return [];
-    return areaSelecionada.tipos.map((tipo) => ({ label: tipo.label, value: tipo }));
-  }, [areaSelecionada]);
+  const typeOptions = useMemo<Array<SelectOption<ModalidadeTipo>>>(() => {
+    if (!selectedArea) return [];
+    return selectedArea.tipos.map((type) => ({ label: type.label, value: type }));
+  }, [selectedArea]);
 
-  const modalidadeOptions = useMemo<Array<SelectOption<ModalidadeItem>>>(() => {
-    if (!tipoSelecionado) return [];
-    return tipoSelecionado.modalidades.map((modalidade) => ({ label: modalidade.label, value: modalidade }));
-  }, [tipoSelecionado]);
+  const modalityOptions = useMemo<Array<SelectOption<ModalidadeItem>>>(() => {
+    if (!selectedType) return [];
+    return selectedType.modalidades.map((modality) => ({ label: modality.label, value: modality }));
+  }, [selectedType]);
 
   const handleOpenEmpresa = useCallback(
     (empresa: Empresa) => {
@@ -68,46 +68,46 @@ export default function Modalidade(): React.JSX.Element {
   );
 
   const handleSelectArea = useCallback((option: SelectOption<ModalidadeArea>) => {
-    setAreaSelecionada(option.value);
-    setTipoSelecionado(null);
-    setModalidadeSelecionada(null);
+    setSelectedArea(option.value);
+    setSelectedType(null);
+    setSelectedModality(null);
     setEmpresas([]);
-    setPesquisaRealizada(false);
+    setSearchCompleted(false);
   }, []);
 
-  const handleSelectTipo = useCallback((option: SelectOption<ModalidadeTipo>) => {
-    setTipoSelecionado(option.value);
-    setModalidadeSelecionada(null);
+  const handleSelectType = useCallback((option: SelectOption<ModalidadeTipo>) => {
+    setSelectedType(option.value);
+    setSelectedModality(null);
     setEmpresas([]);
-    setPesquisaRealizada(false);
+    setSearchCompleted(false);
   }, []);
 
-  const handleSelectModalidade = useCallback((option: SelectOption<ModalidadeItem>) => {
-    setModalidadeSelecionada(option.value);
+  const handleSelectModality = useCallback((option: SelectOption<ModalidadeItem>) => {
+    setSelectedModality(option.value);
     setEmpresas([]);
-    setPesquisaRealizada(false);
+    setSearchCompleted(false);
   }, []);
 
-  const handlePesquisar = useCallback(async () => {
-    if (!modalidadeSelecionada) {
+  const handleSearch = useCallback(async () => {
+    if (!selectedModality) {
       Alert.alert('Atenção', 'Selecione uma modalidade para prosseguir.');
       return;
     }
 
     try {
       setLoading(true);
-      const termo = normalizarBusca(modalidadeSelecionada);
-      const resultado = await consultarPorModalidade(termo);
-      setEmpresas(resultado);
-      setPesquisaRealizada(true);
+      const normalizedTerm = normalizarBusca(selectedModality);
+      const result = await consultarPorModalidade(normalizedTerm);
+      setEmpresas(result);
+      setSearchCompleted(true);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível consultar empresas.');
     } finally {
       setLoading(false);
     }
-  }, [modalidadeSelecionada]);
+  }, [selectedModality]);
 
-  const headerMensagem = useMemo(() => {
+  const headerMessage = useMemo(() => {
     if (empresas.length === 0) return null;
     return empresas.length === 1
       ? '1 empresa encontrada.'
@@ -122,7 +122,7 @@ export default function Modalidade(): React.JSX.Element {
         <SelectField
           label="Área"
           placeholder="Selecione"
-          value={areaSelecionada ? { label: areaSelecionada.label, value: areaSelecionada } : undefined}
+          value={selectedArea ? { label: selectedArea.label, value: selectedArea } : undefined}
           options={areaOptions}
           onSelect={handleSelectArea}
           disabled={loading}
@@ -131,25 +131,25 @@ export default function Modalidade(): React.JSX.Element {
 
         <SelectField
           label="Tipo"
-          placeholder={areaSelecionada ? 'Selecione' : 'Escolha a área primeiro'}
-          value={tipoSelecionado ? { label: tipoSelecionado.label, value: tipoSelecionado } : undefined}
-          options={tipoOptions}
-          onSelect={handleSelectTipo}
-          disabled={loading || !areaSelecionada}
+          placeholder={selectedArea ? 'Selecione' : 'Escolha a área primeiro'}
+          value={selectedType ? { label: selectedType.label, value: selectedType } : undefined}
+          options={typeOptions}
+          onSelect={handleSelectType}
+          disabled={loading || !selectedArea}
           testID="select-tipo"
         />
 
         <SelectField
           label="Modalidade"
-          placeholder={tipoSelecionado ? 'Selecione' : 'Escolha o tipo primeiro'}
+          placeholder={selectedType ? 'Selecione' : 'Escolha o tipo primeiro'}
           value={
-            modalidadeSelecionada
-              ? { label: modalidadeSelecionada.label, value: modalidadeSelecionada }
+            selectedModality
+              ? { label: selectedModality.label, value: selectedModality }
               : undefined
           }
-          options={modalidadeOptions}
-          onSelect={handleSelectModalidade}
-          disabled={loading || !tipoSelecionado}
+          options={modalityOptions}
+          onSelect={handleSelectModality}
+          disabled={loading || !selectedType}
           testID="select-modalidade"
         />
 
@@ -157,10 +157,10 @@ export default function Modalidade(): React.JSX.Element {
           style={({ pressed }) => [
             styles.botao,
             (pressed || loading) && styles.botaoPressionado,
-            (!modalidadeSelecionada || loading) && styles.botaoDesabilitado,
+            (!selectedModality || loading) && styles.botaoDesabilitado,
           ]}
-          onPress={handlePesquisar}
-          disabled={loading || !modalidadeSelecionada}
+          onPress={handleSearch}
+          disabled={loading || !selectedModality}
           accessibilityRole="button"
           accessibilityLabel="Pesquisar empresas pela modalidade selecionada"
         >
@@ -173,18 +173,18 @@ export default function Modalidade(): React.JSX.Element {
         keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
         renderItem={renderItem}
         contentContainerStyle={[
-          empresas.length === 0 && pesquisaRealizada ? styles.listaVazia : null,
-          { paddingVertical: 12 } // espaçamento no topo e no final da lista
+          empresas.length === 0 && searchCompleted ? styles.listaVazia : null,
+          { paddingVertical: 12 },
         ]}
         ListHeaderComponent={
-          headerMensagem ? <Text style={styles.contador}>{headerMensagem}</Text> : null
+          headerMessage ? <Text style={styles.contador}>{headerMessage}</Text> : null
         }
         ListEmptyComponent={
-          !loading && pesquisaRealizada ? (
+          !loading && searchCompleted ? (
             <Text style={styles.nenhumResultado}>Nenhuma empresa encontrada.</Text>
           ) : null
         }
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />} // 👈 espaçamento entre os cards
+        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       />
     </SafeAreaView>
   );

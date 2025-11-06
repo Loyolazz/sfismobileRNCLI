@@ -14,11 +14,11 @@ import styles from './styles';
 
 export default function Embarcacao() {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
-  const [numero, setNumero] = useState('');
-  const [nome, setNome] = useState('');
-  const [data, setData] = useState<Empresa[]>([]);
+  const [registration, setRegistration] = useState('');
+  const [vesselName, setVesselName] = useState('');
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
   const [touched, setTouched] = useState(false);
 
   const handleOpenEmpresa = useCallback(
@@ -48,55 +48,55 @@ export default function Embarcacao() {
 
   const handleSearch = useCallback(async () => {
     setTouched(true);
-    if (!hasText(numero) && !hasText(nome)) {
+    if (!hasText(registration) && !hasText(vesselName)) {
       Alert.alert('Atenção', 'Preencha este campo!');
       return;
     }
     try {
       setLoading(true);
-      const primary = hasText(numero) ? numero : nome;
+      const primary = hasText(registration) ? registration : vesselName;
       let result = await consultarPorEmbarcacao(primary);
 
-      if (result.length === 0 && hasText(numero) && hasText(nome)) {
-        result = await consultarPorEmbarcacao(nome);
+      if (result.length === 0 && hasText(registration) && hasText(vesselName)) {
+        result = await consultarPorEmbarcacao(vesselName);
       }
 
-      setData(result);
-      setPesquisaRealizada(true);
+      setEmpresas(result);
+      setSearchCompleted(true);
     } catch {
       Alert.alert('Erro', 'Não foi possível consultar empresas');
     } finally {
       setLoading(false);
     }
-  }, [nome, numero]);
+  }, [registration, vesselName]);
 
-  const numeroStyles = useMemo<StyleProp<TextStyle>>(() => {
-    if (hasText(numero)) {
+  const registrationInputStyles = useMemo<StyleProp<TextStyle>>(() => {
+    if (hasText(registration)) {
       return [styles.input, styles.inputValid];
     }
     if (touched) {
       return [styles.input, styles.inputInvalid];
     }
     return styles.input;
-  }, [numero, touched]);
+  }, [registration, touched]);
 
-  const nomeStyles = useMemo<StyleProp<TextStyle>>(() => {
-    if (hasText(nome)) {
+  const nameInputStyles = useMemo<StyleProp<TextStyle>>(() => {
+    if (hasText(vesselName)) {
       return [styles.input, styles.inputValid];
     }
-    if (touched && !hasText(numero)) {
+    if (touched && !hasText(registration)) {
       return [styles.input, styles.inputInvalid];
     }
     return styles.input;
-  }, [nome, touched, numero]);
+  }, [vesselName, touched, registration]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <Text style={styles.title}>Informe a embarcação</Text>
       <TextInput
-        value={numero}
+        value={registration}
         onChangeText={(text) => {
-          setNumero(formatImoCapitania(text));
+          setRegistration(formatImoCapitania(text));
           if (!touched && hasText(text)) {
             setTouched(true);
           }
@@ -104,13 +104,13 @@ export default function Embarcacao() {
         placeholder="IMO / Número Capitania"
         autoCapitalize="characters"
         autoCorrect={false}
-        style={numeroStyles}
+        style={registrationInputStyles}
         editable={!loading}
       />
       <TextInput
-        value={nome}
+        value={vesselName}
         onChangeText={(text) => {
-          setNome(text);
+          setVesselName(text);
           if (!touched && hasText(text)) {
             setTouched(true);
           }
@@ -118,14 +118,14 @@ export default function Embarcacao() {
         placeholder="Nome"
         autoCapitalize="characters"
         autoCorrect={false}
-        style={nomeStyles}
+        style={nameInputStyles}
         editable={!loading}
       />
       <Pressable
         style={({ pressed }) => [
           styles.button,
           (pressed || loading) && styles.buttonPressed,
-          !hasText(numero) && !hasText(nome) && styles.buttonDisabled,
+          !hasText(registration) && !hasText(vesselName) && styles.buttonDisabled,
         ]}
         onPress={handleSearch}
         disabled={loading}
@@ -133,21 +133,23 @@ export default function Embarcacao() {
         <Text style={styles.buttonText}>{loading ? 'Pesquisando...' : 'Pesquisar'}</Text>
       </Pressable>
       <FlatList
-        data={data}
+        data={empresas}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
         renderItem={renderItem}
         ListHeaderComponent={
-          data.length > 0 ? (
+          empresas.length > 0 ? (
             <Text style={styles.count}>
-              {data.length === 1 ? '1 empresa encontrada.' : `${data.length} empresas encontradas.`}
+              {empresas.length === 1
+                ? '1 empresa encontrada.'
+                : `${empresas.length} empresas encontradas.`}
             </Text>
           ) : null
         }
         contentContainerStyle={
-          data.length === 0 && pesquisaRealizada ? styles.emptyContainer : undefined
+          empresas.length === 0 && searchCompleted ? styles.emptyContainer : undefined
         }
         ListEmptyComponent={
-          !loading && pesquisaRealizada ? (
+          !loading && searchCompleted ? (
             <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
           ) : null
         }
