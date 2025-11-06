@@ -15,9 +15,9 @@ import styles from './styles';
 export default function Instalacao() {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [query, setQuery] = useState('');
-  const [data, setData] = useState<Empresa[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
   const [touched, setTouched] = useState(false);
 
   const handleOpenEmpresa = useCallback(
@@ -54,8 +54,8 @@ export default function Instalacao() {
     try {
       setLoading(true);
       const result = await consultarPorInstalacao(query);
-      setData(result);
-      setPesquisaRealizada(true);
+      setEmpresas(result);
+      setSearchCompleted(true);
     } catch {
       Alert.alert('Erro', 'Não foi possível consultar empresas');
     } finally {
@@ -104,23 +104,23 @@ export default function Instalacao() {
         </Text>
       </Pressable>
       <FlatList
-        data={data}
+        data={empresas}
         keyExtractor={(item, index) => `${item.NRInscricao}-${index}`}
         renderItem={renderItem}
         ListHeaderComponent={
-          data.length > 0 ? (
+          empresas.length > 0 ? (
             <Text style={styles.count}>
-              {data.length === 1
+              {empresas.length === 1
                 ? '1 empresa encontrada.'
-                : `${data.length} empresas encontradas.`}
+                : `${empresas.length} empresas encontradas.`}
             </Text>
           ) : null
         }
         contentContainerStyle={
-          data.length === 0 && pesquisaRealizada ? styles.emptyContainer : undefined
+          empresas.length === 0 && searchCompleted ? styles.emptyContainer : undefined
         }
         ListEmptyComponent={
-          !loading && pesquisaRealizada ? (
+          !loading && searchCompleted ? (
             <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
           ) : null
         }

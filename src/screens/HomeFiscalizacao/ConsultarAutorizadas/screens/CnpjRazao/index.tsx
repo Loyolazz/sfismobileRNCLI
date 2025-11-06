@@ -23,11 +23,11 @@ import styles from './styles';
 export default function CnpjRazao() {
   const navigation = useNavigation<NativeStackNavigationProp<ConsultarAutorizadasStackParamList>>();
   const [query, setQuery] = useState('');
-  const [data, setData] = useState<Empresa[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
   const [touched, setTouched] = useState(false);
-  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [isQrModalVisible, setIsQrModalVisible] = useState(false);
   const [qrValue, setQrValue] = useState('');
 
   const handleOpenEmpresa = useCallback(
@@ -65,8 +65,8 @@ export default function CnpjRazao() {
     try {
       setLoading(true);
       const result = await buscarEmpresasAutorizadas(q);
-      setData(Array.isArray(result) ? result : []);
-      setPesquisaRealizada(true);
+      setEmpresas(Array.isArray(result) ? result : []);
+      setSearchCompleted(true);
     } catch (e) {
       Alert.alert('Erro', 'Não foi possível consultar empresas.');
     } finally {
@@ -75,8 +75,8 @@ export default function CnpjRazao() {
   }, [query]);
 
   const emptyListStyle = useMemo(
-    () => (data.length === 0 && pesquisaRealizada ? styles.emptyList : undefined),
-    [data.length, pesquisaRealizada],
+    () => (empresas.length === 0 && searchCompleted ? styles.emptyList : undefined),
+    [empresas.length, searchCompleted],
   );
 
   const inputStyles = useMemo<StyleProp<TextStyle>>(() => {
@@ -91,11 +91,11 @@ export default function CnpjRazao() {
 
   const handleOpenQrModal = useCallback(() => {
     setQrValue('');
-    setQrModalVisible(true);
+    setIsQrModalVisible(true);
   }, []);
 
   const handleCloseQrModal = useCallback(() => {
-    setQrModalVisible(false);
+    setIsQrModalVisible(false);
     setQrValue('');
   }, []);
 
@@ -107,7 +107,7 @@ export default function CnpjRazao() {
     }
     setQuery(value.toUpperCase().slice(0, 35));
     setTouched(true);
-    setQrModalVisible(false);
+    setIsQrModalVisible(false);
   }, [qrValue]);
 
   return (
@@ -155,25 +155,27 @@ export default function CnpjRazao() {
       </Pressable>
 
       <FlatList
-        data={data}
+        data={empresas}
         keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
         renderItem={renderItem}
         contentContainerStyle={emptyListStyle}
         ListEmptyComponent={
-          !loading && pesquisaRealizada ? (
+          !loading && searchCompleted ? (
             <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
           ) : null
         }
         ListHeaderComponent={
-          data.length > 0 ? (
+          empresas.length > 0 ? (
             <Text style={styles.count}>
-              {data.length === 1 ? '1 empresa encontrada.' : `${data.length} empresas encontradas.`}
+              {empresas.length === 1
+                ? '1 empresa encontrada.'
+                : `${empresas.length} empresas encontradas.`}
             </Text>
           ) : null
         }
       />
 
-      <Modal visible={qrModalVisible} transparent animationType="fade" onRequestClose={handleCloseQrModal}>
+      <Modal visible={isQrModalVisible} transparent animationType="fade" onRequestClose={handleCloseQrModal}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Ler QRCode manualmente</Text>

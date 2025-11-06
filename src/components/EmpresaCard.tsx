@@ -34,8 +34,21 @@ export default function EmpresaCard({ empresa, onPress, onHistorico }: Props) {
   const ultimoAditamento = formatDate(empresa.DTAditamento);
   const iconName = getIconName(empresa.icone);
 
+  const temHistorico = Boolean(onHistorico);
+
   return (
-    <View style={styles.cardContainer}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.cardContainer,
+        onPress && pressed ? styles.cardPressed : null,
+      ]}
+      onPress={onPress}
+      disabled={!onPress}
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={
+          onPress ? `Selecionar empresa ${empresa.NORazaoSocial}` : undefined
+        }
+    >
       <View style={styles.headerRow}>
         <MaterialIcons name={iconName} size={24} color={theme.colors.primary} style={styles.headerIcon} />
         <View style={styles.headerInfo}>
@@ -105,19 +118,8 @@ export default function EmpresaCard({ empresa, onPress, onHistorico }: Props) {
         </Text>
       )}
 
-      <View style={styles.actions}>
-        {onPress ? (
-          <Pressable
-            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
-            onPress={onPress}
-            accessibilityRole="button"
-            accessibilityLabel={`Selecionar empresa ${empresa.NORazaoSocial}`}
-          >
-            <Text style={styles.actionButtonText}>Selecionar empresa</Text>
-          </Pressable>
-        ) : null}
-
-        {onHistorico ? (
+      {temHistorico ? (
+        <View style={styles.actions}>
           <Pressable
             style={({ pressed }) => [styles.actionButtonSecondary, pressed && styles.actionButtonSecondaryPressed]}
             onPress={onHistorico}
@@ -126,23 +128,24 @@ export default function EmpresaCard({ empresa, onPress, onHistorico }: Props) {
           >
             <Text style={styles.actionButtonSecondaryText}>Histórico de Fiscalizações</Text>
           </Pressable>
-        ) : null}
-      </View>
-    </View>
+        </View>
+      ) : null}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   cardContainer: {
     paddingVertical: theme.spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.background,
     gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
-    borderColor: theme.colors.text,
-    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+  },
+  cardPressed: {
+    opacity: 0.9,
   },
   headerRow: {
     flexDirection: 'row',
@@ -164,20 +167,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xs,
-  },
-  actionButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-  },
-  actionButtonPressed: {
-    opacity: 0.85,
-  },
-  actionButtonText: {
-    ...theme.typography.button,
-    color: theme.colors.surface,
-    fontSize: 14,
   },
   actionButtonSecondary: {
     borderWidth: 1,

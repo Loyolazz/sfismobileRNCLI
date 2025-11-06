@@ -3,7 +3,13 @@ import { StyleSheet } from 'react-native';
 import theme from '@/theme';
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.surface, padding: theme.spacing.md },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+  },
   formulario: { marginBottom: theme.spacing.md },
   titulo: { ...theme.typography.heading, textAlign: 'center', marginBottom: theme.spacing.md },
   botao: {
