@@ -8,20 +8,17 @@ import theme from '@/theme';
 import { formatCnpj, formatDate } from '@/utils/formatters';
 import {
   consultarHistoricoFiscalizacoesPorEmpresa,
-  type ConsultarHistoricoFiscalizacoesPorEmpresaResult,
+  type HistoricoAcaoFiscalizadora,
+  type HistoricoProcessoEmpresa,
 } from '@/api/operations/consultarHistoricoFiscalizacoesPorEmpresa';
 import type { ConsultarAutorizadasStackParamList } from '@/types/types';
 import styles from './styles';
 
 type HistoricoRouteProp = RouteProp<ConsultarAutorizadasStackParamList, 'Historico'>;
 
-type ProcessoHistorico = NonNullable<
-  ConsultarHistoricoFiscalizacoesPorEmpresaResult['HistoricoProcessosEmpresa']
->['HistoricoProcessosEmpresa'][number];
+type ProcessoHistorico = HistoricoProcessoEmpresa;
 
-type AcaoHistorico = NonNullable<
-  ConsultarHistoricoFiscalizacoesPorEmpresaResult['HistoricoAcoesFiscalizadoras']
->['HistoricoAcoesFiscalizadoras'][number];
+type AcaoHistorico = HistoricoAcaoFiscalizadora;
 
 type ProcessosAgrupados = {
   emAndamento: ProcessoHistorico[];
@@ -29,11 +26,6 @@ type ProcessosAgrupados = {
   autos: ProcessoHistorico[];
   notificacoes: ProcessoHistorico[];
 };
-
-function normalizarLista<T>(value: T | T[] | null | undefined): T[] {
-  if (!value) return [];
-  return Array.isArray(value) ? value : [value];
-}
 
 function agruparProcessos(processos: ProcessoHistorico[]): ProcessosAgrupados {
   return processos.reduce<ProcessosAgrupados>(
@@ -104,10 +96,13 @@ export default function Historico(): React.JSX.Element {
       const response = await consultarHistoricoFiscalizacoesPorEmpresa({
         nrinscricao: empresa.NRInscricao,
       });
-      const listaProcessos = normalizarLista(response?.HistoricoProcessosEmpresa?.HistoricoProcessosEmpresa);
-      const listaAcoes = normalizarLista(response?.HistoricoAcoesFiscalizadoras?.HistoricoAcoesFiscalizadoras);
-      setProcessos(listaProcessos);
-      setAcoes(listaAcoes);
+      console.log('[Historico] resposta da API normalizada', {
+        processos: response.processos,
+        acoes: response.acoes,
+      });
+      console.log('[Historico] payload bruto retornado pela API', response.raw);
+      setProcessos(response.processos);
+      setAcoes(response.acoes);
     } catch (error) {
       console.log('[Historico] erro ao consultar histórico', error);
       setErro('Não foi possível carregar o histórico de fiscalizações.');
