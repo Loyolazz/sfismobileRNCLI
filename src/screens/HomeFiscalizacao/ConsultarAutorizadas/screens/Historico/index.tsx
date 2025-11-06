@@ -96,6 +96,11 @@ export default function Historico(): React.JSX.Element {
       const response = await consultarHistoricoFiscalizacoesPorEmpresa({
         nrinscricao: empresa.NRInscricao,
       });
+      console.log('[Historico] resposta da API normalizada', {
+        processos: response.processos,
+        acoes: response.acoes,
+      });
+      console.log('[Historico] payload bruto retornado pela API', response.raw);
       setProcessos(response.processos);
       setAcoes(response.acoes);
     } catch (error) {

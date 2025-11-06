@@ -61,14 +61,25 @@ export async function consultarHistoricoFiscalizacoesPorEmpresa(
   params: ConsultarHistoricoFiscalizacoesPorEmpresaParams,
   options?: SoapRequestOptions,
 ): Promise<ConsultarHistoricoFiscalizacoesPorEmpresaResult> {
+  console.log(
+    '[consultarHistoricoFiscalizacoesPorEmpresa] iniciando chamada com parâmetros',
+    params,
+  );
   const raw = await callSoapAction<ConsultarHistoricoFiscalizacoesPorEmpresaSoapResult>(
     'ConsultarHistoricoFiscalizacoesPorEmpresa',
     params,
     options,
   );
 
+  console.log('[consultarHistoricoFiscalizacoesPorEmpresa] resposta bruta recebida', raw);
+
   const processos = normalizarLista(raw?.HistoricoProcessosEmpresa?.HistoricoProcessosEmpresa);
   const acoes = normalizarLista(raw?.HistoricoAcoesFiscalizadoras?.HistoricoAcoesFiscalizadoras);
+
+  console.log('[consultarHistoricoFiscalizacoesPorEmpresa] listas normalizadas', {
+    processos,
+    acoes,
+  });
 
   return { processos, acoes, raw };
 }
