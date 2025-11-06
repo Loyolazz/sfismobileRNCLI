@@ -140,6 +140,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     paddingHorizontal: theme.spacing.xs,
     backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+    borderColor: theme.colors.text,
+    borderWidth: 2,
   },
   headerRow: {
     flexDirection: 'row',

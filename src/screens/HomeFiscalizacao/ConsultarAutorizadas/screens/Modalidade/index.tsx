@@ -172,15 +172,19 @@ export default function Modalidade(): React.JSX.Element {
         data={empresas}
         keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
         renderItem={renderItem}
-        contentContainerStyle={
-          empresas.length === 0 && pesquisaRealizada ? styles.listaVazia : undefined
+        contentContainerStyle={[
+          empresas.length === 0 && pesquisaRealizada ? styles.listaVazia : null,
+          { paddingVertical: 12 } // espaçamento no topo e no final da lista
+        ]}
+        ListHeaderComponent={
+          headerMensagem ? <Text style={styles.contador}>{headerMensagem}</Text> : null
         }
-        ListHeaderComponent={headerMensagem ? <Text style={styles.contador}>{headerMensagem}</Text> : null}
         ListEmptyComponent={
           !loading && pesquisaRealizada ? (
             <Text style={styles.nenhumResultado}>Nenhuma empresa encontrada.</Text>
           ) : null
         }
+        ItemSeparatorComponent={() => <View style={{ height: 16 }} />} // 👈 espaçamento entre os cards
       />
     </SafeAreaView>
   );
