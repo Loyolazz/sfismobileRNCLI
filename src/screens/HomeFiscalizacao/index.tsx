@@ -18,6 +18,7 @@ import HomeScreen from './HomeScreen';
 import MinhasFiscalizacoes from './MinhasFiscalizacoes';
 import FiscalizacaoRotina from './FiscalizacaoRotina';
 import ConsultarAutorizadas from './ConsultarAutorizadas';
+import Equipe from './Equipe';
 import EmAndamento from './EmAndamento';
 import PainelEmpresas from './PainelEmpresas';
 import EsquemasOperacionais from './EsquemasOperacionais';
@@ -126,6 +127,16 @@ export default function HomeFiscalizacao({ route, navigation }: Props) {
             headerTintColor: theme.colors.surface,
             headerShown: showDrawerHeader,
           };
+        }}
+      />
+      <Drawer.Screen
+        name="Equipe"
+        component={Equipe}
+        options={{
+          title: 'Equipe de Fiscalização',
+          drawerIcon: makeDrawerIcon('groups'),
+          drawerItemStyle: { display: 'none' },
+          headerTintColor: theme.colors.surface,
         }}
       />
       <Drawer.Screen

@@ -3,6 +3,11 @@ export type DrawerParamList = {
     MinhasFiscalizacoes: undefined;
     FiscalizacaoRotina: undefined;
     ConsultarAutorizadas: undefined;
+    Equipe:
+        | {
+              empresa?: import('@/api/operations/consultarEmpresas').Empresa;
+          }
+        | undefined;
     RelatorioUsuario: undefined;
     Antaq: undefined;
     Tutorial: undefined;

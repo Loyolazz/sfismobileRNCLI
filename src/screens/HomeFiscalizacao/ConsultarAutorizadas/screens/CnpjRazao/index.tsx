@@ -110,6 +110,8 @@ export default function CnpjRazao() {
     setIsQrModalVisible(false);
   }, [qrValue]);
 
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, []);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <Text style={styles.label}>Digite o CNPJ ou Razão Social</Text>
@@ -158,7 +160,7 @@ export default function CnpjRazao() {
         data={empresas}
         keyExtractor={(item, index) => `${item.NRInscricao}-${item.NRInstrumento ?? ''}-${index}`}
         renderItem={renderItem}
-        contentContainerStyle={emptyListStyle}
+        contentContainerStyle={[styles.listContent, emptyListStyle]}
         ListEmptyComponent={
           !loading && searchCompleted ? (
             <Text style={styles.empty}>Nenhuma empresa encontrada.</Text>
@@ -173,6 +175,7 @@ export default function CnpjRazao() {
             </Text>
           ) : null
         }
+        ItemSeparatorComponent={renderSeparator}
       />
 
       <Modal visible={isQrModalVisible} transparent animationType="fade" onRequestClose={handleCloseQrModal}>

@@ -48,12 +48,14 @@ const styles = StyleSheet.create({
   emptyList: {
     flexGrow: 1,
   },
+  listContent: { paddingBottom: theme.spacing.lg, gap: theme.spacing.md },
   empty: { textAlign: 'center', color: theme.colors.muted, marginTop: theme.spacing.lg },
   count: {
     ...theme.typography.caption,
     color: theme.colors.muted,
     marginBottom: theme.spacing.sm,
   },
+  separator: { height: theme.spacing.md },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
