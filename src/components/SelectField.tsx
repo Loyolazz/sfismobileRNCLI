@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
   FlatList,
   Modal,
   Pressable,
@@ -40,6 +41,25 @@ export default function SelectField<T = ValueType>({
   testID,
 }: Props<T>) {
   const [visible, setVisible] = useState(false);
+  const iconAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(iconAnimation, {
+      toValue: visible ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [iconAnimation, visible]);
+
+  const arrowDownOpacity = iconAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0],
+  });
+
+  const arrowUpOpacity = iconAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
 
   const handleOpen = useCallback(
     (event: GestureResponderEvent) => {
@@ -79,7 +99,14 @@ export default function SelectField<T = ValueType>({
         disabled={disabled}
       >
         <Text style={[styles.value, !value && styles.placeholder]}>{selectedLabel}</Text>
-        <Icon name={visible ? 'arrow-drop-up' : 'arrow-drop-down'} size={24} color={theme.colors.muted} />
+        <Animated.View style={styles.iconContainer} pointerEvents="none">
+          <Animated.View style={[styles.iconLayer, { opacity: arrowDownOpacity }]}>
+            <Icon name="arrow-drop-down" size={24} color={theme.colors.muted} />
+          </Animated.View>
+          <Animated.View style={{ opacity: arrowUpOpacity }}>
+            <Icon name="arrow-drop-up" size={24} color={theme.colors.muted} />
+          </Animated.View>
+        </Animated.View>
       </Pressable>
 
       <Modal
@@ -140,6 +167,18 @@ const styles = StyleSheet.create({
   fieldPressed: { backgroundColor: '#F0F4F8' },
   value: { ...theme.typography.body, flex: 1, marginRight: theme.spacing.xs },
   placeholder: { color: theme.colors.muted },
+  iconContainer: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconLayer: {
+    position: 'absolute',
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   overlay: {
     flex: 1,
     justifyContent: 'center',

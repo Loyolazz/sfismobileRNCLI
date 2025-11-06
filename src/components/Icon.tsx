@@ -4,6 +4,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const icons = {
   'arrow-back': require('../../assets/new_icons/arrow_back_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
+  'arrow-drop-down': require('../../assets/new_icons/arrow_drop_down_42dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png'),
+  'arrow-drop-up': require('../../assets/new_icons/arrow_drop_up_42dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.png'),
   assignment: require('../../assets/new_icons/assignment_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   'assignment-add': require('../../assets/new_icons/assignment_add_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   'assignment-ind': require('../../assets/new_icons/assignment_ind_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
@@ -26,6 +28,9 @@ const icons = {
   report: require('../../assets/new_icons/report_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   refresh: require('../../assets/new_icons/refresh_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   schema: require('../../assets/new_icons/schema_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
+  'icon-esquemas': require('../../assets/new_icons/iconEsquemas.png'),
+  'icon-embarca': require('../../assets/new_icons/iconEmbarca.png'),
+  'icon-terminal': require('../../assets/new_icons/iconTerminal.png'),
   search: require('../../assets/new_icons/search_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   sync: require('../../assets/new_icons/sync_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),
   'sync-problem': require('../../assets/new_icons/sync_problem_48dp_FFFFFF_FILL0_wght400_GRAD0_opsz48.png'),

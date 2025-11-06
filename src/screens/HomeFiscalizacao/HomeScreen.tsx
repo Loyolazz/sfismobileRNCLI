@@ -146,7 +146,7 @@ export default function HomeScreen({
       {
         key: 'EsquemasOperacionais',
         title: 'Esquemas Operacionais',
-        icon: 'schema',
+        icon: 'icon-esquemas',
       },
       {
         key: 'ServicosNaoAutorizados',
