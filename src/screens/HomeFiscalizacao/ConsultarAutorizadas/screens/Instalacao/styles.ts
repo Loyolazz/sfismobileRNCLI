@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.sm,
     alignItems: 'center',
     marginBottom: theme.spacing.md,
+
   },
   buttonPressed: { opacity: 0.85 },
   buttonDisabled: { opacity: 0.5 },

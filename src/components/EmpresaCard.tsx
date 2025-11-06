@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     paddingVertical: theme.spacing.sm,
     gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
     borderColor: theme.colors.primary,
