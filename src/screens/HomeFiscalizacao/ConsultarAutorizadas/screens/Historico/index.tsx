@@ -29,8 +29,7 @@ type ProcessosAgrupados = {
 
 const normalizarTipoHistorico = (valor: ProcessoHistorico['TPHistorico']): string => {
   if (valor === null || valor === undefined) return '';
-  if (typeof valor === 'string') return valor.trim();
-  return String(valor).trim();
+  return typeof valor === 'string' ? valor.trim() : '';
 };
 
 function agruparProcessos(processos: ProcessoHistorico[]): ProcessosAgrupados {
@@ -157,14 +156,31 @@ export default function Historico(): React.JSX.Element {
     (
       item: ProcessoHistorico,
       extras: Array<[string, string | number | null | undefined]>,
-    ) => (
-      <View key={`${item.CodProcesso}-${item.NRAutoInfracao}-${item.NRNotificacao}`} style={styles.card}>
-        {linha('Nº do processo', getProcessoNumero(item))}
-        {linha('Tipo de fiscalização', item.TipoFiscalizacao)}
-        {linha('Situação', item.SituacaoProcesso)}
-        {extras.map(([label, valor]) => linha(label, valor))}
-      </View>
-    ),
+      index: number,
+    ) => {
+      const key = [
+        item.TPHistorico,
+        item.CodProcesso,
+        item.NRAutoInfracao,
+        item.NRNotificacao,
+        index,
+      ]
+        .map((parte) => (parte == null ? '' : String(parte)))
+        .join('|');
+
+      return (
+        <View key={key} style={styles.card}>
+          {linha('Nº do processo', getProcessoNumero(item))}
+          {linha('Tipo de fiscalização', item.TipoFiscalizacao)}
+          {linha('Situação', item.SituacaoProcesso)}
+          {extras.map(([label, valor], extraIndex) => {
+            const conteudo = linha(label, valor);
+            if (!conteudo) return null;
+            return <React.Fragment key={`${label}-${extraIndex}`}>{conteudo}</React.Fragment>;
+          })}
+        </View>
+      );
+    },
     [],
   );
 
@@ -180,7 +196,7 @@ export default function Historico(): React.JSX.Element {
       return (
         <View style={styles.section} key={titulo}>
           <Text style={styles.sectionTitle}>{titulo}</Text>
-          {itens.map((item) => renderProcessoCard(item, extrasMapper(item)))}
+          {itens.map((item, index) => renderProcessoCard(item, extrasMapper(item), index))}
         </View>
       );
     },
@@ -246,7 +262,17 @@ export default function Historico(): React.JSX.Element {
                   <Text style={styles.empty}>Não existem Ações Fiscalizadoras.</Text>
                 ) : (
                   acoes.map((acao, index) => (
-                    <View style={styles.card} key={`${acao.TipoFiscalizacao}-${acao.NRInscricao}-${index}`}>
+                    <View
+                      style={styles.card}
+                      key={[
+                        acao.TipoFiscalizacao,
+                        acao.NRInscricao,
+                        acao.NRAnoFiscalizacao,
+                        index,
+                      ]
+                        .map((parte) => (parte == null ? '' : String(parte)))
+                        .join('|')}
+                    >
                       {linha('Tipo de fiscalização', acao.TipoFiscalizacao)}
                       {linha('Quantidade de ações', acao.QTFiscalizacao != null ? String(acao.QTFiscalizacao) : undefined)}
                       {linha('Ano', acao.NRAnoFiscalizacao)}
