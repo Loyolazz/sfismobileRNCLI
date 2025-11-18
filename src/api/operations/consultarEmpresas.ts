@@ -216,8 +216,8 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
   try {
     console.log('[API] consultarEmpresasAutorizadas SOAP', filtro);
     const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
-      cnpjRazaosocial: filtro.cnpjRazaosocial,
-      modalidade: filtro.modalidade,
+      cnpjRazaosocial: filtro.cnpjRazaosocial || undefined,
+      modalidade: filtro.modalidade || undefined,
       embarcacao: filtro.embarcacao || undefined,
       instalacao: filtro.instalacao || undefined,
     });

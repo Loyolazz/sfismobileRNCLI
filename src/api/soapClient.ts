@@ -41,11 +41,9 @@ export function buildSoapEnvelope(action: string, params?: Record<string, unknow
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (value === null || value === undefined) {
-        root.ele(`tem:${key}`);
-      } else {
-        root.ele(`tem:${key}`).txt(String(value));
-      }
+      if (value === null || value === undefined) return;
+      if (typeof value === 'string' && value.trim() === '') return;
+      root.ele(`tem:${key}`).txt(String(value));
     });
   }
 
