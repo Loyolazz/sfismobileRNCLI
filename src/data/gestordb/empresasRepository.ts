@@ -1,4 +1,5 @@
 import { ensureEmpresaPayload, serializeEmpresaPayload, type EmpresaPayload } from '@/utils/payload';
+import { normalizeSearchText } from '@/utils/formatters';
 import { allAsync, getAsync, txAsync } from './database';
 
 export type EmpresaAutorizadaRow = {
@@ -245,7 +246,7 @@ export async function listEmpresasPorEmbarcacaoAsync(termo: string): Promise<Emp
 
   const like = `%${search}%`;
   const sql = `
-    SELECT DISTINCT e.*
+    SELECT DISTINCT e.*, f.NOEMBARCACAO AS _NOEMBARCACAO, f.NRCAPITANIA AS _NRCAPITANIA, f.IDFROTA AS _IDFROTA, f.IDEMBARCACAO AS _IDEMBARCACAO, f.NRINSTRUMENTO AS _NRINSTRUMENTO
     FROM FROTAALOCADA f
     INNER JOIN EMPRESASAUTORIZADAS e
       ON e.NRINSCRICAO = f.NRINSCRICAO
@@ -265,8 +266,23 @@ export async function listEmpresasPorEmbarcacaoAsync(termo: string): Promise<Emp
   `;
 
   const params: string[] = [like, like, like, like, like];
-  const rows = await allAsync<EmpresaAutorizadaRow>(sql, params);
-  return rows.map(mapEmpresa);
+  const rows = await allAsync<EmpresaAutorizadaRow & Record<string, unknown>>(sql, params);
+  const normalizedTerm = normalizeSearchText(search);
+
+  const filtered = rows.filter((row) => {
+    const candidatos = [
+      row._NOEMBARCACAO,
+      row._NRCAPITANIA,
+      row._IDFROTA,
+      row._IDEMBARCACAO,
+      row._NRINSTRUMENTO,
+      row.PAYLOAD,
+    ];
+
+    return candidatos.some((value) => normalizeSearchText(String(value ?? '')).includes(normalizedTerm));
+  });
+
+  return filtered.map(mapEmpresa);
 }
 
 export async function getEmpresaByIdAsync(id: number): Promise<EmpresaAutorizada | null> {
