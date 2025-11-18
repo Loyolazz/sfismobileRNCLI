@@ -3,6 +3,8 @@ import { callSoapAction, type SoapRequestOptions } from '../api';
 export type ConsultarEmpresasAutorizadasParams = {
   cnpjRazaosocial: string;
   modalidade: string;
+  instalacao?: string;
+  embarcacao?: string;
 };
 
 export type ConsultarEmpresasAutorizadasResult = {
