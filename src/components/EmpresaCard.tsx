@@ -6,6 +6,7 @@ import type { Empresa } from '@/api/operations/consultarEmpresas';
 import theme from '@/theme';
 import { formatCnpj, formatDate } from '@/utils/formatters';
 import { ICONES_AUTORIZACAO } from '@/utils/autorizacao';
+import { classificarArea } from '@/types/dto/empresa';
 
 type Props = {
   empresa: Empresa;
@@ -35,7 +36,8 @@ function getIconName(icone?: string | null): string {
 }
 
 export default function EmpresaCard({ empresa, onPress, onHistorico }: Props) {
-  const travessia = (empresa.Modalidade ?? '').toLowerCase().includes('travessia');
+  const area = classificarArea(empresa.Modalidade, empresa.AreaPPF);
+  const travessia = area === 'navegacao-interior-travessia';
   const instrumento =
     empresa.DescricaoNRInstrumento?.trim() ||
     (empresa.NRInstrumento ? `Instrumento: ${empresa.NRInstrumento}` : '');
@@ -118,7 +120,13 @@ export default function EmpresaCard({ empresa, onPress, onHistorico }: Props) {
 
         {!!empresa.AreaPPF && (
           <Text style={styles.row}>
-            Área PPF: <Text style={styles.emphasis}>{empresa.AreaPPF}</Text>
+            {area === 'navegacao-interior-carga'
+              ? 'Região:'
+              : area === 'navegacao-interior-travessia' ||
+                  area === 'navegacao-interior-longo-misto'
+                ? 'Linha:'
+                : 'Área PPF:'}{' '}
+            <Text style={styles.emphasis}>{empresa.AreaPPF}</Text>
           </Text>
         )}
 

@@ -32,3 +32,11 @@ export function formatImoCapitania(raw: string): string {
 export function hasText(value: string): boolean {
   return value.trim().length > 0;
 }
+
+export function normalizeSearchText(value: string | null | undefined): string {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}+/gu, '')
+    .trim()
+    .toLowerCase();
+}

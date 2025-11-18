@@ -9,6 +9,7 @@ import {
   type ListEmpresasParams,
 } from '@/data/gestordb/empresasRepository';
 import { ensureEmpresaPayload } from '@/utils/payload';
+import { normalizeSearchText } from '@/utils/formatters';
 import { aplicarPrefixoInstrumento, obterRegraModalidade, ICONES_AUTORIZACAO } from '@/utils/autorizacao';
 
 export type TipoEmpresa = {
@@ -198,13 +199,18 @@ function normalizeFiltroAutorizadas(payload: FiltroAutorizadas): NormalizedFiltr
 
 async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise<Empresa[]> {
   const filtro = normalizeFiltroAutorizadas(payload);
+  const normalizedInstalacao = normalizeSearchText(filtro.instalacao);
+
+  const filtrarInstalacao = (empresas: Empresa[]) => {
+    if (!normalizedInstalacao) return empresas;
+    return empresas.filter((empresa) => {
+      const campos = [empresa.Instalacao, empresa.NORazaoSocialInstalacao, empresa.AreaPPF];
+      return campos.some((campo) => normalizeSearchText(campo).includes(normalizedInstalacao));
+    });
+  };
 
   if (await shouldUseOfflineData()) {
-    return consultarEmpresasAutorizadasOffline(filtro);
-  }
-
-  if (filtro.embarcacao || filtro.instalacao) {
-    return consultarEmpresasAutorizadasOffline(filtro);
+    return filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
   }
 
   try {
@@ -212,22 +218,24 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
     const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
       cnpjRazaosocial: filtro.cnpjRazaosocial,
       modalidade: filtro.modalidade,
+      embarcacao: filtro.embarcacao || undefined,
+      instalacao: filtro.instalacao || undefined,
     });
     const itens = Array.isArray(parsed?.d) ? parsed.d : parsed?.Empresa ?? parsed;
     const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
 
-    if (!list.length) {
-      const offline = await consultarEmpresasAutorizadasOffline(filtro);
+    const mapped = filtrarInstalacao(list.map(mapEmpresaAutorizadaLikeCordova));
+    if (!mapped.length) {
+      const offline = filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
       console.log('[API] consultarEmpresasAutorizadas retorno offline (sem dados online)', offline);
       return offline;
     }
 
-    const mapped = list.map(mapEmpresaAutorizadaLikeCordova);
     console.log('[API] consultarEmpresasAutorizadas retorno SOAP', mapped);
     return mapped;
   } catch (error) {
     console.log('[API] consultarEmpresasAutorizadas erro SOAP', error);
-    const fallback = await consultarEmpresasAutorizadasOffline(filtro);
+    const fallback = filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
     if (fallback.length > 0) {
       console.log('[API] consultarEmpresasAutorizadas retorno offline (fallback)', fallback);
       return fallback;
@@ -340,12 +348,12 @@ function mapEmpresaResumo(x: any): Empresa {
 }
 
 function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
-  const modalidade = str(x?.Modalidade);
+  const modalidade = pickStringField(x, ['Modalidade']);
   const regraModalidade = obterRegraModalidade(modalidade);
   const idInstPortOriginal = str(x?.IDTipoInstalacaoPortuaria);
   const idInstPort = regraModalidade.idTipoInstalacaoPortuaria ?? idInstPortOriginal;
 
-  const numeroInstrumentoOriginal = str(x?.NRInstrumento).trim();
+  const numeroInstrumentoOriginal = pickStringField(x, ['NRInstrumento', 'NRInstrum', 'Instrumento']).trim();
   const numeroInstrumento = aplicarPrefixoInstrumento(numeroInstrumentoOriginal, regraModalidade.prefixoInstrumento).trim();
   const descInstrumento = numeroInstrumento
     ? modalidade?.match(/Cabotagem|Apoio Portuario|Apoio Maritimo/i)
@@ -359,25 +367,25 @@ function mapEmpresaAutorizadaLikeCordova(x: any): Empresa {
   const isAutoridadePortuaria = Boolean(idInstPort) || regraModalidade.forcarMapa === true;
 
   return {
-    NORazaoSocial: str(x?.NORazaoSocial),
+    NORazaoSocial: pickStringField(x, ['NORazaoSocial', 'RazaoSocial']),
     TPInscricao: num(x?.TPInscricao),
-    NRInscricao: str(x?.NRInscricao),
-    DSEndereco: str(x?.DSEndereco),
-    SGUF: str(x?.SGUF),
-    NOMunicipio: str(x?.NOMunicipio),
-    DSBairro: str(x?.DSBairro),
-    NRCEP: str(x?.NRCEP),
+    NRInscricao: pickStringField(x, ['NRInscricao', 'CNPJ']),
+    DSEndereco: pickStringField(x, ['DSEndereco', 'Endereco', 'Logradouro']),
+    SGUF: pickStringField(x, ['SGUF', 'UF']),
+    NOMunicipio: pickStringField(x, ['NOMunicipio', 'Municipio']),
+    DSBairro: pickStringField(x, ['DSBairro', 'Bairro']),
+    NRCEP: pickStringField(x, ['NRCEP', 'CEP']),
     QTDEmbarcacao: num(x?.QTDEmbarcacao),
-    AreaPPF: str(x?.AreaPPF),
+    AreaPPF: pickStringField(x, ['AreaPPF', 'Linha', 'Regiao']),
 
     Modalidade: modalidade,
     NRInstrumento: numeroInstrumento,
     DescricaoNRInstrumento: descInstrumento,
-    DTAditamento: str(x?.DTAditamento),
-    NRAditamento: str(x?.NRAditamento),
-    Instalacao: str(x?.Instalacao),
-    NRInscricaoInstalacao: str(x?.NRInscricaoInstalacao),
-    NORazaoSocialInstalacao: str(x?.NORazaoSocialInstalacao),
+    DTAditamento: pickStringField(x, ['DTAditamento', 'DTUltimoAditamento']),
+    NRAditamento: pickStringField(x, ['NRAditamento', 'Termo']),
+    Instalacao: pickStringField(x, ['Instalacao', 'NMInstalacao', 'DSInstalacao', 'Porto']),
+    NRInscricaoInstalacao: pickStringField(x, ['NRInscricaoInstalacao', 'CNPJInstalacao']),
+    NORazaoSocialInstalacao: pickStringField(x, ['NORazaoSocialInstalacao', 'RazaoSocialInstalacao']),
     IDTipoInstalacaoPortuaria: idInstPort,
 
     icone,
@@ -434,6 +442,22 @@ function str(v: any): string {
   if (v == null) return '';
   if (typeof v === 'object' && v['@_nil']) return '';
   return String(v);
+}
+
+function pickStringField(obj: any, candidates: string[]): string {
+  if (!obj) return '';
+  for (const candidate of candidates) {
+    const value = obj?.[candidate];
+    if (value != null) return str(value);
+  }
+
+  const keys = Object.keys(obj ?? {});
+  for (const candidate of candidates) {
+    const match = keys.find((key) => key.toLowerCase() === candidate.toLowerCase());
+    if (match && obj?.[match] != null) return str(obj[match]);
+  }
+
+  return '';
 }
 
 function num(v: any): number | undefined {
