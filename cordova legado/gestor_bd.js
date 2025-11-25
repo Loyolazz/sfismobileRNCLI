@@ -2237,7 +2237,6 @@ async function gestorVerificarEstrutura_versao1_2_9_A2() {
     }
 }
 
-
 async function gestorVerificarEstrutura_versao1_2_9_A3() {
     try {
         openDB();
@@ -2267,7 +2266,6 @@ async function gestorVerificarEstrutura_versao1_2_9_A3() {
         console.log('gestorVerificarEstrutura_versao1_2_9_A3', erro.message);
     }
 }
-
 
 async function gestorCriarCampoTabela(tabela, coluna, formato) {
     try {

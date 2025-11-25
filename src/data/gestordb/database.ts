@@ -6,7 +6,7 @@ import SQLite, {
 
 SQLite.enablePromise(true);
 
-const DB_NAME = 'DBPRDSFISMobile.db';
+const DB_NAME = 'DBDSNSFISMobile.db';
 const DB_LOCATION = 'default';
 
 let dbInstance: SQLiteDatabase | null = null;
