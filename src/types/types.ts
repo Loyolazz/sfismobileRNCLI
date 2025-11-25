@@ -46,3 +46,34 @@ export type ConsultarAutorizadasStackParamList = {
         empresa: import('@/api/operations/consultarEmpresas').Empresa;
     };
 };
+
+export type PrestadorServico =
+    import('@/api/operations/listarPrestadoresServicos').ListarPrestadoresServicosResult['Empresa'][number];
+
+export type NovoPrestadorServico = {
+    STCadastrarNovo: true;
+    TPInscricao: 1 | 2;
+    NRInscricao: string;
+    NORazaoSocial: string;
+    DSEndereco: string;
+    EDComplemento?: string;
+    NREndereco: string;
+    NRCEP: string;
+    DSBairro: string;
+    SGUF: string;
+    CDMunicipio: string;
+    NOMunicipio?: string;
+};
+
+export type PrestadorSelecionado = PrestadorServico | NovoPrestadorServico;
+
+export type ServicosNaoAutorizadosStackParamList = {
+    Consultar: undefined;
+    ListaPrestadores: {
+        prestadores: PrestadorServico[];
+        filtro: { termo: string; tipo: 'cnpj' | 'cpf' | 'razaosocial' };
+    };
+    CadastrarPrestador: undefined;
+    AreaAtuacao: { prestador: PrestadorSelecionado };
+    AreaPortuaria: { prestador: PrestadorSelecionado };
+};
