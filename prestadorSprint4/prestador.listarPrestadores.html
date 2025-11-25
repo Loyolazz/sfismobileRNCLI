@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="css/prestador.listarPrestadores.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+</head>
+<body ng-app="app">
+    <div ng-controller="MainCtrl">
+
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a onclick="window.history.back()" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Resultado da Consulta </a>
+            </nav>
+        </div>
+
+        <div class="fixed">
+            <p id="data-qtd" class="titulo"></p>
+            <a id="cadastrar" ng-click=proxima('cadastrar') class="waves-effect waves-blue btn botao botao-top">
+                CADASTRAR
+            </a>
+        </div>
+
+        <div class="app app-lista">
+            <div class="lista-prestadores" ng-show="prestadores.length > 0">
+                <div class="collection" ng-repeat="prestador in prestadores">
+
+                    <a ng-click="detalhar(prestador);" class="collection-item">
+
+                        <span class="title">{{prestador.NORazaoSocial}}</span>
+                        <i class="material-icons right">chevron_right</i>
+
+                        <p class="detalhe"> {{tipoInscricao(prestador.TPInscricao)}}: {{formatarInscricao(prestador.TPInscricao, prestador.NRInscricao)}} </p>
+                        <p class="detalhe"> Endereço: {{prestador.DSEndereco}} {{prestador.NOMunicipio ? " - " + prestador.NOMunicipio : ""}} {{prestador.SGUF ? " - " + prestador.SGUF : ""}} </p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="preloader" class="preloader-wrapper big active">
+        <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div><div class="gap-patch">
+                <div class="circle"></div>
+            </div><div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/gestor_bd.js"></script>
+    <script src="js/prestador.listarPrestadores.js"></script>
+</body>
+</html>
+
