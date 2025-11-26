@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, SafeAreaView, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, SafeAreaView, Text, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -139,13 +139,6 @@ export default function ConsultarPrestador() {
         <Text style={styles.botaoTexto}>{loading ? 'Pesquisando...' : 'PESQUISAR'}</Text>
       </Pressable>
 
-      <View style={styles.helper}>
-        {tipoPesquisa.value !== 'razaosocial' ? (
-          <Text style={styles.helperTexto}>Use somente números. Formatação aplicada automaticamente.</Text>
-        ) : (
-          <Text style={styles.helperTexto}>Informe ao menos 3 caracteres para pesquisar.</Text>
-        )}
-      </View>
     </SafeAreaView>
   );
 }

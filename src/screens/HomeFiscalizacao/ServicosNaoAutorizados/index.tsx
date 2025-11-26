@@ -21,9 +21,6 @@ import ResultadoFiscalizacao from './screens/ResultadoFiscalizacao';
 import AutoEmitido from './screens/AutoEmitido';
 import ProcessoFiscalizacao from './screens/ProcessoFiscalizacao';
 import ReenviarDocumentos from './screens/ReenviarDocumentos';
-import BuscarServico from './screens/BuscarServico';
-import ResultadoServicos from './screens/ResultadoServicos';
-
 const Stack = createNativeStackNavigator<ServicosNaoAutorizadosStackParamList>();
 
 const headerTitleStyle = {

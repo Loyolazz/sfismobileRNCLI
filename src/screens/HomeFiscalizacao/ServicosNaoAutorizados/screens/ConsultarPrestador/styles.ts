@@ -40,11 +40,4 @@ export default StyleSheet.create({
     color: theme.colors.surface,
     ...theme.typography.button,
   },
-  helper: {
-    marginTop: theme.spacing.md,
-  },
-  helperTexto: {
-    ...theme.typography.caption,
-    color: theme.colors.muted,
-  },
 });
