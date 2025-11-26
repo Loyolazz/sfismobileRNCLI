@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, SafeAreaView, Text, TextInput } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { consultarIrregularidades, type ConsultarIrregularidadesResult } from '@/api/operations';
+import { carregarIrregularidadesServicosNaoAutorizados, type ConsultarIrregularidadesResult } from '@/api/servicosNaoAutorizados';
 import type { ServicosNaoAutorizadosStackParamList } from '@/types/types';
 
 import styles from './styles';
@@ -21,7 +21,7 @@ export default function Irregularidades({ navigation, route }: Props) {
   const carregarIrregularidades = useCallback(async () => {
     try {
       setCarregando(true);
-      const resposta = await consultarIrregularidades({ norma: '' });
+      const resposta = await carregarIrregularidadesServicosNaoAutorizados();
       const irregularidades = (resposta as ConsultarIrregularidadesResult | undefined)?.Irregularidade ?? [];
       setLista(irregularidades);
     } catch (error) {

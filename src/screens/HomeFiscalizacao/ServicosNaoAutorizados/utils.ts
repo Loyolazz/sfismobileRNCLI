@@ -1,8 +1,8 @@
 import {
-  inserirPrestadorServico,
+  cadastrarPrestadorServicoNaoAutorizado,
   type InserirPrestadorServicoParams,
-  vincularAreaAtuacaoPrestadorServico,
-} from '@/api/operations';
+  vincularPrestadorServicoNaoAutorizado,
+} from '@/api/servicosNaoAutorizados';
 import { digitsOnly } from '@/utils/documents';
 import type { PrestadorSelecionado } from '@/types/types';
 
@@ -22,12 +22,12 @@ export async function salvarAreaPrestador(prestador: PrestadorSelecionado, tipoA
       tipoInscricao: prestador.TPInscricao.toString(),
     };
 
-    await inserirPrestadorServico(payload);
+    await cadastrarPrestadorServicoNaoAutorizado(payload);
     return;
   }
 
   const tipoInscricao = prestador.TPInscricao === 1 ? 'cnpj' : 'cpf';
-  await vincularAreaAtuacaoPrestadorServico({
+  await vincularPrestadorServicoNaoAutorizado({
     numeroInscricao: prestador.NRInscricao,
     tipoAreaAtuacao,
     tipoInscricao,

@@ -2,13 +2,15 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, SafeAreaView, ScrollView, Text, TextInput } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { buscarEmpresasCnpjRazao, type Empresa } from '@/api/operations/consultarEmpresas';
 import {
-  consultarEmbarcacoesPorNomeOuCapitania,
+  buscarServicosNaoAutorizadosPorEmbarcacao,
+  buscarServicosNaoAutorizadosPorEmpresa,
   type ConsultarEmbarcacoesPorNomeOuCapitaniaResult,
-} from '@/api/operations/consultarEmbarcacoesPorNomeOuCapitania';
+  type Empresa,
+} from '@/api/servicosNaoAutorizados';
 import type { ServicosNaoAutorizadosStackParamList } from '@/types/types';
-import { digitsOnly, formatCnpj } from '@/utils/documents';
+import { digitsOnly } from '@/utils/documents';
+import { formatCnpj } from '@/utils/formatters';
 
 import styles from './styles';
 
@@ -44,12 +46,12 @@ export default function BuscarServico({ navigation }: Props) {
 
       if (nomeEmpresa.trim() || cnpj.trim()) {
         const termo = nomeEmpresa.trim() || digitsOnly(cnpj);
-        const empresas = await buscarEmpresasCnpjRazao(termo);
+        const empresas = await buscarServicosNaoAutorizadosPorEmpresa(termo);
         resultados.push(...empresas);
       }
 
       if (embarcacao.trim()) {
-        const embarcacoesResposta = await consultarEmbarcacoesPorNomeOuCapitania({
+        const embarcacoesResposta = await buscarServicosNaoAutorizadosPorEmbarcacao({
           NOEmbarcacao: embarcacao.trim(),
           NRCapitania: '',
         });

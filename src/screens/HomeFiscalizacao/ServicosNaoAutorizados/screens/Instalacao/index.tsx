@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { inserirInstalacao } from '@/api/operations';
+import { salvarInstalacaoServicoNaoAutorizado } from '@/api/servicosNaoAutorizados';
 import type { ServicosNaoAutorizadosStackParamList } from '@/types/types';
 import { digitsOnly, formatCep } from '@/utils/documents';
 import { loadSession } from '@/services/session';
@@ -58,7 +58,7 @@ export default function Instalacao({ navigation, route }: Props) {
         numeroInscricao: prestador.NRInscricao,
       };
 
-      await inserirInstalacao(payload);
+      await salvarInstalacaoServicoNaoAutorizado(payload);
 
       navigation.navigate('Equipe', {
         prestador,
