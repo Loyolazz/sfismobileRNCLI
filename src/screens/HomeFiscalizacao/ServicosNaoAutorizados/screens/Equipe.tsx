@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, SafeAreaView, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, SafeAreaView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
-import { servidores } from '../mockData';
+import { buscarServidoresFiscalizacao } from '../services';
 import type { Servidor, ServicosNaoAutorizadosStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'Equipe'>;
@@ -11,7 +11,28 @@ type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'Equip
 export default function Equipe({ route, navigation }: Props) {
   const { prestador, area, instalacao } = route.params;
   const [busca, setBusca] = useState('');
+  const [servidores, setServidores] = useState<Servidor[]>([]);
   const [selecionados, setSelecionados] = useState<Servidor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    buscarServidoresFiscalizacao()
+      .then(lista => {
+        if (active) setServidores(lista);
+      })
+      .catch(error => {
+        console.warn('[ServicosNaoAutorizados] Falha ao carregar servidores', error);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -19,7 +40,7 @@ export default function Equipe({ route, navigation }: Props) {
       return servidores;
     }
     return servidores.filter(s => s.nome.toLowerCase().includes(termo));
-  }, [busca]);
+  }, [busca, servidores]);
 
   const toggle = (servidor: Servidor) => {
     setSelecionados(prev => {
@@ -62,19 +83,45 @@ export default function Equipe({ route, navigation }: Props) {
 
         <TextInput
           placeholder="Buscar servidor"
-          placeholderTextColor={theme.colors.muted}
-          value={busca}
-          onChangeText={setBusca}
-          style={styles.input}
-        />
+        placeholderTextColor={theme.colors.muted}
+        value={busca}
+        onChangeText={setBusca}
+        style={styles.input}
+      />
 
-        <FlatList
-          data={filtrados}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
-          contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
-        />
+        {loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={theme.colors.primaryDark} />
+            <Text style={{ marginTop: theme.spacing.sm, color: theme.colors.muted }}>
+              Carregando servidores...
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filtrados}
+            keyExtractor={item => item.id}
+            renderItem={renderItem}
+            ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
+            ListEmptyComponent={
+              <View
+                style={{
+                  padding: theme.spacing.lg,
+                  alignItems: 'center',
+                  backgroundColor: theme.colors.surface,
+                  borderRadius: theme.radius.md,
+                }}
+              >
+                <Text style={{ fontWeight: '700', color: theme.colors.text }}>
+                  Nenhum servidor encontrado
+                </Text>
+                <Text style={{ color: theme.colors.muted, marginTop: theme.spacing.xs, textAlign: 'center' }}>
+                  Ajuste a busca ou tente novamente mais tarde.
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
+          />
+        )}
 
         <Pressable
           onPress={prosseguir}
