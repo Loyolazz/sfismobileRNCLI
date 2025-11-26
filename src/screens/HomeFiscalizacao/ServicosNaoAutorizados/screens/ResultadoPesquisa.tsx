@@ -1,32 +1,45 @@
-import React, { useMemo } from 'react';
-import { FlatList, Pressable, SafeAreaView, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, SafeAreaView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
-import { filtroLabel, prestadoresBase } from '../mockData';
+import { filtroLabel } from '../mockData';
+import { buscarPrestadoresServico } from '../services';
 import type { Prestador, ServicosNaoAutorizadosStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'ResultadoPesquisa'>;
 
 export default function ResultadoPesquisa({ route, navigation }: Props) {
   const { filtro, termo, resultados } = route.params;
+  const [dados, setDados] = useState<Prestador[]>(resultados);
+  const [loading, setLoading] = useState(false);
 
-  const dados = useMemo<Prestador[]>(() => {
-    if (resultados.length) {
-      return resultados;
+  useEffect(() => {
+    setDados(resultados);
+  }, [resultados]);
+
+  useEffect(() => {
+    let active = true;
+    const termoPesquisa = termo.trim();
+    if (resultados.length === 0 && termoPesquisa) {
+      setLoading(true);
+      buscarPrestadoresServico(filtro, termoPesquisa)
+        .then(itens => {
+          if (active) setDados(itens);
+        })
+        .catch(error => {
+          console.warn('[ServicosNaoAutorizados] Falha ao refazer busca', error);
+          Alert.alert('Erro', 'Não foi possível atualizar os resultados.');
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
     }
 
-    const termoNormalizado = termo.trim().toLowerCase();
-    if (!termoNormalizado) {
-      return [];
-    }
-
-    const fallback = prestadoresBase.filter(item =>
-      item.razaoSocial.toLowerCase().includes(termoNormalizado),
-    );
-
-    return fallback;
-  }, [resultados, termo]);
+    return () => {
+      active = false;
+    };
+  }, [filtro, resultados.length, termo]);
 
   const handleCadastrar = () => {
     navigation.navigate('CadastroPrestador', {
@@ -40,7 +53,8 @@ export default function ResultadoPesquisa({ route, navigation }: Props) {
     });
   };
 
-  const headerResumo = `${dados.length || resultados.length} localizada(s)`;
+  const lista = dados.length ? dados : resultados;
+  const headerResumo = `${lista.length} localizada(s)`;
 
   const renderCard = ({ item }: { item: Prestador }) => (
     <Pressable
@@ -92,7 +106,14 @@ export default function ResultadoPesquisa({ route, navigation }: Props) {
           <Text style={{ color: theme.colors.surface, fontWeight: '700' }}>Cadastrar</Text>
         </Pressable>
 
-        {dados.length === 0 ? (
+        {loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={theme.colors.primaryDark} />
+            <Text style={{ marginTop: theme.spacing.sm, color: theme.colors.muted }}>
+              Buscando prestadores...
+            </Text>
+          </View>
+        ) : lista.length === 0 ? (
           <View
             style={{
               flex: 1,
@@ -112,7 +133,7 @@ export default function ResultadoPesquisa({ route, navigation }: Props) {
           </View>
         ) : (
           <FlatList
-            data={dados}
+            data={lista}
             keyExtractor={item => item.id}
             renderItem={renderCard}
             ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
