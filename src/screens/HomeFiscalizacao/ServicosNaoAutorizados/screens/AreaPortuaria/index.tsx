@@ -31,8 +31,12 @@ export default function AreaPortuaria({ navigation, route }: Props) {
     try {
       setSalvando(true);
       await salvarAreaPrestador(prestador, areaPortuaria.value);
-      Alert.alert('Sucesso', 'Área portuária salva com sucesso.', undefined, {
-        onDismiss: () => navigation.popToTop(),
+      navigation.navigate('Instalacao', {
+        prestador,
+        areaAtuacao: {
+          tipo: areaPortuaria.value,
+          descricao: areaPortuaria.label,
+        },
       });
     } catch (error) {
       console.error(error);

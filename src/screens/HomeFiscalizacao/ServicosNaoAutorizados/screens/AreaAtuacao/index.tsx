@@ -18,9 +18,7 @@ export default function AreaAtuacao({ navigation, route }: Props) {
     try {
       setLoading(true);
       await salvarAreaPrestador(prestador, 'interior');
-      Alert.alert('Sucesso', 'Área de atuação vinculada com sucesso.', undefined, {
-        onDismiss: () => navigation.popToTop(),
-      });
+      navigation.navigate('NavegacaoInterior', { prestador });
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Não foi possível salvar a área de atuação.');
