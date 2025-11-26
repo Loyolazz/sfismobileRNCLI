@@ -45,18 +45,22 @@ function mapPrestadorServico(item: PrestadorServicoRecord, index: number): Prest
     .map(normalizeString)
     .filter(Boolean);
 
+  const idBruto =
+    (item as any).IDContratoArrendamento ??
+    (documento || undefined) ??
+    (item as any).id ??
+    index;
+
   return {
-    id: normalizeString(
-      (item as any).IDContratoArrendamento ?? documento || (item as any).id ?? index,
-    ),
+    id: normalizeString(idBruto),
     razaoSocial: normalizeString(
       (item as any).NORazaoSocial ?? (item as any).noRazaoSocial ?? (item as any).NORAZAOSOCIAL ?? 'Prestador',
     ),
     documento: documento || '-',
     documentoTipo: detectarDocumentoTipo(documento),
     endereco: enderecoParts.join(' - ') || 'Endereço não informado',
-    municipio: normalizeString((item as any).NOMunicipio ?? (item as any).noMunicipio ?? '' ) || undefined,
-    uf: normalizeString((item as any).SGUF ?? (item as any).sguf ?? '' ) || undefined,
+    municipio: normalizeString((item as any).NOMunicipio ?? (item as any).noMunicipio ?? '') || undefined,
+    uf: normalizeString((item as any).SGUF ?? (item as any).sguf ?? '') || undefined,
   };
 }
 
