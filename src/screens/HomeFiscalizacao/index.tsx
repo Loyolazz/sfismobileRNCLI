@@ -217,9 +217,10 @@ export default function HomeFiscalizacao({ route, navigation }: Props) {
         component={ServicosNaoAutorizados}
         options={{
           drawerItemStyle: { display: 'none' },
-          title: 'ServicosNaoAutorizados',
+          title: 'Serviços não autorizados',
+          headerShown: false,
           headerTintColor: theme.colors.surface,
-      }}
+        }}
       />
       <Drawer.Screen
         name="Notificacoes"

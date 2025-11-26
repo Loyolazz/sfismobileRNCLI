@@ -1,5 +1,5 @@
-export function normalizeCnpj(raw: string | null | undefined): string | null {
-  const digits = (raw ?? '').replace(/\D/g, '');
+export function normalizeCnpj(raw: string | number | null | undefined): string | null {
+  const digits = `${raw ?? ''}`.replace(/\D/g, '');
   if (!digits) return null;
 
   if (digits.length > 14) {
