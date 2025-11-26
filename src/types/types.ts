@@ -68,6 +68,11 @@ export type NovoPrestadorServico = {
 export type PrestadorSelecionado = PrestadorServico | NovoPrestadorServico;
 
 export type ServicosNaoAutorizadosStackParamList = {
+    Buscar: undefined;
+    ResultadoServicos: {
+        empresas: import('@/api/operations/consultarEmpresas').Empresa[];
+        filtro: { nome?: string; cnpj?: string; embarcacao?: string };
+    };
     Consultar: undefined;
     ListaPrestadores: {
         prestadores: PrestadorServico[];
@@ -76,4 +81,45 @@ export type ServicosNaoAutorizadosStackParamList = {
     CadastrarPrestador: undefined;
     AreaAtuacao: { prestador: PrestadorSelecionado };
     AreaPortuaria: { prestador: PrestadorSelecionado };
+    NavegacaoInterior: { prestador: PrestadorSelecionado };
+    Instalacao: {
+        prestador: PrestadorSelecionado;
+        areaAtuacao: { tipo: 'interior' | 'tup' | 'registro'; descricao: string };
+        interior?: { tipoTransporte: number; trechoLinha: number; descricao: string };
+    };
+    Equipe: {
+        prestador: PrestadorSelecionado;
+        areaAtuacao: { tipo: 'interior' | 'tup' | 'registro'; descricao: string };
+        interior?: { tipoTransporte: number; trechoLinha: number; descricao: string };
+        instalacao: {
+            nome: string;
+            tipo: string;
+            endereco: string;
+            bairro: string;
+            municipio: string;
+            cep: string;
+            latitude?: string;
+            longitude?: string;
+        };
+    };
+    DescricaoFiscalizacao: ServicosNaoAutorizadosStackParamList['Equipe'] & {
+        equipe: Array<{
+            NRMatriculaServidor: number;
+            NOUsuario: string;
+            NOCargo: string;
+            IDPerfilFiscalizacao: number;
+        }>;
+    };
+    Irregularidades: ServicosNaoAutorizadosStackParamList['DescricaoFiscalizacao'] & {
+        descricao: string;
+    };
+    ResultadoFiscalizacao: ServicosNaoAutorizadosStackParamList['Irregularidades'] & {
+        irregularidades: Array<{ IDIrregularidade: number; DSIrregularidade: string }>;
+    };
+    AutoEmitido: { mensagem: string; detalhes?: string };
+    ProcessoFiscalizacao: {
+        protocolo?: string;
+        anexos?: Array<{ id: string; nome: string; selecionado?: boolean }>;
+    };
+    ReenviarDocumentos: ServicosNaoAutorizadosStackParamList['ProcessoFiscalizacao'];
 };
