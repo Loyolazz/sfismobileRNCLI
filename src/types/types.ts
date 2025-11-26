@@ -68,6 +68,11 @@ export type NovoPrestadorServico = {
 export type PrestadorSelecionado = PrestadorServico | NovoPrestadorServico;
 
 export type ServicosNaoAutorizadosStackParamList = {
+    Buscar: undefined;
+    ResultadoServicos: {
+        empresas: import('@/api/operations/consultarEmpresas').Empresa[];
+        filtro: { nome?: string; cnpj?: string; embarcacao?: string };
+    };
     Consultar: undefined;
     ListaPrestadores: {
         prestadores: PrestadorServico[];

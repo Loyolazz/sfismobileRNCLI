@@ -46,6 +46,16 @@ export default function ServicosNaoAutorizadosNavigator(): React.JSX.Element {
         headerLeft: createHeaderLeft(() => navigation.goBack()),
       })}
     >
+      <Stack.Screen
+        name="Buscar"
+        component={BuscarServico}
+        options={{ title: 'Serviços não autorizados' }}
+      />
+      <Stack.Screen
+        name="ResultadoServicos"
+        component={ResultadoServicos}
+        options={{ title: 'Resultado da Consulta' }}
+      />
       <Stack.Screen name="Consultar" component={ConsultarPrestador} options={{ title: 'Consultar' }} />
       <Stack.Screen
         name="ListaPrestadores"
