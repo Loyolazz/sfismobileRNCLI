@@ -1,4 +1,4 @@
-const digitsOnly = (value: string) => value.replace(/\D/g, '');
+const digitsOnly = (value: string | number) => `${value}`.replace(/\D/g, '');
 
 const CPF_FACTOR_1 = [10, 9, 8, 7, 6, 5, 4, 3, 2];
 const CPF_FACTOR_2 = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
@@ -9,7 +9,7 @@ function calculateCpfDigit(numbers: number[], factors: number[]): number {
   return remainder < 2 ? 0 : 11 - remainder;
 }
 
-export function validateCpf(value: string): boolean {
+export function validateCpf(value: string | number): boolean {
   const clean = digitsOnly(value);
   if (clean.length !== 11 || /^([0-9])\1+$/.test(clean)) return false;
 
@@ -30,7 +30,7 @@ function calculateCnpjDigit(numbers: number[]): number {
   return remainder < 2 ? 0 : 11 - remainder;
 }
 
-export function validateCnpj(value: string): boolean {
+export function validateCnpj(value: string | number): boolean {
   const clean = digitsOnly(value);
   if (clean.length !== 14 || /^([0-9])\1+$/.test(clean)) return false;
 
@@ -44,7 +44,7 @@ export function validateCnpj(value: string): boolean {
   return clean === `${base.join('')}${firstDigit}${secondDigit}`;
 }
 
-export function formatCpf(value: string): string {
+export function formatCpf(value: string | number): string {
   const clean = digitsOnly(value).slice(0, 11);
   if (clean.length <= 3) return clean;
   if (clean.length <= 6) return `${clean.slice(0, 3)}.${clean.slice(3)}`;
@@ -52,7 +52,7 @@ export function formatCpf(value: string): string {
   return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
 }
 
-export function formatCep(value: string): string {
+export function formatCep(value: string | number): string {
   const clean = digitsOnly(value).slice(0, 8);
   if (clean.length <= 5) return clean;
   return `${clean.slice(0, 5)}-${clean.slice(5)}`;
