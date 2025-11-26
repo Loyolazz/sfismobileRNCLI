@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, SafeAreaView, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, SafeAreaView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
-import { irregularidades } from '../mockData';
+import { buscarIrregularidades } from '../services';
 import type { Irregularidade, ServicosNaoAutorizadosStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'SelecaoIrregularidades'>;
@@ -11,13 +11,33 @@ type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'Selec
 export default function SelecaoIrregularidades({ route, navigation }: Props) {
   const { prestador, area, instalacao, equipe, descricao } = route.params;
   const [busca, setBusca] = useState('');
+  const [irregularidades, setIrregularidades] = useState<Irregularidade[]>([]);
   const [selecionadas, setSelecionadas] = useState<Irregularidade[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    buscarIrregularidades()
+      .then(lista => {
+        if (active) setIrregularidades(lista);
+      })
+      .catch(error => {
+        console.warn('[ServicosNaoAutorizados] Falha ao carregar irregularidades', error);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     if (!termo) return irregularidades;
     return irregularidades.filter(item => item.descricao.toLowerCase().includes(termo));
-  }, [busca]);
+  }, [busca, irregularidades]);
 
   const toggle = (item: Irregularidade) => {
     setSelecionadas(prev => {
@@ -57,23 +77,42 @@ export default function SelecaoIrregularidades({ route, navigation }: Props) {
           style={styles.input}
         />
 
-        <FlatList
-          data={filtradas}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => {
-            const ativo = selecionadas.some(ir => ir.id === item.id);
-            return (
-              <Pressable onPress={() => toggle(item)} style={[styles.card, ativo && styles.cardAtivo]}>
-                <Text style={{ color: theme.colors.text }}>{item.descricao}</Text>
-                <Text style={{ color: ativo ? theme.colors.primary : theme.colors.muted, marginTop: 4 }}>
-                  {ativo ? 'Selecionada' : 'Tocar para selecionar'}
+        {loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={theme.colors.primaryDark} />
+            <Text style={{ marginTop: theme.spacing.sm, color: theme.colors.muted }}>
+              Carregando irregularidades...
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filtradas}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => {
+              const ativo = selecionadas.some(ir => ir.id === item.id);
+              return (
+                <Pressable onPress={() => toggle(item)} style={[styles.card, ativo && styles.cardAtivo]}>
+                  <Text style={{ color: theme.colors.text }}>{item.descricao}</Text>
+                  <Text style={{ color: ativo ? theme.colors.primary : theme.colors.muted, marginTop: 4 }}>
+                    {ativo ? 'Selecionada' : 'Tocar para selecionar'}
+                  </Text>
+                </Pressable>
+              );
+            }}
+            ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
+            ListEmptyComponent={
+              <View style={{ padding: theme.spacing.lg, alignItems: 'center' }}>
+                <Text style={{ fontWeight: '700', color: theme.colors.text }}>
+                  Nenhuma irregularidade encontrada
                 </Text>
-              </Pressable>
-            );
-          }}
-          ItemSeparatorComponent={() => <View style={{ height: theme.spacing.sm }} />}
-          contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
-        />
+                <Text style={{ color: theme.colors.muted, marginTop: theme.spacing.xs, textAlign: 'center' }}>
+                  Ajuste o termo de busca e tente novamente.
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
+          />
+        )}
 
         <Pressable
           onPress={confirmar}

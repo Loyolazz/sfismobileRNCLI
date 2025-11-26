@@ -18,6 +18,7 @@ export type EmpresaAutorizadaRecord = Record<string, unknown>;
 export type IrregularidadeRecord = Record<string, unknown>;
 export type ServidorRecord = Record<string, unknown>;
 export type FrotaAlocadaRecord = Record<string, unknown>;
+export type PrestadorServicoRecord = Record<string, unknown>;
 
 async function postJson<T>(
   action: string,
@@ -67,6 +68,19 @@ export async function listarFrotaAlocada(): Promise<FrotaAlocadaRecord[]> {
     return ensureArray(response.data?.d);
   } catch (error) {
     console.warn('[gestorbd] Falha ao listar frota alocada', error);
+    return [];
+  }
+}
+
+export async function listarPrestadoresServicos(): Promise<PrestadorServicoRecord[]> {
+  try {
+    const response = await postJson<MaybeArray<PrestadorServicoRecord>>('ListarPrestadoresServicos', {
+      textoPesquisa: '',
+      tipoPesquisa: '',
+    });
+    return ensureArray(response.data?.d);
+  } catch (error) {
+    console.warn('[gestorbd] Falha ao listar prestadores de serviço', error);
     return [];
   }
 }

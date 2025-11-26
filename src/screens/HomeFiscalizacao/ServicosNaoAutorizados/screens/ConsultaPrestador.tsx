@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
-import { filtroLabel, prestadoresBase } from '../mockData';
-import type { DocumentoTipo, Prestador, ServicosNaoAutorizadosStackParamList } from '../types';
+import { filtroLabel } from '../mockData';
+import { buscarPrestadoresServico } from '../services';
+import type { DocumentoTipo, ServicosNaoAutorizadosStackParamList } from '../types';
 
 const filtros: { label: string; value: DocumentoTipo }[] = [
   { label: 'CNPJ', value: 'cnpj' },
@@ -18,34 +19,30 @@ export default function ConsultaPrestador({ navigation }: Props) {
   const [filtro, setFiltro] = useState<DocumentoTipo>('cnpj');
   const [termo, setTermo] = useState('');
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const resultados = useMemo(() => {
-    const normalizado = termo.trim().toLowerCase();
-    if (!normalizado) {
-      return [] as Prestador[];
-    }
-
-    return prestadoresBase.filter(item => {
-      if (filtro === 'razao') {
-        return item.razaoSocial.toLowerCase().includes(normalizado);
-      }
-
-      return item.documento.replace(/\D/g, '').includes(normalizado.replace(/\D/g, ''));
-    });
-  }, [filtro, termo]);
-
-  const handlePesquisar = () => {
+  const handlePesquisar = async () => {
     if (!termo.trim()) {
       setErro('Preencha este campo!');
       return;
     }
 
     setErro('');
-    navigation.navigate('ResultadoPesquisa', {
-      filtro,
-      termo,
-      resultados,
-    });
+    try {
+      setLoading(true);
+      const encontrados = await buscarPrestadoresServico(filtro, termo);
+
+      navigation.navigate('ResultadoPesquisa', {
+        filtro,
+        termo,
+        resultados: encontrados,
+      });
+    } catch (error) {
+      console.warn('[ServicosNaoAutorizados] Erro ao pesquisar prestadores', error);
+      Alert.alert('Erro', 'Não foi possível consultar prestadores no momento.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -124,7 +121,7 @@ export default function ConsultaPrestador({ navigation }: Props) {
             }}
           >
             <Text style={{ color: theme.colors.surface, fontSize: 16, fontWeight: '700' }}>
-              PESQUISAR
+              {loading ? 'PESQUISANDO...' : 'PESQUISAR'}
             </Text>
           </Pressable>
 
