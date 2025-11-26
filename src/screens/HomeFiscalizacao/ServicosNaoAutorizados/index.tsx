@@ -12,6 +12,17 @@ import ListaPrestadores from './screens/ListaPrestadores';
 import CadastrarPrestador from './screens/CadastrarPrestador';
 import AreaAtuacao from './screens/AreaAtuacao';
 import AreaPortuaria from './screens/AreaPortuaria';
+import NavegacaoInterior from './screens/NavegacaoInterior';
+import Instalacao from './screens/Instalacao';
+import Equipe from './screens/Equipe';
+import DescricaoFiscalizacao from './screens/DescricaoFiscalizacao';
+import Irregularidades from './screens/Irregularidades';
+import ResultadoFiscalizacao from './screens/ResultadoFiscalizacao';
+import AutoEmitido from './screens/AutoEmitido';
+import ProcessoFiscalizacao from './screens/ProcessoFiscalizacao';
+import ReenviarDocumentos from './screens/ReenviarDocumentos';
+import BuscarServico from './screens/BuscarServico';
+import ResultadoServicos from './screens/ResultadoServicos';
 
 const Stack = createNativeStackNavigator<ServicosNaoAutorizadosStackParamList>();
 
@@ -38,6 +49,16 @@ export default function ServicosNaoAutorizadosNavigator(): React.JSX.Element {
         headerLeft: createHeaderLeft(() => navigation.goBack()),
       })}
     >
+      <Stack.Screen
+        name="Buscar"
+        component={BuscarServico}
+        options={{ title: 'Serviços não autorizados' }}
+      />
+      <Stack.Screen
+        name="ResultadoServicos"
+        component={ResultadoServicos}
+        options={{ title: 'Resultado da Consulta' }}
+      />
       <Stack.Screen name="Consultar" component={ConsultarPrestador} options={{ title: 'Consultar' }} />
       <Stack.Screen
         name="ListaPrestadores"
@@ -51,6 +72,39 @@ export default function ServicosNaoAutorizadosNavigator(): React.JSX.Element {
       />
       <Stack.Screen name="AreaAtuacao" component={AreaAtuacao} options={{ title: 'Serviço' }} />
       <Stack.Screen name="AreaPortuaria" component={AreaPortuaria} options={{ title: 'Área Portuária' }} />
+      <Stack.Screen
+        name="NavegacaoInterior"
+        component={NavegacaoInterior}
+        options={{ title: 'Navegação Interior' }}
+      />
+      <Stack.Screen name="Instalacao" component={Instalacao} options={{ title: 'Instalação' }} />
+      <Stack.Screen name="Equipe" component={Equipe} options={{ title: 'Equipe' }} />
+      <Stack.Screen
+        name="DescricaoFiscalizacao"
+        component={DescricaoFiscalizacao}
+        options={{ title: 'Descrição' }}
+      />
+      <Stack.Screen
+        name="Irregularidades"
+        component={Irregularidades}
+        options={{ title: 'Irregularidades' }}
+      />
+      <Stack.Screen
+        name="ResultadoFiscalizacao"
+        component={ResultadoFiscalizacao}
+        options={{ title: 'Resumo' }}
+      />
+      <Stack.Screen name="AutoEmitido" component={AutoEmitido} options={{ title: 'Auto de Infração' }} />
+      <Stack.Screen
+        name="ProcessoFiscalizacao"
+        component={ProcessoFiscalizacao}
+        options={{ title: 'Processo' }}
+      />
+      <Stack.Screen
+        name="ReenviarDocumentos"
+        component={ReenviarDocumentos}
+        options={{ title: 'Reenviar Documentos' }}
+      />
     </Stack.Navigator>
   );
 }
