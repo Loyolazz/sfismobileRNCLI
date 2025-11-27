@@ -240,7 +240,9 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
       console.log('[API] consultarEmpresasAutorizadas retorno offline (fallback)', fallback);
       return fallback;
     }
-    throw error;
+
+    console.log('[API] consultarEmpresasAutorizadas sem dados no fallback, retornando lista vazia');
+    return [];
   }
 }
 
