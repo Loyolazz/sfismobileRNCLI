@@ -1,6 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 
 import { callSoapAction, type SoapRequestOptions } from '../api';
+import { consultarEmbarcacoesPorNomeOuCapitania } from './consultarEmbarcacoesPorNomeOuCapitania';
 
 import {
   listEmpresasAutorizadasAsync,
@@ -210,16 +211,32 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
   };
 
   if (await shouldUseOfflineData()) {
+    console.log('[API] consultarEmpresasAutorizadas: embarcacao/instalacao search, usando offline', filtro);
     return filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
+  }
+
+  // If searching by vessel, use the specific vessel API first
+  if (filtro.embarcacao) {
+    try {
+      console.log('[API] consultarEmpresasAutorizadas: buscando por embarcacao via API específica', filtro.embarcacao);
+      const result = await consultarEmpresasPorEmbarcacao(filtro.embarcacao);
+      if (result.length > 0) {
+        return filtrarInstalacao(result);
+      }
+      console.log('[API] consultarEmpresasAutorizadas: nenhuma empresa encontrada para embarcacao, tentando offline');
+    } catch (error) {
+      console.log('[API] consultarEmpresasAutorizadas: erro ao buscar por embarcacao', error);
+    }
+    const offline = filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
+    return offline;
   }
 
   try {
     console.log('[API] consultarEmpresasAutorizadas SOAP', filtro);
+    // Note: The API only supports cnpjRazaosocial and modalidade parameters
     const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
       cnpjRazaosocial: filtro.cnpjRazaosocial || undefined,
       modalidade: filtro.modalidade || undefined,
-      embarcacao: filtro.embarcacao || undefined,
-      instalacao: filtro.instalacao || undefined,
     });
     const itens = Array.isArray(parsed?.d) ? parsed.d : parsed?.Empresa ?? parsed;
     const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
@@ -244,6 +261,63 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
     console.log('[API] consultarEmpresasAutorizadas sem dados no fallback, retornando lista vazia');
     return [];
   }
+}
+
+async function consultarEmpresasPorEmbarcacao(nomeEmbarcacao: string): Promise<Empresa[]> {
+  console.log('[API] consultarEmpresasPorEmbarcacao: buscando embarcacao', nomeEmbarcacao);
+
+  // Search for vessels by name
+  const vesselResult = await consultarEmbarcacoesPorNomeOuCapitania({
+    NOEmbarcacao: nomeEmbarcacao,
+    NRCapitania: '',
+  });
+
+  console.log('[API] consultarEmpresasPorEmbarcacao: embarcacoes encontradas', vesselResult);
+
+  // Extract vessel data
+  const vessels = Array.isArray(vesselResult?.EmbarcacaoAutorizada)
+    ? vesselResult.EmbarcacaoAutorizada
+    : vesselResult?.EmbarcacaoAutorizada
+      ? [vesselResult.EmbarcacaoAutorizada]
+      : [];
+
+  if (vessels.length === 0) {
+    console.log('[API] consultarEmpresasPorEmbarcacao: nenhuma embarcacao encontrada');
+    return [];
+  }
+
+  // Extract unique company CNPJs from vessels
+  const cnpjs = new Set<string>();
+  vessels.forEach((vessel: any) => {
+    if (vessel.NRInscricao) {
+      cnpjs.add(String(vessel.NRInscricao));
+    }
+  });
+
+  console.log('[API] consultarEmpresasPorEmbarcacao: CNPJs de empresas encontrados', Array.from(cnpjs));
+
+  if (cnpjs.size === 0) {
+    console.log('[API] consultarEmpresasPorEmbarcacao: nenhum CNPJ encontrado nas embarcacoes');
+    return [];
+  }
+
+  // Search for companies by CNPJ
+  const empresas: Empresa[] = [];
+  for (const cnpj of cnpjs) {
+    try {
+      const result = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
+        cnpjRazaosocial: cnpj,
+      });
+      const itens = Array.isArray(result?.d) ? result.d : result?.Empresa ?? result;
+      const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
+      empresas.push(...list.map(mapEmpresaAutorizadaLikeCordova));
+    } catch (error) {
+      console.log('[API] consultarEmpresasPorEmbarcacao: erro ao buscar empresa com CNPJ', cnpj, error);
+    }
+  }
+
+  console.log('[API] consultarEmpresasPorEmbarcacao: empresas encontradas', empresas);
+  return empresas;
 }
 
 async function consultarEmpresasAutorizadasOffline(
