@@ -24,14 +24,18 @@ function explainAxiosError(err: unknown, tag = 'ERR') {
     console.warn(`[${tag}] status:`, ax.response.status);
     console.warn(`[${tag}] headers:`, ax.response.headers);
     const data = ax.response.data as any;
-    console.warn(`[${tag}] body:`, typeof data === 'string' ? data.slice(0, 400) : data);
+    console.warn(`[${tag}] body:`, typeof data === 'string' ? data.slice(0, 1000) : data);
   }
 }
 
-export function buildSoapEnvelope(action: string, params?: Record<string, unknown>) {
+export function buildSoapEnvelope(action: string, params?: Record<string, unknown>, useSoap11 = false) {
+  const soapNamespace = useSoap11
+    ? 'http://schemas.xmlsoap.org/soap/envelope/'
+    : 'http://www.w3.org/2003/05/soap-envelope';
+
   const root = create({ version: '1.0' })
     .ele('soap:Envelope', {
-      'xmlns:soap': 'http://www.w3.org/2003/05/soap-envelope',
+      'xmlns:soap': soapNamespace,
       'xmlns:tem': SOAP_NAMESPACE,
     })
     .ele('soap:Header')
@@ -50,8 +54,15 @@ export function buildSoapEnvelope(action: string, params?: Record<string, unknow
   return root.end();
 }
 
-async function axiosSoapPost(action: string, xmlBody: string, signal?: AbortSignal): Promise<string> {
+async function axiosSoapPost(
+  action: string,
+  params: Record<string, unknown> | undefined,
+  signal?: AbortSignal,
+): Promise<string> {
+  // Primeiro tenta SOAP 1.1 (preferido por servidores .NET/ASMX antigos)
   try {
+    const xmlBody = buildSoapEnvelope(action, params, true);
+    console.log('[SOAP11] Tentando SOAP 1.1 com body >>>\n', xmlBody);
     const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
       baseURL: undefined,
       transformRequest: v => v,
@@ -60,15 +71,19 @@ async function axiosSoapPost(action: string, xmlBody: string, signal?: AbortSign
       timeout: REQUEST_TIMEOUT_MS,
       signal,
       headers: {
-        'Content-Type': `application/soap+xml; charset=utf-8; action="${SOAP_NAMESPACE}/${action}"`,
-        Accept: 'application/soap+xml',
+        'Content-Type': 'text/xml; charset=utf-8',
+        SOAPAction: `"${SOAP_NAMESPACE}/${action}"`,
+        Accept: 'text/xml',
       },
     });
-    console.log('[SOAP12] status:', response.status);
+    console.log('[SOAP11] status:', response.status);
     return response.data;
   } catch (firstError) {
-    explainAxiosError(firstError, 'SOAP12');
+    explainAxiosError(firstError, 'SOAP11');
+    // Fallback: SOAP 1.1 sem aspas no SOAPAction
     try {
+      const xmlBody = buildSoapEnvelope(action, params, true);
+      console.log('[SOAP11-NOQ] Tentando SOAP 1.1 sem aspas no SOAPAction >>>\n', xmlBody);
       const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
         baseURL: undefined,
         transformRequest: v => v,
@@ -78,15 +93,36 @@ async function axiosSoapPost(action: string, xmlBody: string, signal?: AbortSign
         signal,
         headers: {
           'Content-Type': 'text/xml; charset=utf-8',
-          SOAPAction: `"${SOAP_NAMESPACE}/${action}"`,
+          SOAPAction: `${SOAP_NAMESPACE}/${action}`,
           Accept: 'text/xml',
         },
       });
-      console.log('[SOAP11] status:', response.status);
+      console.log('[SOAP11-NOQ] status:', response.status);
       return response.data;
-    } catch (fallbackError) {
-      explainAxiosError(fallbackError, 'SOAP11');
-      throw fallbackError;
+    } catch (secondError) {
+      explainAxiosError(secondError, 'SOAP11-NOQ');
+      // Último fallback: SOAP 1.2
+      try {
+        const xmlBody = buildSoapEnvelope(action, params, false);
+        console.log('[SOAP12] Tentando fallback SOAP 1.2 >>>\n', xmlBody);
+        const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
+          baseURL: undefined,
+          transformRequest: v => v,
+          transitional: { forcedJSONParsing: false },
+          responseType: 'text',
+          timeout: REQUEST_TIMEOUT_MS,
+          signal,
+          headers: {
+            'Content-Type': `application/soap+xml; charset=utf-8; action="${SOAP_NAMESPACE}/${action}"`,
+            Accept: 'application/soap+xml',
+          },
+        });
+        console.log('[SOAP12] status:', response.status);
+        return response.data;
+      } catch (fallbackError) {
+        explainAxiosError(fallbackError, 'SOAP12');
+        throw fallbackError;
+      }
     }
   }
 }
@@ -119,7 +155,7 @@ export async function soapRequest(
   const xml = buildSoapEnvelope(action, params);
   console.log('[SOAP] body >>>\n', xml);
 
-  const raw = await axiosSoapPost(action, xml, options?.signal);
+  const raw = await axiosSoapPost(action, params, options?.signal);
   console.log('[SOAP] raw(xml) <<<\n', (raw || '').slice(0, 800));
 
   const parsed = parser.parse(raw);
