@@ -28,10 +28,14 @@ function explainAxiosError(err: unknown, tag = 'ERR') {
   }
 }
 
-export function buildSoapEnvelope(action: string, params?: Record<string, unknown>) {
+export function buildSoapEnvelope(action: string, params?: Record<string, unknown>, useSoap11 = false) {
+  const soapNamespace = useSoap11
+    ? 'http://schemas.xmlsoap.org/soap/envelope/'
+    : 'http://www.w3.org/2003/05/soap-envelope';
+
   const root = create({ version: '1.0' })
     .ele('soap:Envelope', {
-      'xmlns:soap': 'http://www.w3.org/2003/05/soap-envelope',
+      'xmlns:soap': soapNamespace,
       'xmlns:tem': SOAP_NAMESPACE,
     })
     .ele('soap:Header')
@@ -50,8 +54,14 @@ export function buildSoapEnvelope(action: string, params?: Record<string, unknow
   return root.end();
 }
 
-async function axiosSoapPost(action: string, xmlBody: string, signal?: AbortSignal): Promise<string> {
+async function axiosSoapPost(
+  action: string,
+  params: Record<string, unknown> | undefined,
+  signal?: AbortSignal,
+): Promise<string> {
+  // Primeiro tenta SOAP 1.2
   try {
+    const xmlBody = buildSoapEnvelope(action, params, false);
     const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
       baseURL: undefined,
       transformRequest: v => v,
@@ -68,7 +78,10 @@ async function axiosSoapPost(action: string, xmlBody: string, signal?: AbortSign
     return response.data;
   } catch (firstError) {
     explainAxiosError(firstError, 'SOAP12');
+    // Fallback para SOAP 1.1 com envelope correto
     try {
+      const xmlBody = buildSoapEnvelope(action, params, true);
+      console.log('[SOAP11] Tentando fallback com body >>>\n', xmlBody);
       const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
         baseURL: undefined,
         transformRequest: v => v,
@@ -119,7 +132,7 @@ export async function soapRequest(
   const xml = buildSoapEnvelope(action, params);
   console.log('[SOAP] body >>>\n', xml);
 
-  const raw = await axiosSoapPost(action, xml, options?.signal);
+  const raw = await axiosSoapPost(action, params, options?.signal);
   console.log('[SOAP] raw(xml) <<<\n', (raw || '').slice(0, 800));
 
   const parsed = parser.parse(raw);
