@@ -24,7 +24,7 @@ function explainAxiosError(err: unknown, tag = 'ERR') {
     console.warn(`[${tag}] status:`, ax.response.status);
     console.warn(`[${tag}] headers:`, ax.response.headers);
     const data = ax.response.data as any;
-    console.warn(`[${tag}] body:`, typeof data === 'string' ? data.slice(0, 400) : data);
+    console.warn(`[${tag}] body:`, typeof data === 'string' ? data.slice(0, 1000) : data);
   }
 }
 
