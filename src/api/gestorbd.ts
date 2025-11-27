@@ -20,6 +20,11 @@ export type ServidorRecord = Record<string, unknown>;
 export type FrotaAlocadaRecord = Record<string, unknown>;
 export type PrestadorServicoRecord = Record<string, unknown>;
 
+export type ListarPrestadoresServicosParams = {
+  textoPesquisa?: string;
+  tipoPesquisa?: string;
+};
+
 async function postJson<T>(
   action: string,
   payload: Record<string, unknown> = {},
@@ -72,11 +77,13 @@ export async function listarFrotaAlocada(): Promise<FrotaAlocadaRecord[]> {
   }
 }
 
-export async function listarPrestadoresServicos(): Promise<PrestadorServicoRecord[]> {
+export async function listarPrestadoresServicos(
+  params: ListarPrestadoresServicosParams = {},
+): Promise<PrestadorServicoRecord[]> {
   try {
     const response = await postJson<MaybeArray<PrestadorServicoRecord>>('ListarPrestadoresServicos', {
-      textoPesquisa: '',
-      tipoPesquisa: '',
+      textoPesquisa: params.textoPesquisa ?? '',
+      tipoPesquisa: params.tipoPesquisa ?? '',
     });
     return ensureArray(response.data?.d);
   } catch (error) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, SafeAreaView, Text, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
@@ -12,34 +13,31 @@ export default function AreaAtuacao({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ padding: theme.spacing.lg, gap: theme.spacing.md, flex: 1 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>
-          Selecione a área de atuação
-        </Text>
-
-        <Text style={{ color: theme.colors.muted }}>
-          Prestador: {prestador.razaoSocial} • {prestador.documento}
-        </Text>
+      <View style={{ padding: theme.spacing.lg, gap: theme.spacing.lg, flex: 1 }}>
+        <View style={{ gap: theme.spacing.xs }}>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>
+            Selecione a área de atuação.
+          </Text>
+          <Text style={{ color: theme.colors.muted }}>
+            {prestador.razaoSocial} • {prestador.documento}
+          </Text>
+        </View>
 
         <View style={{ gap: theme.spacing.md }}>
-          <Pressable
-            onPress={() => navigation.navigate('NavegacaoInterior', { prestador })}
-            style={styles.card}
-          >
-            <Text style={styles.cardTitle}>Navegação Interior</Text>
-            <Text style={styles.cardSubtitle}>
-              Selecione o tipo de transporte e os trechos/linhas para prosseguir.
-            </Text>
+          <Pressable onPress={() => navigation.navigate('NavegacaoInterior', { prestador })} style={styles.card}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+              <Icon name="ferry" size={32} color={theme.colors.primaryDark} />
+              <Text style={styles.cardTitle}>Navegação Interior</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.colors.muted} style={{ position: 'absolute', right: 16 }} />
           </Pressable>
 
-          <Pressable
-            onPress={() => navigation.navigate('AreaPortuaria', { prestador })}
-            style={styles.card}
-          >
-            <Text style={styles.cardTitle}>Área Portuária</Text>
-            <Text style={styles.cardSubtitle}>
-              Informe registro, TUP ou outras informações do terminal.
-            </Text>
+          <Pressable onPress={() => navigation.navigate('AreaPortuaria', { prestador })} style={styles.card}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+              <Icon name="crane" size={32} color={theme.colors.primaryDark} />
+              <Text style={styles.cardTitle}>Área Portuária</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.colors.muted} style={{ position: 'absolute', right: 16 }} />
           </Pressable>
         </View>
       </View>
@@ -51,10 +49,11 @@ const styles = {
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    gap: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
   cardTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text },
   cardSubtitle: { color: theme.colors.muted },

@@ -3,6 +3,7 @@ import { getAsync, runAsync } from './database';
 export type SyncDatasetKey =
   | 'EMPRESASAUTORIZADAS'
   | 'FROTAALOCADA'
+  | 'PRESTADORESSERVICOS'
   | 'ESQUEMASOPERACIONAIS'
   | 'EMBARCACOESINTERIOR';
 
