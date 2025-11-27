@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, TextInput } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Alert, Pressable, SafeAreaView, ScrollView, Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
+import SelectField from '../components/SelectField';
 import type { AreaAtuacao, ServicosNaoAutorizadosStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'AreaPortuaria'>;
 
 export default function AreaPortuaria({ navigation, route }: Props) {
   const { prestador } = route.params;
-  const [registro, setRegistro] = useState('');
-  const [tup, setTup] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  const [areaSelecionada, setAreaSelecionada] = useState<string | null>(null);
+
+  const options = useMemo(
+    () => [
+      { label: 'TUP', value: 'TUP' },
+      { label: 'Registro', value: 'Registro' },
+    ],
+    [],
+  );
 
   const handleProsseguir = () => {
+    if (!areaSelecionada) {
+      Alert.alert('Selecione a área portuária');
+      return;
+    }
+
     const area: AreaAtuacao = {
       tipo: 'portuaria',
-      registro: registro || 'Registro não informado',
-      tup: tup || undefined,
-      observacoes: observacoes || undefined,
+      registro: areaSelecionada,
     };
 
     navigation.navigate('CadastrarInstalacao', { prestador, area });
@@ -29,39 +39,21 @@ export default function AreaPortuaria({ navigation, route }: Props) {
       <ScrollView contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>Área Portuária</Text>
         <Text style={{ color: theme.colors.muted }}>
-          Informe os dados do TUP ou registro portuário antes de seguir com a instalação.
+          Selecione o tipo de área portuária antes de seguir com a instalação.
         </Text>
 
-        <TextInput
-          placeholder="Registro / TUP"
-          placeholderTextColor={theme.colors.muted}
-          value={registro}
-          onChangeText={setRegistro}
-          style={styles.input}
-        />
-
-        <TextInput
-          placeholder="Código ou apelido do terminal"
-          placeholderTextColor={theme.colors.muted}
-          value={tup}
-          onChangeText={setTup}
-          style={styles.input}
-        />
-
-        <TextInput
-          placeholder="Observações"
-          placeholderTextColor={theme.colors.muted}
-          value={observacoes}
-          onChangeText={setObservacoes}
-          multiline
-          numberOfLines={3}
-          style={[styles.input, { minHeight: 100, textAlignVertical: 'top' }]}
+        <SelectField
+          label="Área Portuária"
+          placeholder="Área Portuária"
+          value={areaSelecionada}
+          onSelect={setAreaSelecionada}
+          options={options}
         />
 
         <Pressable
           onPress={handleProsseguir}
           style={{
-            backgroundColor: theme.colors.primaryDark,
+            backgroundColor: '#6CB6E3',
             paddingVertical: theme.spacing.md,
             borderRadius: theme.radius.md,
             alignItems: 'center',
@@ -73,14 +65,3 @@ export default function AreaPortuaria({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const styles = {
-  input: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: '#D0D5DD',
-    padding: theme.spacing.md,
-    fontSize: 16,
-  },
-};

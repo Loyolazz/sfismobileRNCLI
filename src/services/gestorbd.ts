@@ -1,8 +1,10 @@
 import {
   listarEmpresasAutorizadas,
   listarFrotaAlocada,
+  listarPrestadoresServicos,
   type EmpresaAutorizadaRecord,
   type FrotaAlocadaRecord,
+  type PrestadorServicoRecord,
 } from '@/api/gestorbd';
 import {
   countEmpresasAutorizadasAsync,
@@ -17,6 +19,11 @@ import {
   type ListEmpresasParams,
   type CountFrotaParams,
 } from '@/data/gestordb/empresasRepository';
+import {
+  countPrestadoresAsync,
+  searchPrestadoresServicoOffline,
+  upsertPrestadoresServicosBulkAsync,
+} from '@/data/gestordb/prestadoresRepository';
 import { migrateAsync } from '@/data/gestordb/database';
 import {
   appendErrorLogAsync,
@@ -28,6 +35,7 @@ import {
 export type GestorSyncCounts = {
   empresas: number;
   frota: number;
+  prestadores: number;
 };
 
 export type GestorSyncStatus = {
@@ -57,6 +65,26 @@ export async function syncEmpresasAutorizadasAsync({
   }
 }
 
+export async function syncPrestadoresServicosAsync({
+  sinceCursor,
+}: { sinceCursor?: string } = {}): Promise<{ count: number; cursor: string }> {
+  await migrateAsync();
+  const cursor = sinceCursor ?? (await getSyncCursorAsync('PRESTADORESSERVICOS')) ?? undefined;
+
+  try {
+    const items: PrestadorServicoRecord[] = await listarPrestadoresServicos();
+    const count = await upsertPrestadoresServicosBulkAsync(items);
+    const newCursor = new Date().toISOString();
+    await setSyncCursorAsync('PRESTADORESSERVICOS', newCursor);
+    return { count, cursor: newCursor };
+  } catch (error) {
+    await appendErrorLogAsync('syncPrestadoresServicosAsync', (error as Error)?.message ?? 'Erro desconhecido', {
+      sinceCursor: cursor,
+    });
+    throw error;
+  }
+}
+
 export async function syncFrotaAlocadaAsync({
   sinceCursor,
 }: { sinceCursor?: string } = {}): Promise<{ count: number; cursor: string }> {
@@ -80,9 +108,10 @@ export async function syncFrotaAlocadaAsync({
 export async function syncGestorDatabase(): Promise<GestorSyncStatus> {
   await migrateAsync();
 
-  const [empresasResult, frotaResult] = await Promise.all([
+  const [empresasResult, frotaResult, prestadoresResult] = await Promise.all([
     syncEmpresasAutorizadasAsync(),
     syncFrotaAlocadaAsync(),
+    syncPrestadoresServicosAsync(),
   ]);
 
   const status = await loadGestorSyncStatus();
@@ -92,23 +121,26 @@ export async function syncGestorDatabase(): Promise<GestorSyncStatus> {
     lastRun: {
       empresas: empresasResult.count,
       frota: frotaResult.count,
+      prestadores: prestadoresResult.count,
     },
   };
 }
 
 export async function loadGestorSyncStatus(): Promise<GestorSyncStatus> {
   await migrateAsync();
-  const [empresasCursor, frotaCursor] = await Promise.all([
+  const [empresasCursor, frotaCursor, prestadoresCursor] = await Promise.all([
     getSyncCursorAsync('EMPRESASAUTORIZADAS'),
     getSyncCursorAsync('FROTAALOCADA'),
+    getSyncCursorAsync('PRESTADORESSERVICOS'),
   ]);
 
-  const [empresasCount, frotaCount] = await Promise.all([
+  const [empresasCount, frotaCount, prestadoresCount] = await Promise.all([
     countEmpresasAutorizadasAsync(),
     countFrotaAsync(),
+    countPrestadoresAsync(),
   ]);
 
-  const timestamps = [empresasCursor, frotaCursor]
+  const timestamps = [empresasCursor, frotaCursor, prestadoresCursor]
     .map(value => (value ? Date.parse(value) : NaN))
     .filter(value => Number.isFinite(value)) as number[];
 
@@ -119,10 +151,12 @@ export async function loadGestorSyncStatus(): Promise<GestorSyncStatus> {
     cursors: {
       EMPRESASAUTORIZADAS: empresasCursor ?? null,
       FROTAALOCADA: frotaCursor ?? null,
+      PRESTADORESSERVICOS: prestadoresCursor ?? null,
     },
     counts: {
       empresas: empresasCount,
       frota: frotaCount,
+      prestadores: prestadoresCount,
     },
   };
 }
@@ -147,6 +181,14 @@ export async function getEmpresaByNrInscricaoAsync(
 export async function countFrotaByEmpresaAsync(params: CountFrotaParams): Promise<number> {
   await migrateAsync();
   return countFrotaByEmpresaFromDbAsync(params);
+}
+
+export async function searchPrestadoresServicoOfflineAsync(
+  termo: string,
+  filtro: 'razao' | 'cpf' | 'cnpj',
+): Promise<Record<string, unknown>[]> {
+  await migrateAsync();
+  return searchPrestadoresServicoOffline(termo, filtro);
 }
 
 export async function logGestorDatabaseSnapshot(): Promise<void> {

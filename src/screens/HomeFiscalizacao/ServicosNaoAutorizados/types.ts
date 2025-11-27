@@ -16,9 +16,13 @@ export type AreaAtuacao =
 
 export type Instalacao = {
   nome: string;
-  tipo: string;
   endereco: string;
   complemento?: string;
+  numero?: string;
+  bairro?: string;
+  cep?: string;
+  uf?: string;
+  municipio?: string;
   latitude?: string;
   longitude?: string;
 };

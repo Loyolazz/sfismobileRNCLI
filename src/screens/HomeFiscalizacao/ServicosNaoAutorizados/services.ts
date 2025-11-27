@@ -5,12 +5,17 @@ import { listarPrestadoresServicos as listarPrestadoresServicosSoap } from '@/ap
 import { listarServidores as listarServidoresSoap } from '@/api/operations/listarServidores';
 import {
   consultarIrregularidades as consultarIrregularidadesBD,
+  listarPrestadoresServicos as listarPrestadoresGestor,
   listarServidores as listarServidoresBD,
   type IrregularidadeRecord,
   type PrestadorServicoRecord,
   type ServidorRecord,
 } from '@/api/gestorbd';
-import { searchPrestadoresServicoOffline } from '@/data/gestordb/prestadoresRepository';
+import { migrateAsync } from '@/data/gestordb/database';
+import {
+  searchPrestadoresServicoOffline,
+  upsertPrestadoresServicosBulkAsync,
+} from '@/data/gestordb/prestadoresRepository';
 import type { DocumentoTipo, Irregularidade, Prestador, Servidor } from './types';
 
 function ensureArray<T>(value: T | T[] | null | undefined): T[] {
@@ -76,6 +81,17 @@ function prestadorMatchesFiltro(prestador: Prestador, filtro: DocumentoTipo, ter
   return prestador.documento.replace(/\D/g, '').includes(digits);
 }
 
+async function persistirPrestadoresOffline(itens: PrestadorServicoRecord[]): Promise<void> {
+  if (!itens.length) return;
+
+  try {
+    await migrateAsync();
+    await upsertPrestadoresServicosBulkAsync(itens);
+  } catch (error) {
+    console.warn('[ServicosNaoAutorizados] Falha ao salvar prestadores offline', error);
+  }
+}
+
 export async function buscarPrestadoresServico(
   filtro: DocumentoTipo,
   termo: string,
@@ -86,19 +102,39 @@ export async function buscarPrestadoresServico(
   const tipoPesquisa = filtro === 'razao' ? 'razao' : filtro;
 
   try {
-    const result = await listarPrestadoresServicosSoap({ textoPesquisa: consulta, tipoPesquisa });
-    const itens = (result as any)?.Empresa ?? (result as any)?.d ?? result;
-    const mapped = ensureArray<PrestadorServicoRecord>(itens)
+    const resultGestor = await listarPrestadoresGestor({ textoPesquisa: consulta, tipoPesquisa });
+    const itensGestor = ensureArray<PrestadorServicoRecord>(resultGestor);
+    const mappedGestor = itensGestor
       .map(mapPrestadorServico)
       .filter(prestador => prestadorMatchesFiltro(prestador, filtro, consulta));
 
-    if (mapped.length) return mapped;
+    if (mappedGestor.length) {
+      await persistirPrestadoresOffline(itensGestor);
+      return mappedGestor;
+    }
+  } catch (error) {
+    console.warn('[ServicosNaoAutorizados] Falha ao consultar prestadores (API BD)', error);
+  }
+
+  try {
+    const result = await listarPrestadoresServicosSoap({ textoPesquisa: consulta, tipoPesquisa });
+    const itens = (result as any)?.Empresa ?? (result as any)?.d ?? result;
+    const itensSoap = ensureArray<PrestadorServicoRecord>(itens);
+    const mapped = itensSoap
+      .map(mapPrestadorServico)
+      .filter(prestador => prestadorMatchesFiltro(prestador, filtro, consulta));
+
+    if (mapped.length) {
+      await persistirPrestadoresOffline(itensSoap);
+      return mapped;
+    }
   } catch (error) {
     console.warn('[ServicosNaoAutorizados] Falha ao consultar prestadores (SOAP)', error);
   }
 
   try {
-    const offline = await searchPrestadoresServicoOffline(consulta, filtro === 'razao' ? 'razao' : 'cnpj');
+    await migrateAsync();
+    const offline = await searchPrestadoresServicoOffline(consulta, filtro === 'razao' ? 'razao' : filtro);
     const mapped = ensureArray<PrestadorServicoRecord>(offline)
       .map(mapPrestadorServico)
       .filter(prestador => prestadorMatchesFiltro(prestador, filtro, consulta));

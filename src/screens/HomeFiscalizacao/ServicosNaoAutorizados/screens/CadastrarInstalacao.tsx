@@ -1,20 +1,48 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
+import SelectField from '../components/SelectField';
 import type { Instalacao, ServicosNaoAutorizadosStackParamList } from '../types';
+
+const ufs = ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
+const municipiosSugeridos = ['Recife', 'Belém', 'Manaus', 'Fortaleza', 'Macapá'];
 
 type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'CadastrarInstalacao'>;
 
 export default function CadastrarInstalacao({ navigation, route }: Props) {
   const { prestador, area } = route.params;
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState('');
   const [endereco, setEndereco] = useState('');
   const [complemento, setComplemento] = useState('');
+  const [numero, setNumero] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [cep, setCep] = useState('');
+  const [uf, setUf] = useState<string | null>(prestador.uf ?? null);
+  const [municipio, setMunicipio] = useState<string | null>(prestador.municipio ?? null);
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
+
+  const ufOptions = useMemo(() => ufs.map(sigla => ({ label: sigla, value: sigla })), []);
+
+  const municipioOptions = useMemo(() => {
+    const base = new Set<string>();
+    municipiosSugeridos.forEach(c => base.add(c));
+    if (prestador.municipio) base.add(prestador.municipio);
+    return Array.from(base).map(cidade => ({ label: cidade, value: cidade }));
+  }, [prestador.municipio]);
+
+  const copiarRazaoSocial = () => {
+    setNome(prestador.razaoSocial);
+  };
+
+  const copiarEmpresa = () => {
+    if (prestador.razaoSocial && !nome) setNome(prestador.razaoSocial);
+    if (prestador.endereco) setEndereco(prestador.endereco);
+    if (prestador.municipio) setMunicipio(prestador.municipio);
+    if (prestador.uf) setUf(prestador.uf);
+  };
 
   const handleSalvar = () => {
     if (!nome.trim()) {
@@ -22,11 +50,20 @@ export default function CadastrarInstalacao({ navigation, route }: Props) {
       return;
     }
 
+    if (!endereco.trim()) {
+      Alert.alert('Endereço obrigatório', 'Informe o endereço da instalação.');
+      return;
+    }
+
     const instalacao: Instalacao = {
       nome: nome.trim(),
-      tipo: tipo || 'Instalação não informada',
-      endereco: endereco || 'Endereço não informado',
+      endereco: endereco.trim(),
       complemento: complemento || undefined,
+      numero: numero || undefined,
+      bairro: bairro || undefined,
+      cep: cep || undefined,
+      uf: uf || undefined,
+      municipio: municipio || undefined,
       latitude: lat || undefined,
       longitude: lng || undefined,
     };
@@ -37,41 +74,85 @@ export default function CadastrarInstalacao({ navigation, route }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>
-          Cadastrar Instalação
-        </Text>
-        <Text style={{ color: theme.colors.muted }}>
-          Preencha os dados da instalação fiscalizada para seguir para a equipe.
-        </Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>Cadastrar Instalação</Text>
 
-        <TextInput
-          placeholder="Nome da instalação"
-          placeholderTextColor={theme.colors.muted}
-          value={nome}
-          onChangeText={setNome}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Tipo"
-          placeholderTextColor={theme.colors.muted}
-          value={tipo}
-          onChangeText={setTipo}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Endereço completo"
-          placeholderTextColor={theme.colors.muted}
-          value={endereco}
-          onChangeText={setEndereco}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Complemento"
-          placeholderTextColor={theme.colors.muted}
-          value={complemento}
-          onChangeText={setComplemento}
-          style={styles.input}
-        />
+        <View style={{ gap: theme.spacing.sm }}>
+          <TextInput
+            placeholder="Digite o Nome da Instalação"
+            placeholderTextColor={theme.colors.muted}
+            value={nome}
+            onChangeText={setNome}
+            style={styles.input}
+          />
+          <Pressable style={styles.secondaryButton} onPress={copiarRazaoSocial}>
+            <Text style={styles.secondaryLabel}>Copiar Razão Social</Text>
+          </Pressable>
+        </View>
+
+        <View style={{ gap: theme.spacing.sm }}>
+          <TextInput
+            placeholder="Rua, Travessa, Avenida, Logradouro, etc."
+            placeholderTextColor={theme.colors.muted}
+            value={endereco}
+            onChangeText={setEndereco}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Complemento"
+            placeholderTextColor={theme.colors.muted}
+            value={complemento}
+            onChangeText={setComplemento}
+            style={styles.input}
+          />
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <TextInput
+              placeholder="Número"
+              placeholderTextColor={theme.colors.muted}
+              value={numero}
+              onChangeText={setNumero}
+              style={[styles.input, { flex: 1 }]}
+            />
+            <TextInput
+              placeholder="CEP"
+              placeholderTextColor={theme.colors.muted}
+              value={cep}
+              onChangeText={setCep}
+              style={[styles.input, { flex: 1 }]}
+            />
+          </View>
+          <TextInput
+            placeholder="Bairro"
+            placeholderTextColor={theme.colors.muted}
+            value={bairro}
+            onChangeText={setBairro}
+            style={styles.input}
+          />
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <SelectField
+                label="UF"
+                placeholder="UF"
+                value={uf}
+                onSelect={setUf}
+                options={ufOptions}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <SelectField
+                label="Município"
+                placeholder="Município"
+                value={municipio}
+                onSelect={setMunicipio}
+                options={municipioOptions}
+              />
+            </View>
+          </View>
+        </View>
+
+        <Pressable style={styles.secondaryButton} onPress={copiarEmpresa}>
+          <Text style={styles.secondaryLabel}>Copiar da Empresa Selecionada</Text>
+        </Pressable>
+
         <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
           <TextInput
             placeholder="Latitude"
@@ -92,7 +173,7 @@ export default function CadastrarInstalacao({ navigation, route }: Props) {
         <Pressable
           onPress={handleSalvar}
           style={{
-            backgroundColor: theme.colors.primaryDark,
+            backgroundColor: '#6CB6E3',
             paddingVertical: theme.spacing.md,
             borderRadius: theme.radius.md,
             alignItems: 'center',
@@ -114,4 +195,11 @@ const styles = {
     padding: theme.spacing.md,
     fontSize: 16,
   },
+  secondaryButton: {
+    backgroundColor: '#6CB6E3',
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+  },
+  secondaryLabel: { color: theme.colors.surface, fontWeight: '700' },
 };

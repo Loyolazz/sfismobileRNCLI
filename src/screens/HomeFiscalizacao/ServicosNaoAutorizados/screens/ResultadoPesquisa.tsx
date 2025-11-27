@@ -54,7 +54,7 @@ export default function ResultadoPesquisa({ route, navigation }: Props) {
   };
 
   const lista = dados.length ? dados : resultados;
-  const headerResumo = `${lista.length} localizada(s)`;
+  const headerResumo = `${lista.length} Prestadores encontrados.`;
 
   const renderCard = ({ item }: { item: Prestador }) => (
     <Pressable
@@ -62,13 +62,18 @@ export default function ResultadoPesquisa({ route, navigation }: Props) {
       style={{
         backgroundColor: theme.colors.surface,
         borderRadius: theme.radius.md,
-        padding: theme.spacing.md,
+        paddingVertical: theme.spacing.md,
+        paddingHorizontal: theme.spacing.md,
         gap: theme.spacing.xs,
         borderWidth: 1,
         borderColor: '#E2E8F0',
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 1,
       }}
     >
-      <Text style={{ fontWeight: '800', color: theme.colors.text }}>
+      <Text style={{ fontWeight: '800', color: theme.colors.text, fontSize: 16 }}>
         {item.razaoSocial.toUpperCase()}
       </Text>
       <Text style={{ fontWeight: '700', color: theme.colors.text }}>
@@ -85,26 +90,24 @@ export default function ResultadoPesquisa({ route, navigation }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: theme.spacing.lg, gap: theme.spacing.md, flex: 1 }}>
-        <View style={{ gap: 4 }}>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>
-            {headerResumo}
-          </Text>
-          <Text style={{ color: theme.colors.muted }}>
-            {`Filtro utilizado: ${filtroLabel[filtro]} - ${termo}`}
-          </Text>
-        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.primaryDark }}>{headerResumo}</Text>
+            <Text style={{ color: theme.colors.muted }}>{`Filtro utilizado: ${filtroLabel[filtro]} - ${termo}`}</Text>
+          </View>
 
-        <Pressable
-          onPress={handleCadastrar}
-          style={{
-            backgroundColor: theme.colors.primaryDark,
-            paddingVertical: theme.spacing.sm,
-            borderRadius: theme.radius.md,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: theme.colors.surface, fontWeight: '700' }}>Cadastrar</Text>
-        </Pressable>
+          <Pressable
+            onPress={handleCadastrar}
+            style={{
+              backgroundColor: '#6CB6E3',
+              paddingVertical: theme.spacing.sm,
+              paddingHorizontal: theme.spacing.md,
+              borderRadius: theme.radius.md,
+            }}
+          >
+            <Text style={{ color: theme.colors.surface, fontWeight: '700' }}>CADASTRAR</Text>
+          </Pressable>
+        </View>
 
         {loading ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

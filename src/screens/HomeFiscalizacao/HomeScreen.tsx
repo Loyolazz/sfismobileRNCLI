@@ -47,6 +47,7 @@ export default function HomeScreen({
   const [syncSummary, setSyncSummary] = useState<{
     empresas: number;
     frota: number;
+    prestadores: number;
   } | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
 
@@ -102,6 +103,7 @@ export default function HomeScreen({
           setSyncSummary({
             empresas: status.counts.empresas,
             frota: status.counts.frota,
+            prestadores: status.counts.prestadores,
           });
         } else {
           setSyncSummary(null);
@@ -176,7 +178,7 @@ export default function HomeScreen({
         ? formatDateTime(status.updatedAt)
         : null;
       setLastSync(formatted);
-      const totals = status.counts ?? { empresas: 0, frota: 0 };
+      const totals = status.counts ?? { empresas: 0, frota: 0, prestadores: 0 };
       const lastRun = status.lastRun ?? totals;
       setSyncSummary(totals);
       const twoSample = await listarFrotaAlocada();
@@ -194,10 +196,11 @@ export default function HomeScreen({
         frota: twoSample.map(item => ({
           ...item,
         })),
+        prestadores: status.counts.prestadores,
       });
       Alert.alert(
         'Dados atualizados',
-        `Empresas baixadas nesta execução: ${lastRun.empresas}\nFrota baixada nesta execução: ${lastRun.frota}\nTotal de empresas salvas: ${totals.empresas}\nTotal de frota salva: ${totals.frota}`,
+        `Empresas baixadas nesta execução: ${lastRun.empresas}\nFrota baixada nesta execução: ${lastRun.frota}\nPrestadores baixados nesta execução: ${lastRun.prestadores}\nTotal de empresas salvas: ${totals.empresas}\nTotal de frota salva: ${totals.frota}\nTotal de prestadores salvos: ${totals.prestadores}`,
       );
     } catch (error) {
       console.error('[gestorbd] sincronização', error);
@@ -265,7 +268,7 @@ export default function HomeScreen({
           {syncSummary ? (
             <Text style={styles.lastSyncText}>
               Registros salvos • Empresas: {syncSummary.empresas} • Frota:{' '}
-              {syncSummary.frota}
+              {syncSummary.frota} • Prestadores: {syncSummary.prestadores}
             </Text>
           ) : null}
           <Text style={styles.versionText}>Versão WS: {versaoStr}</Text>

@@ -1,36 +1,78 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import theme from '@/theme';
+import SelectField from '../components/SelectField';
 import type { ServicosNaoAutorizadosStackParamList } from '../types';
 
 const tiposTransporte = [
-  'Transporte Regular de Passageiros',
-  'Transporte de Cargas',
-  'Transporte de Veículos',
+  'Longitudinal de Carga',
+  'Longitudinal de Passageiros',
+  'Longitudinal Misto (Passageiros e Cargas)',
+  'Transporte privado de cargas, pessoas e veículos em percurso longitudinal',
+  'Transporte regular de passageiros e veículos em percurso de travessia',
+  'Transporte regular de cargas em percurso longitudinal',
+  'Transporte regular de cargas fracionadas em percurso longitudinal',
+  'Transporte regular de cargas e veículos em percurso longitudinal',
+  'Transporte regular de passageiros em percurso longitudinal',
+  'Transporte regular de passageiros em percurso transversal',
+  'Transporte regular de passageiros (MEI)',
+  'Travessia de Carga',
 ];
 
 const trechosPorTipo: Record<string, string[]> = {
-  'Transporte Regular de Passageiros': ['Linha 112 - Centro / Ilha', 'Linha 208 - Ribeirinho', 'Linha 350 - Hidroviário'],
-  'Transporte de Cargas': ['Trecho Industrial', 'Trecho Rio Negro'],
-  'Transporte de Veículos': ['Travessia Principal', 'Travessia Alternativa'],
+  'Longitudinal de Passageiros': [
+    'Acará (PA) / Abaetetuba (PA) / Acará (PA)',
+    'Afuá (AP) / Macapá (AP) / Afuá (AP)',
+    'Ananindeua (PA) / Santana (AP) / Afuá (PA)',
+    'Anhembi (SP) / Puerto Indio (PARAGUAI) / Anhembi (SP)',
+    'Araçatuba (SP) / Hernandárias (PARAGUAI) / Araçatuba (SP)',
+  ],
+  'Longitudinal de Carga': [
+    'Trecho Industrial',
+    'Trecho Rio Negro',
+    'Trecho Santarém',
+  ],
+  'Travessia de Carga': ['Travessia Principal', 'Travessia Alternativa'],
 };
 
 type Props = NativeStackScreenProps<ServicosNaoAutorizadosStackParamList, 'NavegacaoInterior'>;
 
 export default function NavegacaoInterior({ navigation, route }: Props) {
   const { prestador } = route.params;
-  const [tipoSelecionado, setTipoSelecionado] = useState<string>('Transporte Regular de Passageiros');
+  const [tipoSelecionado, setTipoSelecionado] = useState<string | null>(null);
   const [trechoSelecionado, setTrechoSelecionado] = useState<string | null>(null);
 
-  const trechos = useMemo(() => trechosPorTipo[tipoSelecionado] ?? [], [tipoSelecionado]);
+  const tipoOptions = useMemo(
+    () => tiposTransporte.map(tipo => ({ label: tipo, value: tipo })),
+    [],
+  );
+
+  const trechosOptions = useMemo(
+    () =>
+      (tipoSelecionado ? trechosPorTipo[tipoSelecionado] ?? [] : []).map(trecho => ({
+        label: trecho,
+        value: trecho,
+      })),
+    [tipoSelecionado],
+  );
 
   const handleProsseguir = () => {
+    if (!tipoSelecionado) {
+      Alert.alert('Selecione o tipo de transporte');
+      return;
+    }
+
+    if (!trechoSelecionado) {
+      Alert.alert('Selecione o trecho/linha');
+      return;
+    }
+
     const area = {
       tipo: 'navegacao' as const,
       transporte: tipoSelecionado,
-      trechos: trechoSelecionado ? [trechoSelecionado] : trechos,
+      trechos: [trechoSelecionado],
     };
     navigation.navigate('CadastrarInstalacao', { prestador, area });
   };
@@ -38,63 +80,34 @@ export default function NavegacaoInterior({ navigation, route }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>
-          Navegação Interior
-        </Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.text }}>Navegação Interior</Text>
         <Text style={{ color: theme.colors.muted }}>
           Informe o tipo de transporte e selecione o trecho/linha para seguir com a fiscalização.
         </Text>
 
-        <View style={{ gap: theme.spacing.sm }}>
-          {tiposTransporte.map(tipo => {
-            const ativo = tipo === tipoSelecionado;
-            return (
-              <Pressable
-                key={tipo}
-                onPress={() => {
-                  setTipoSelecionado(tipo);
-                  setTrechoSelecionado(null);
-                }}
-                style={{
-                  padding: theme.spacing.md,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: ativo ? '#E5EEF6' : theme.colors.surface,
-                  borderWidth: 1,
-                  borderColor: ativo ? theme.colors.primary : '#E2E8F0',
-                }}
-              >
-                <Text style={{ fontWeight: '700', color: theme.colors.text }}>{tipo}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SelectField
+          label="Tipo Transporte"
+          placeholder="Tipo Transporte"
+          value={tipoSelecionado}
+          onSelect={value => {
+            setTipoSelecionado(value);
+            setTrechoSelecionado(null);
+          }}
+          options={tipoOptions}
+        />
 
-        <View style={{ gap: theme.spacing.sm }}>
-          <Text style={{ fontWeight: '700', color: theme.colors.text }}>Trechos / Linhas</Text>
-          {trechos.map(trecho => {
-            const ativo = trechoSelecionado ? trecho === trechoSelecionado : false;
-            return (
-              <Pressable
-                key={trecho}
-                onPress={() => setTrechoSelecionado(trecho)}
-                style={{
-                  padding: theme.spacing.md,
-                  borderRadius: theme.radius.md,
-                  backgroundColor: ativo ? theme.colors.primaryDark : theme.colors.surface,
-                  borderWidth: 1,
-                  borderColor: ativo ? theme.colors.primaryDark : '#E2E8F0',
-                }}
-              >
-                <Text style={{ color: ativo ? theme.colors.surface : theme.colors.text, fontWeight: '600' }}>{trecho}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SelectField
+          label="Trecho Linha"
+          placeholder="Trecho Linha"
+          value={trechoSelecionado}
+          onSelect={setTrechoSelecionado}
+          options={trechosOptions}
+        />
 
         <Pressable
           onPress={handleProsseguir}
           style={{
-            backgroundColor: theme.colors.primaryDark,
+            backgroundColor: '#6CB6E3',
             paddingVertical: theme.spacing.md,
             borderRadius: theme.radius.md,
             alignItems: 'center',
