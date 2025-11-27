@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/empresa_tipo_consulta.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+
+
+
+    <title>Tipo Consulta</title>
+
+</head>
+<body ng-app="app">
+
+    <div ng-controller="MainCtrl">
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a href="home.html" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Consultar Autorizadas </a>
+
+            </ul>
+            </nav>
+        </div>
+
+        <!--<nav class="nav">
+            <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <a href="#" class="brand-logo center"><img align="middle" src="img/logo-navbar2.png"></a>
+            <ul id="nav-mobile" class="right">
+                <li>
+                    <div id="ex1">
+                        <i class="fa fa-envelope fa-5x fa-border icon-grey badgeNav"><i class="material-icons">notifications</i></i>
+                    </div>
+                </li>
+                <li><a href="#"><i class="material-icons">refresh</i></a></li>
+            </ul>
+        </nav>
+
+        <ul id="slide-out" class="sidenav">
+            <li>
+                <div class="user-view">
+                    <div class="background">
+                        <img src="img/fundo.png">
+                    </div>
+                    <a href="#user"><img src="img/logo-navbar2@1,5x.png"></a>
+                    <a href="#name"><span class="white-text name">{{arUsuario.servidor.NOUsuario}}</span></a>
+                    <a href="index.html"><span class="sair white-text right"><img src="img/icon-sair.png"> Sair </span></a>
+
+                    <a href="#email"><span class="white-text email">{{arUsuario.EEFuncionario}}</span></a>
+
+                </div>
+
+            </li>
+            <div class="menu">
+                <li><a href="home.html"><i class="material-icons ">home</i>Inicio</a></li>
+                <li><a href="minhasfiscalizacoes.listar.html"><i class="material-icons ">assignment</i>Minhas Fiscalizações</a></li>
+                <li><a href="empresa.consultarAutorizadas.html?tipofis=rotina"><i class="material-icons ">assignment_turned_in</i>Rotina</a></li>
+                <li><a href="empresa.consultarAutorizadas.html?tipofis=consulta"><i class="material-icons ">business</i>Consultar Autorizadas</a></li>
+                <li><a href="#!"><i class="material-icons ">folder_special</i>Tutorial</a></li>
+                <li><a href="#!"><i class="material-icons ">info</i>A ANTAQ</a></li>
+
+            </div>
+        </ul>
+        </div>-->
+
+        <div id="deviceready" class="blink"></div>
+
+        <p class="titulo"> Selecione o tipo de consulta. </p>
+        <p class="subtitulo"> Qual tipo de consulta?   </p>
+        <div class="app">
+            <div class="lista">
+
+                <a ng-click=proxima('cnpj')  class="waves-effect waves-green btn-large white black-text icon-grey">
+                    <i class="material-icons right ">chevron_right</i>
+                    <i class="fa fa-envelope fa-5x fa-border icon-grey badgeMenu">
+                        <img id="rotina" src="img/icon-rotina.png">
+                    </i>
+                    <span class="menu"> &nbsp Por CNPJ / Razão Social</span>
+                </a>
+                <a href="#" ng-click=proxima('modalidade') class="waves-effect waves-green btn-large  white black-text">
+                    <i class="material-icons right">chevron_right</i>
+                    <img id="rotina" src="img/icon-minhas-fiscalizacoes.png">
+                    <span class="menu"> &nbsp Por Modalidade</span>
+                </a>
+                <a href="#" ng-click=proxima('embarcacao') class="waves-effect waves-green btn-large  white black-text">
+                    <i class="material-icons right">chevron_right</i>
+                    <img id="rotina" src="img/icon-embarca.png">
+                    <span class="menu"> &nbsp Por Embarcação</span>
+                </a>
+                <a href="#" ng-click=proxima('instalacao') class="waves-effect waves-green btn-large  white black-text">
+                    <i class="material-icons right">chevron_right</i>
+                    <img id="rotina" src="img/icon-instalacao.png">
+                    <span class="menu"> &nbsp Por Instalação</span>
+                </a>
+
+
+            </div>
+        </div>
+
+    </div>
+
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="js/util.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/empresa.tipoConsulta.js"></script>
+    <script src="js/gestor_bd.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var options = null;
+
+            var elems = document.querySelectorAll('.sidenav');
+            var instances = M.Sidenav.init(elems, options);
+        });
+    </script>
+</body>
+</html>

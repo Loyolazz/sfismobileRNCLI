@@ -1,4 +1,4 @@
-# Resolve react_native_pods.rb with node to allow for hoisting
+# === Carrega as funções do RN (use_native_modules!, use_react_native!, etc.)
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
     "react-native/scripts/react_native_pods.rb",
@@ -8,6 +8,9 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
+# Caminho do react-native, para usar no post_install
+react_native_path = File.expand_path('../node_modules/react-native', __dir__)
+
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -15,21 +18,43 @@ if linkage != nil
 end
 
 target 'SFISmobile2' do
+  # Precisamos chamar isso DENTRO do target para autolink funcionar
   config = use_native_modules!
 
   use_react_native!(
-    :path => config[:reactNativePath],
-    # An absolute path to your application root.
+    :path => config[:reactNativePath],            # usa o path resolvido pelo autolink
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+end
 
-  post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
-    react_native_post_install(
-      installer,
-      config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
-    )
+# ---- post_install no nível raiz ----
+post_install do |installer|
+  # Ajustes padrão do RN
+  react_native_post_install(
+    installer,
+    react_native_path,
+    :mac_catalyst_enabled => false
+  )
+
+  # 1) Desativa User Script Sandboxing (corrige rsync deny / Hermes)
+  installer.pods_project.targets.each do |t|
+    t.build_configurations.each do |cfg|
+      cfg.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+    end
+  end
+  installer.aggregate_targets.each do |agg|
+    agg.user_targets.each do |ut|
+      ut.build_configurations.each do |cfg|
+        cfg.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
+    end
+  end
+
+  # 2) Garante REACT_NATIVE_PATH relativo aos Pods (evita "Pods/./Users/.../with-environment.sh")
+  rn_rel = '../../node_modules/react-native'
+  (installer.pods_project.targets + installer.aggregate_targets.map(&:user_targets).flatten).each do |t|
+    t.build_configurations.each do |cfg|
+      cfg.build_settings['REACT_NATIVE_PATH'] = rn_rel
+    end
   end
 end

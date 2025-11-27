@@ -5,9 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 import Icon from '@/components/Icon';
-import { listarMensagensPush, MensagemPush } from '@/api/notificacoes';
+import { listarMensagensPush, type MensagemPush } from '@/api/operations/listarMensagensPush';
 import { loadSession } from '@/services/session';
 import type { DrawerParamList } from '@/types/types';
+import theme from '@/theme';
 import styles from './styles';
 
 export default function Notificacoes() {
@@ -17,10 +18,13 @@ export default function Notificacoes() {
   useEffect(() => {
     async function fetchData() {
       const session = await loadSession();
+      console.log('A',session);
       const idPerfil = session?.usuario?.IDPerfilFiscalizacao;
       if (!idPerfil) return;
       try {
-        const res = await listarMensagensPush(idPerfil);
+        const res = await listarMensagensPush({
+          IDPerfilFiscalizacao: String(idPerfil),
+        });
         const parseDate = (s: string) => {
           const [date, time] = s.split(' ');
           const [d, m, y] = date.split('/').map(Number);
@@ -46,7 +50,7 @@ export default function Notificacoes() {
           <Icon
             name={unread ? 'notifications-unread' : 'notifications'}
             size={24}
-            color="#0F3C52"
+            color={theme.colors.primaryDark}
           />
         </View>
         <View style={styles.cardContent}>
@@ -64,7 +68,7 @@ export default function Notificacoes() {
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#fff" />
+          <Icon name="arrow-back" size={24} color={theme.colors.surface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notificações</Text>
         <View style={styles.headerSpacer} />

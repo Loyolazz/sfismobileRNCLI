@@ -1,16 +1,57 @@
 import React from 'react';
-  import { Text, StyleSheet } from 'react-native';
-  import { SafeAreaView } from 'react-native-safe-area-context';
+import { type TextStyle } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
-  export default function ConsultarAutorizadasNavigator() {
-    return (
-      <SafeAreaView style={styles.container} edges={['left', 'right']}>
-        <Text style={styles.title}>ConsultarAutorizadas</Text>
-      </SafeAreaView>
-    );
-  }
+import theme from '@/theme';
+import type { ConsultarAutorizadasStackParamList } from '@/types/types';
+import HeaderBackButton from '../../../components/HeaderBackButton';
 
-  const styles = StyleSheet.create({
-    container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-    title: { fontSize: 18, color: '#0F3C52' },
-  });
+import ConsultarAutorizadasMenu from './screens/Menu';
+import CnpjRazao from './screens/CnpjRazao';
+import Modalidade from './screens/Modalidade';
+import Embarcacao from './screens/Embarcacao';
+import Instalacao from './screens/Instalacao';
+import Detalhes from './screens/Detalhes';
+import Frota from './screens/Frota';
+import Mapa from './screens/Mapa';
+import Historico from './screens/Historico';
+
+const Stack = createNativeStackNavigator<ConsultarAutorizadasStackParamList>();
+
+const headerTitleStyle = {
+  fontSize: 18,
+  fontWeight: '600',
+} satisfies Pick<TextStyle, 'fontSize' | 'fontWeight'>;
+
+const baseScreenOptions: NativeStackNavigationOptions = {
+  headerStyle: { backgroundColor: theme.colors.primaryDark },
+  headerTitleStyle,
+  headerTintColor: theme.colors.surface,
+  headerTitleAlign: 'center',
+};
+
+const createHeaderLeft = (onPress: () => void): NativeStackNavigationOptions['headerLeft'] =>
+  () => <HeaderBackButton onPress={onPress} />;
+
+export default function ConsultarAutorizadasNavigator(): React.JSX.Element {
+  return (
+    <Stack.Navigator
+      screenOptions={({ navigation }): NativeStackNavigationOptions => ({
+        ...baseScreenOptions,
+        headerLeft: createHeaderLeft(() => navigation.goBack()),
+      })}
+    >
+      <Stack.Screen name="Menu" component={ConsultarAutorizadasMenu} options={{ headerShown: false }} />
+      <Stack.Screen name="CnpjRazao" component={CnpjRazao} options={{ title: 'Por CNPJ / Razão Social' }} />
+      <Stack.Screen name="Modalidade" component={Modalidade} options={{ title: 'Por Modalidade' }} />
+      <Stack.Screen name="Embarcacao" component={Embarcacao} options={{ title: 'Por Embarcação' }} />
+      <Stack.Screen name="Instalacao" component={Instalacao} options={{ title: 'Por Instalação' }} />
+      <Stack.Screen name="Detalhes" component={Detalhes} options={{ title: 'Detalhes da Empresa' }} />
+      <Stack.Screen name="Frota" component={Frota} options={{ title: 'Lista de Embarcações' }} />
+      <Stack.Screen name="Mapa" component={Mapa} options={{ title: 'Mapa da Instalação' }} />
+      <Stack.Screen name="Historico" component={Historico} options={{ title: 'Histórico de Fiscalizações' }} />
+    </Stack.Navigator>
+  );
+}
+

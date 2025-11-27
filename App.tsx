@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
@@ -8,6 +8,8 @@ import ToastManager from 'toastify-react-native';
 
 import AlertToast from '@/components/AlertToast';
 import AppNavigator from '@/navigation/AppNavigator';
+import { migrateAsync } from '@/data/gestordb/database';
+import { logGestorDatabaseSnapshot } from '@/services/gestorbd';
 
 enableScreens(true);
 
@@ -29,6 +31,19 @@ const toastConfig = {
 };
 
 function App(): React.JSX.Element {
+  useEffect(() => {
+    const prepareDatabase = async () => {
+      try {
+        await migrateAsync();
+        await logGestorDatabaseSnapshot();
+      } catch (error) {
+        console.error('[gestorbd] falha ao preparar banco local', error);
+      }
+    };
+
+    prepareDatabase();
+  }, []);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>

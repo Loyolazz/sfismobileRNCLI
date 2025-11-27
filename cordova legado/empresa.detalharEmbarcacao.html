@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://maps.googleapis.com/ https://maps.gstatic.com/ https://mts0.googleapis.com/ 'unsafe-inline' 'unsafe-eval'">
+
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+</head>
+<body ng-app="app">
+    <div ng-controller="MainCtrl">
+
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a onclick="window.history.back()" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Empresa Vinculada </a>
+            </nav>
+        </div>
+
+        <div class="fixed">
+            <p class="empresa"><b> &nbsp {{embarcacao.NoEmbarcacao}} </b></p>
+            <p class="autorizacao"> &nbsp IMO:<b> {{embarcacao.NRCapitania}} </b></p>
+            <p class="autorizacao"> &nbsp Tipo: <b> {{embarcacao.TipoEmbarcacao}}</b> </p>
+            <p class="detalhe-info">
+                Selecione a empresa para iniciar a fiscalização.
+            </p>
+        </div>
+
+        <div class="app">
+            <div class="lista-empresa">
+                <div class="collection" ng-repeat="empresa in empresas">
+
+                    <a ng-click="detalhar(empresa);" class="collection-item avatar">
+
+                        <img src="{{empresa.icone}}" alt="" class="circle">
+                        <span class="title">{{empresa.NORazaoSocial}}</span>
+                        <i class="material-icons right">chevron_right</i>
+
+                        <p class="detalhe"> CNPJ: <b>{{formatarNRCnpj(empresa.NRInscricao)}} </b></p>
+                        <p class="detalhe"> Endereço: <b> {{empresa.DSEndereco}} </b></p>
+                        <p class="detalhe" nrinstrumento> Modalidade: <b> {{empresa.Modalidade}} </b></p>
+
+                        <p class="detalhe" ng-show="empresa.NRInstrumento"> Instrumento: <b> {{empresa.NRInstrumento}} </b></p>
+
+                        <p class="detalhe" ng-hide="empresa.DTAditamento == '01/01/1900 00:00:00' || !empresa.DTAditamento"> Data Último Aditamento: <b> {{formatarData(empresa.DTAditamento)}} </b></p>
+                        <p class="detalhe" ng-show="empresa.NRAditamento"> Termo: <b> {{empresa.NRAditamento}} </b></p>
+                        <p class="detalhe" ng-show="empresa.QTDEmbarcacao"> Embarcações: <b>{{empresa.QTDEmbarcacao}}</b> </p>
+                        <p class="detalhe" ng-show="empresa.norma == 1274 || empresa.norma == 3285"> Travessia: <b>{{empresa.Instalacao}}</b> </p>
+                        <p class="detalhe" ng-show="empresa.norma == 912"> Linha: <b>{{empresa.Instalacao}}</b> </p>
+                        <p class="detalhe" ng-show="empresa.norma!=1274 && empresa.norma!=912 && empresa.norma!=3285 && empresa.Instalacao"> Instalação: <b>{{empresa.Instalacao}}</b> </p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="preloader" class="preloader-wrapper big active">
+        <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div><div class="gap-patch">
+                <div class="circle"></div>
+            </div><div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+    <!--JavaScript at end of body for optimized loading-->
+    <script src="js/angular.min.js"></script>
+    <script src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/gestor_bd.js"></script>
+    <script src="js/empresa.detalharEmbarcacao.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+</body>
+</html>
+

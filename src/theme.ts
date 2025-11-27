@@ -9,6 +9,8 @@ const colors = {
   text: "#0B1F33",
   muted: "#64748B",
   error: "#D62828",
+  success: "#1BAA6A",
+  warning: "#FFDB00",
 };
 
 const spacing = {
@@ -25,10 +27,11 @@ const radius = {
   lg: scale(18),
 };
 
- const typography = {
-   heading: { fontSize: moderateScale(20), fontWeight: "600", color: colors.text },
-   body: { fontSize: moderateScale(14), color: colors.text },
-   button: { fontSize: moderateScale(16), fontWeight: "600", color: colors.surface },
- } as const;
+const typography = {
+  heading: { fontSize: moderateScale(20), fontWeight: "600", color: colors.text },
+  body: { fontSize: moderateScale(14), color: colors.text },
+  button: { fontSize: moderateScale(16), fontWeight: "600", color: colors.surface },
+  caption: { fontSize: moderateScale(12), color: colors.muted },
+} as const;
 
 export default { colors, spacing, radius, typography };

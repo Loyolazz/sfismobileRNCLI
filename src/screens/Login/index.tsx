@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Toast } from "toastify-react-native";
 
-import { usuarioAutenticar } from "@/api/usuarioAutenticar";
+import { usuarioAutenticar } from "@/api/operations/usuarioAutenticar";
 import { saveSession, loadSession } from "@/services/session";
 import type { RootStackParamList } from "@/types/types";
 import Icon from "@/components/Icon";
@@ -65,7 +65,10 @@ export default function LoginScreen() {
                 Toast.error(msg);
                 return;
             }
-            const { token, servidor } = await usuarioAutenticar(usuario, senha);
+          const { token, servidor } = await usuarioAutenticar({
+            loginUsuario: usuario,
+            senhaUsuario: senha,
+          });
             await saveSession({ token, usuario: servidor }, keepConnected, 14);
             Toast.success("Login realizado com sucesso!");
             navigation.replace("HomeDrawer", { showReleases: "1" });

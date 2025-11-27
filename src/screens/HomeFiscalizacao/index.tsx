@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { type TextStyle } from 'react-native';
 import {
   createDrawerNavigator,
   DrawerContentComponentProps,
@@ -18,6 +18,7 @@ import HomeScreen from './HomeScreen';
 import MinhasFiscalizacoes from './MinhasFiscalizacoes';
 import FiscalizacaoRotina from './FiscalizacaoRotina';
 import ConsultarAutorizadas from './ConsultarAutorizadas';
+import Equipe from './Equipe';
 import EmAndamento from './EmAndamento';
 import PainelEmpresas from './PainelEmpresas';
 import EsquemasOperacionais from './EsquemasOperacionais';
@@ -28,7 +29,8 @@ import Tutorial from './Tutorial';
 import NovidadesVersao from './NovidadesVersao';
 import SituacaoServico from './SituacaoServico';
 import Notificacoes from './Notificacoes';
-import homeStyles from './styles';
+import HeaderBackButton from '../../components/HeaderBackButton';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/core';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -37,26 +39,24 @@ const makeDrawerIcon =
   ({ color, size }: { color: string; size: number }) =>
     <Icon name={name} color={color} size={size} />;
 
+const headerTitleStyle = {
+  fontSize: 18,
+  fontWeight: '600',
+} satisfies Pick<TextStyle, 'fontSize' | 'fontWeight'>;
+
+const createHeaderLeft = (onPress: () => void): DrawerNavigationOptions['headerLeft'] =>
+  () => <HeaderBackButton onPress={onPress} />;
+
 const defaultScreenOptions = ({
   navigation,
 }: {
   navigation: DrawerNavigationProp<DrawerParamList>;
 }): DrawerNavigationOptions => ({
   headerStyle: { backgroundColor: theme.colors.primaryDark },
-  headerTitleStyle: { fontSize: 18, fontWeight: '600' },
+  headerTitleStyle,
   headerTitleAlign: 'center',
   drawerActiveTintColor: theme.colors.primaryDark,
-  headerLeft: () => (
-    <Pressable
-      onPress={() => navigation.goBack()}
-      accessibilityRole="button"
-      accessibilityLabel="Voltar"
-      style={homeStyles.headerButton}
-      hitSlop={8}
-    >
-      <Icon name="arrow-back" size={24} color={theme.colors.surface} />
-    </Pressable>
-  ),
+  headerLeft: createHeaderLeft(() => navigation.goBack()),
   swipeEnabled: false,
 });
 
@@ -115,15 +115,30 @@ export default function HomeFiscalizacao({ route, navigation }: Props) {
       <Drawer.Screen
         name="ConsultarAutorizadas"
         component={ConsultarAutorizadas}
+        options={({ route: drawerRoute }) => {
+          const focusedRoute =
+            getFocusedRouteNameFromRoute(drawerRoute) ?? 'Menu';
+          const showDrawerHeader = focusedRoute === 'Menu';
+
+          return {
+            title: 'Consultar Autorizadas',
+            drawerIcon: makeDrawerIcon('search'),
+            drawerItemStyle: { display: 'none' },
+            headerTintColor: theme.colors.surface,
+            headerShown: showDrawerHeader,
+          };
+        }}
+      />
+      <Drawer.Screen
+        name="Equipe"
+        component={Equipe}
         options={{
-          title: 'Consultar Autorizadas',
-          drawerIcon: makeDrawerIcon('search'),
+          title: 'Equipe de Fiscalização',
+          drawerIcon: makeDrawerIcon('groups'),
           drawerItemStyle: { display: 'none' },
           headerTintColor: theme.colors.surface,
         }}
       />
-
-      {/* Itens exibidos no Drawer */}
       <Drawer.Screen
         name="RelatorioUsuario"
         component={RelatorioUsuario}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width">
+    <link rel="stylesheet" type="text/css" href="css/empresa_tipo_consulta.css">
+    <!--Import Google Icon Font-->
+    <link type="text/css" rel="stylesheet" href="fonts/material-icons.css" media="screen,projection" />
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="css/padrao.css">
+    <meta charset="UTF-8" />
+
+
+    <title>Tipo Consulta</title>
+
+</head>
+<body ng-app="app">
+
+    <div ng-controller="MainCtrl">
+        <div class="navbar-fixed">
+            <nav class="nav">
+                <a href="home.html" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">arrow_back</i></a>
+                <a href="#" class="brand-logo left nav-text"> Consultar Autorizadas </a>
+
+            </ul>
+            </nav>
+        </div>
+
+        <div id="deviceready" class="blink"></div>
+
+        <!--<p class="titulo"> Selecione o tipo de consulta. </p>-->
+        <!--<p class="subtitulo"> Qual tipo de consulta?   </p>-->
+        <div class="app">
+            <div id="lista-elementos" class="lista">
+
+                  <div ng-click=proxima('navegacao') id="btn_card_01" class="card" style="overflow: visible;">
+                    <div class="card-image waves-effect waves-block waves-light">
+                      <img id="img_card_01" style="height: 100%" class="activator" src="img/fundoCardNavegacao.png">
+                    </div>
+                    <div class="card-content" style="padding: 7px;">
+                      <span class="card-title activator grey-text text-darken-4" style="font-size: 21px;">Navegação</span>
+                      <!--<span class="card-title activator grey-text text-darken-4" style="font-size: 21px;">Navegação<i class="material-icons right">more_vert</i></span>
+                      <p><a ng-click=proxima('navegacao') >Clique aqui</a></p>-->
+                    </div>
+
+                    <!--<div class="card-reveal" style="display: none; transform: translateY(0%);">
+                      <span class="card-title grey-text text-darken-4">Navegação<i class="material-icons right">close</i></span>
+                      <p>Consulte as empresas autorizadas pela Antaq á prestar serviços aquaviários.</p>
+                    </div>-->
+                  </div>
+
+                  <div ng-click=proxima('porto') id="btn_card_02" class="card" style="overflow: visible;">
+                    <div class="card-image waves-effect waves-block waves-light">
+                      <img id="img_card_02" style="height: 100%" class="activator" src="img/fundoCardPorto.png">
+                    </div>
+                    <div class="card-content" style="padding: 7px;">
+                      <span class="card-title activator grey-text text-darken-4" style="font-size: 21px;">Portuária</span>
+                      <!--<span class="card-title activator grey-text text-darken-4" style="font-size: 21px;">Portuária<i class="material-icons right">more_vert</i></span>
+                      <p><a ng-click=proxima('porto') >Clique aqui</a></p>-->
+                    </div>
+                    <!--<div class="card-reveal" style="display: none; transform: translateY(0%);">
+                      <span class="card-title grey-text text-darken-4">Portuária<i class="material-icons right">close</i></span>
+                      <p>Consulte as empresas autorizadas pela Antaq á prestar serviços aquaviários.</p>
+                    </div>-->
+                  </div>
+
+                  <div class="lista">
+                    <div style="visibility: unset;" class="lista-empresa">
+                      <div id="data-list" class="collection"></div>
+                    </div>
+                  </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/util.js"></script>
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script src="js/empresa.tipoConsultaCadastro.js"></script>
+    <script src="js/gestor_bd.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var options = null;
+
+            var elems = document.querySelectorAll('.sidenav');
+            var instances = M.Sidenav.init(elems, options);
+        });
+    </script>
+</body>
+</html>

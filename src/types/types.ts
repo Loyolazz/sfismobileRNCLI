@@ -3,6 +3,11 @@ export type DrawerParamList = {
     MinhasFiscalizacoes: undefined;
     FiscalizacaoRotina: undefined;
     ConsultarAutorizadas: undefined;
+    Equipe:
+        | {
+              empresa?: import('@/api/operations/consultarEmpresas').Empresa;
+          }
+        | undefined;
     RelatorioUsuario: undefined;
     Antaq: undefined;
     Tutorial: undefined;
@@ -27,4 +32,17 @@ export type ConsultarAutorizadasStackParamList = {
     Modalidade: undefined;
     Embarcacao: undefined;
     Instalacao: undefined;
+    Detalhes: {
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
+    };
+    Frota: {
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
+        fluxoTipo?: 'FROTA' | 'TRAVESSIA';
+    };
+    Mapa: {
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
+    };
+    Historico: {
+        empresa: import('@/api/operations/consultarEmpresas').Empresa;
+    };
 };

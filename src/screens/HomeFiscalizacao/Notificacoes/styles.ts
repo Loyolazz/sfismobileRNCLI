@@ -1,24 +1,26 @@
 import { StyleSheet } from 'react-native';
 
-export default StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+import theme from '@/theme';
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background },
   header: {
-    backgroundColor: '#0F3C52',
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    backgroundColor: theme.colors.primaryDark,
+    paddingTop: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   headerSpacer: { width: 24 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  list: { padding: 16 },
+  headerTitle: { ...theme.typography.heading, color: theme.colors.surface },
+  list: { padding: theme.spacing.md },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -27,10 +29,12 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  icon: { marginRight: 12, marginTop: 2 },
+  icon: { marginRight: theme.spacing.sm, marginTop: 2 },
   cardContent: { flex: 1 },
-  title: { fontSize: 16, fontWeight: 'bold', marginBottom: 8, color: '#0F3C52' },
-  readTitle: { fontWeight: 'normal' },
-  message: { fontSize: 14, marginBottom: 8, color: '#333' },
-  date: { fontSize: 12, color: '#666', textAlign: 'right' },
+  title: { ...theme.typography.body, fontWeight: '700', marginBottom: theme.spacing.xs, color: theme.colors.primaryDark },
+  readTitle: { fontWeight: '400' },
+  message: { ...theme.typography.body, color: theme.colors.text, marginBottom: theme.spacing.xs },
+  date: { ...theme.typography.caption, color: theme.colors.muted, textAlign: 'right' },
 });
+
+export default styles;

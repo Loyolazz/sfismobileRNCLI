@@ -1,16 +1,18 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import PlaceholderScreen from '@/components/PlaceholderScreen';
+
+import styles from './styles';
 
 export default function Tutorial() {
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <Text style={styles.title}>Tutorial</Text>
-    </SafeAreaView>
+    <PlaceholderScreen
+      title="Tutorial"
+      subtitle="Funcionalidade em desenvolvimento."
+      edges={['left', 'right']}
+      containerStyle={styles.container}
+      titleStyle={styles.title}
+      subtitleStyle={styles.subtitle}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center',backgroundColor: '#fff'  },
-  title: { fontSize: 18, color: '#0F3C52' },
-});
