@@ -108,6 +108,62 @@ export type ConsultarEmpresasResult = {
   }>;
 };
 
+export type ConsultarEmbarcacoesResult = {
+  EmbarcacaoAutorizada: Array<{
+    IDFrota: number;
+    TPInscricao: number;
+    IDEmbarcacao: number;
+    STEmbarcacao: boolean;
+    DTInicio: string;
+    DTTermino: string;
+    TPAfretamento: number;
+    STRegistro: boolean;
+    IDFrotaPai: number;
+    STHomologacao: string;
+    NoEmbarcacao: string;
+    NRCapitania: string;
+    TipoEmbarcacao: string;
+    NRInscricao: string;
+    NRInstrumento: string;
+  }>;
+};
+
+export type ConsultarInstalacoesResult = {
+  InstalacoesPortuariasSIGTAQ: Array<{
+    cdinstalacaoportuaria: string;
+    nome: string;
+    tipo: string;
+    cdbigrama: string;
+    cdtrigrama: string;
+    cdterminal: string;
+    situacao: string;
+    gestao: string;
+    modalidade: string;
+    companhia: string;
+    cnpj: string;
+    legislacao: string;
+    profundidade: number;
+    endereco: string;
+    complemento: string;
+    numero: number;
+    bairro: string;
+    cep: string;
+    idcidade: string;
+    localizacao: string;
+    latitude: string;
+    longitude: string;
+    observacao: string;
+    fonte: string;
+    cdcentroide: string;
+    idregiaohidrografica: number;
+    estado: string;
+    uf: string;
+    cidade: string;
+    pais: string;
+    regiaohidrografica: string;
+  }>;
+};
+
 type FiltroAutorizadas = {
   cnpjRazaosocial?: string | null;
   modalidade?: string | null;
@@ -130,6 +186,125 @@ export async function consultarEmpresas(
   const result = await callSoapAction<ConsultarEmpresasResult>('ConsultarEmpresas', params, options);
   console.log('[API] consultarEmpresas retorno', result);
   return result;
+}
+
+async function consultarEmbarcacoesSOAP(nomeEmbarcacao: string): Promise<Empresa[]> {
+  try {
+    console.log('[API] consultarEmbarcacoesSOAP chamada', { nomeEmbarcacao });
+    const parsed = await callSoapAction<any>('ConsultarEmbarcacoesPorNomeOuCapitania', {
+      NRCapitania: '',
+      NOEmbarcacao: nomeEmbarcacao,
+    });
+
+    const itens = parsed?.EmbarcacaoAutorizada ?? parsed?.d?.EmbarcacaoAutorizada ?? parsed;
+    const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
+
+    if (!list.length) {
+      console.log('[API] consultarEmbarcacoesSOAP: nenhuma embarcação encontrada');
+      return [];
+    }
+
+    // Precisamos buscar as empresas associadas a essas embarcações
+    // Vamos buscar por CNPJ das empresas que possuem essas embarcações
+    const empresasMap = new Map<string, Empresa>();
+
+    for (const embarcacao of list) {
+      const nrInscricao = str(embarcacao.NRInscricao);
+      if (!nrInscricao || empresasMap.has(nrInscricao)) continue;
+
+      try {
+        const empresaResult = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
+          cnpjRazaosocial: nrInscricao,
+          modalidade: '',
+        });
+
+        const empresaItens = Array.isArray(empresaResult?.d)
+          ? empresaResult.d
+          : empresaResult?.Empresa ?? empresaResult;
+        const empresaList: any[] = Array.isArray(empresaItens)
+          ? empresaItens
+          : [empresaItens].filter(Boolean);
+
+        empresaList.forEach(emp => {
+          const cnpj = str(emp.NRInscricao);
+          if (cnpj && !empresasMap.has(cnpj)) {
+            empresasMap.set(cnpj, mapEmpresaAutorizadaLikeCordova(emp));
+          }
+        });
+      } catch (error) {
+        console.log('[API] consultarEmbarcacoesSOAP: erro ao buscar empresa', nrInscricao, error);
+      }
+    }
+
+    const result = Array.from(empresasMap.values());
+    console.log('[API] consultarEmbarcacoesSOAP retorno', result.length, 'empresas');
+    return result;
+  } catch (error) {
+    console.log('[API] consultarEmbarcacoesSOAP erro', error);
+    return [];
+  }
+}
+
+async function consultarInstalacoesSOAP(nomeInstalacao: string): Promise<Empresa[]> {
+  try {
+    console.log('[API] consultarInstalacoesSOAP chamada', { nomeInstalacao });
+    const parsed = await callSoapAction<any>('ConsultarInstalacoesPortuarias', {
+      Nome: nomeInstalacao,
+      DSEndereco: '',
+      TPInstalacaoPortuaria: '',
+      localizacao: '',
+      cdinstalacaoportuaria: '',
+      VLLatitude: '',
+      VLLongitude: '',
+      cnpj: '',
+    });
+
+    const itens = parsed?.InstalacoesPortuariasSIGTAQ ?? parsed?.d?.InstalacoesPortuariasSIGTAQ ?? parsed;
+    const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
+
+    if (!list.length) {
+      console.log('[API] consultarInstalacoesSOAP: nenhuma instalação encontrada');
+      return [];
+    }
+
+    // Precisamos buscar as empresas associadas a essas instalações
+    const empresasMap = new Map<string, Empresa>();
+
+    for (const instalacao of list) {
+      const cnpj = str(instalacao.cnpj);
+      if (!cnpj || empresasMap.has(cnpj)) continue;
+
+      try {
+        const empresaResult = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
+          cnpjRazaosocial: cnpj,
+          modalidade: '',
+        });
+
+        const empresaItens = Array.isArray(empresaResult?.d)
+          ? empresaResult.d
+          : empresaResult?.Empresa ?? empresaResult;
+        const empresaList: any[] = Array.isArray(empresaItens)
+          ? empresaItens
+          : [empresaItens].filter(Boolean);
+
+        empresaList.forEach(emp => {
+          const empCnpj = str(emp.NRInscricao);
+          if (empCnpj && !empresasMap.has(empCnpj)) {
+            empresasMap.set(empCnpj, mapEmpresaAutorizadaLikeCordova(emp));
+          }
+        });
+      } catch (error) {
+        console.log('[API] consultarInstalacoesSOAP: erro ao buscar empresa', cnpj, error);
+      }
+    }
+
+    const result = Array.from(empresasMap.values());
+    console.log('[API] consultarInstalacoesSOAP retorno', result.length, 'empresas');
+    return result;
+  } catch (error) {
+    console.log('[API] consultarInstalacoesSOAP erro', error);
+    return [];
+  }
 }
 
 export async function buscarEmpresasCnpjRazao(termo: string): Promise<Empresa[]> {
@@ -210,18 +385,50 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
   };
 
   if (await shouldUseOfflineData()) {
+    console.log('[API] consultarEmpresasAutorizadas: embarcacao/instalacao search, usando offline', filtro);
     return filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
+  }
+
+  // Use specific SOAP endpoints for embarcacao and instalacao searches
+  if (filtro.embarcacao && !filtro.cnpjRazaosocial) {
+    try {
+      const resultEmb = await consultarEmbarcacoesSOAP(filtro.embarcacao);
+      if (resultEmb.length > 0) {
+        console.log('[API] consultarEmpresasAutorizadas: retorno via ConsultarEmbarcacoes', resultEmb);
+        return resultEmb;
+      }
+      // Fallback to offline if no results
+      const offline = await consultarEmpresasAutorizadasOffline(filtro);
+      console.log('[API] consultarEmpresasAutorizadas: sem resultados SOAP para embarcacao, usando offline', offline);
+      return offline;
+    } catch (error) {
+      console.log('[API] consultarEmpresasAutorizadas: erro ao buscar embarcacao via SOAP', error);
+      const offline = await consultarEmpresasAutorizadasOffline(filtro);
+      return offline;
+    }
+  }
+
+  if (filtro.instalacao && !filtro.cnpjRazaosocial) {
+    try {
+      const resultInst = await consultarInstalacoesSOAP(filtro.instalacao);
+      if (resultInst.length > 0) {
+        console.log('[API] consultarEmpresasAutorizadas: retorno via ConsultarInstalacoes', resultInst);
+        return resultInst;
+      }
+      // Fallback to offline if no results
+      const offline = filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
+      console.log('[API] consultarEmpresasAutorizadas: sem resultados SOAP para instalacao, usando offline', offline);
+      return offline;
+    } catch (error) {
+      console.log('[API] consultarEmpresasAutorizadas: erro ao buscar instalacao via SOAP', error);
+      const offline = filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
+      return offline;
+    }
   }
 
   // The SOAP API ConsultarEmpresasAutorizadas only supports cnpjRazaosocial and modalidade
   // The cnpjRazaosocial field works as a generic search field (searches across multiple fields)
-  // Map embarcacao and instalacao searches to cnpjRazaosocial for SOAP API
-  let searchTerm = filtro.cnpjRazaosocial;
-  if (!searchTerm && filtro.embarcacao) {
-    searchTerm = filtro.embarcacao;
-  } else if (!searchTerm && filtro.instalacao) {
-    searchTerm = filtro.instalacao;
-  }
+  const searchTerm = filtro.cnpjRazaosocial;
 
   try {
     console.log('[API] consultarEmpresasAutorizadas SOAP', filtro);
