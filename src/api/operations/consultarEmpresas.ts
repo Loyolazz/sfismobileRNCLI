@@ -11,6 +11,8 @@ import {
 import { ensureEmpresaPayload } from '@/utils/payload';
 import { normalizeSearchText } from '@/utils/formatters';
 import { aplicarPrefixoInstrumento, obterRegraModalidade, ICONES_AUTORIZACAO } from '@/utils/autorizacao';
+import { consultarEmbarcacoesPorNomeOuCapitania } from '@/api/operations/consultarEmbarcacoesPorNomeOuCapitania';
+import { consultarInstalacoesPortuarias } from '@/api/operations/consultarInstalacoesPortuarias';
 
 export type TipoEmpresa = {
   IDTipoEmpresa: number;
@@ -176,16 +178,97 @@ export async function consultarPorModalidade(modalidade: string): Promise<Empres
 
 export async function consultarPorEmbarcacao(embarcacao: string): Promise<Empresa[]> {
   console.log('[API] consultarPorEmbarcacao chamada', { embarcacao });
-  const result = await consultarEmpresasAutorizadas({ embarcacao });
-  console.log('[API] consultarPorEmbarcacao retorno', result);
-  return result;
+
+  // Primeiro tenta buscar online via endpoint correto
+  if (!(await shouldUseOfflineData())) {
+    try {
+      const embarcacoesResult = await consultarEmbarcacoesPorNomeOuCapitania({
+        NOEmbarcacao: embarcacao.trim(),
+        NRCapitania: '',
+      });
+
+      const embarcacoes = Array.isArray(embarcacoesResult?.EmbarcacaoAutorizada)
+        ? embarcacoesResult.EmbarcacaoAutorizada
+        : embarcacoesResult?.EmbarcacaoAutorizada
+          ? [embarcacoesResult.EmbarcacaoAutorizada]
+          : [];
+
+      if (embarcacoes.length > 0) {
+        // Para cada embarcação encontrada, buscar a empresa pelo NRInscricao
+        const empresasPromises = embarcacoes.map(async (emb) => {
+          if (emb.NRInscricao) {
+            const empresaResult = await consultarEmpresasAutorizadas({
+              cnpjRazaosocial: emb.NRInscricao,
+              modalidade: '',
+            });
+            return empresaResult;
+          }
+          return [];
+        });
+
+        const empresasArrays = await Promise.all(empresasPromises);
+        const result = empresasArrays.flat();
+        console.log('[API] consultarPorEmbarcacao retorno SOAP', result);
+        return result;
+      }
+    } catch (error) {
+      console.log('[API] consultarPorEmbarcacao erro SOAP', error);
+    }
+  }
+
+  // Fallback para dados offline
+  const offline = await consultarEmpresasAutorizadasOffline({
+    cnpjRazaosocial: '',
+    modalidade: '',
+    embarcacao: embarcacao.trim(),
+    instalacao: '',
+  });
+  console.log('[API] consultarPorEmbarcacao retorno offline', offline);
+  return offline;
 }
 
 export async function consultarPorInstalacao(instalacao: string): Promise<Empresa[]> {
   console.log('[API] consultarPorInstalacao chamada', { instalacao });
-  const result = await consultarEmpresasAutorizadas({ instalacao });
-  console.log('[API] consultarPorInstalacao retorno', result);
-  return result;
+
+  // Primeiro tenta buscar online via endpoint correto
+  if (!(await shouldUseOfflineData())) {
+    try {
+      const instalacoesResult = await consultarInstalacoesPortuarias({
+        instalacao: instalacao.trim(),
+      });
+
+      if (instalacoesResult.length > 0) {
+        // Para cada instalação encontrada, buscar a empresa pelo CNPJ
+        const empresasPromises = instalacoesResult.map(async (inst) => {
+          if (inst.cnpj) {
+            const empresaResult = await consultarEmpresasAutorizadas({
+              cnpjRazaosocial: inst.cnpj,
+              modalidade: '',
+            });
+            return empresaResult;
+          }
+          return [];
+        });
+
+        const empresasArrays = await Promise.all(empresasPromises);
+        const result = empresasArrays.flat();
+        console.log('[API] consultarPorInstalacao retorno SOAP', result);
+        return result;
+      }
+    } catch (error) {
+      console.log('[API] consultarPorInstalacao erro SOAP', error);
+    }
+  }
+
+  // Fallback para dados offline
+  const offline = await consultarEmpresasAutorizadasOffline({
+    cnpjRazaosocial: '',
+    modalidade: '',
+    embarcacao: '',
+    instalacao: instalacao.trim(),
+  });
+  console.log('[API] consultarPorInstalacao retorno offline', offline);
+  return offline;
 }
 
 function normalizeFiltroAutorizadas(payload: FiltroAutorizadas): NormalizedFiltroAutorizadas {
