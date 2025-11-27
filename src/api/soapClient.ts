@@ -42,7 +42,17 @@ export function buildSoapEnvelope(action: string, params?: Record<string, unknow
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value === null || value === undefined) return;
-      if (typeof value === 'string' && value.trim() === '') return;
+
+      // For ConsultarEmpresasAutorizadas, always include cnpjRazaosocial and modalidade even if empty
+      // to prevent server-side NullReferenceException
+      const isConsultarEmpresasAutorizadas = action === 'ConsultarEmpresasAutorizadas';
+      const isRequiredField = key === 'cnpjRazaosocial' || key === 'modalidade';
+      const isEmpty = typeof value === 'string' && value.trim() === '';
+
+      if (isEmpty && !(isConsultarEmpresasAutorizadas && isRequiredField)) {
+        return;
+      }
+
       root.ele(`tem:${key}`).txt(String(value));
     });
   }
@@ -57,7 +67,7 @@ async function axiosSoapPost(
 ): Promise<string> {
   // Primeiro tenta SOAP 1.1 (preferido por servidores .NET/ASMX antigos)
   try {
-    const xmlBody = buildSoapEnvelope(action, params, true);
+    const xmlBody = buildSoapEnvelope(action, params);
     console.log('[SOAP11] Tentando SOAP 1.1 com body >>>\n', xmlBody);
     const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
       baseURL: undefined,
@@ -78,7 +88,7 @@ async function axiosSoapPost(
     explainAxiosError(firstError, 'SOAP11');
     // Fallback: SOAP 1.1 sem aspas no SOAPAction
     try {
-      const xmlBody = buildSoapEnvelope(action, params, true);
+      const xmlBody = buildSoapEnvelope(action, params);
       console.log('[SOAP11-NOQ] Tentando SOAP 1.1 sem aspas no SOAPAction >>>\n', xmlBody);
       const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
         baseURL: undefined,
@@ -99,7 +109,7 @@ async function axiosSoapPost(
       explainAxiosError(secondError, 'SOAP11-NOQ');
       // Último fallback: SOAP 1.2
       try {
-        const xmlBody = buildSoapEnvelope(action, params, false);
+        const xmlBody = buildSoapEnvelope(action, params);
         console.log('[SOAP12] Tentando fallback SOAP 1.2 >>>\n', xmlBody);
         const response = await axios.post<string>(SERVICE_BASE_URL, xmlBody, {
           baseURL: undefined,
@@ -151,7 +161,7 @@ export async function soapRequest(
   const xml = buildSoapEnvelope(action, params);
   console.log('[SOAP] body >>>\n', xml);
 
-  const raw = await axiosSoapPost(action, xml, options?.signal);
+  const raw = await axiosSoapPost(action, params, options?.signal);
   console.log('[SOAP] raw(xml) <<<\n', (raw || '').slice(0, 800));
 
   const parsed = parser.parse(raw);
