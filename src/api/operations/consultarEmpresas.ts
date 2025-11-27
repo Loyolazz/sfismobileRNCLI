@@ -111,10 +111,10 @@ export type ConsultarEmpresasResult = {
 };
 
 type FiltroAutorizadas = {
-  cnpjRazaosocial?: string | null;
-  modalidade?: string | null;
-  embarcacao?: string | null;
-  instalacao?: string | null;
+  cnpjRazaosocial?: string | number | null;
+  modalidade?: string | number | null;
+  embarcacao?: string | number | null;
+  instalacao?: string | number | null;
 };
 
 type NormalizedFiltroAutorizadas = {
@@ -272,11 +272,16 @@ export async function consultarPorInstalacao(instalacao: string): Promise<Empres
 }
 
 function normalizeFiltroAutorizadas(payload: FiltroAutorizadas): NormalizedFiltroAutorizadas {
+  const normalize = (value?: string | number | null): string => {
+    if (value == null) return '';
+    return String(value).trim();
+  };
+
   return {
-    cnpjRazaosocial: payload.cnpjRazaosocial?.trim() ?? '',
-    modalidade: payload.modalidade?.trim() ?? '',
-    embarcacao: payload.embarcacao?.trim() ?? '',
-    instalacao: payload.instalacao?.trim() ?? '',
+    cnpjRazaosocial: normalize(payload.cnpjRazaosocial),
+    modalidade: normalize(payload.modalidade),
+    embarcacao: normalize(payload.embarcacao),
+    instalacao: normalize(payload.instalacao),
   };
 }
 
