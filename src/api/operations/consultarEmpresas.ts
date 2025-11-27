@@ -213,13 +213,21 @@ async function consultarEmpresasAutorizadas(payload: FiltroAutorizadas): Promise
     return filtrarInstalacao(await consultarEmpresasAutorizadasOffline(filtro));
   }
 
+  // The SOAP API ConsultarEmpresasAutorizadas only supports cnpjRazaosocial and modalidade
+  // The cnpjRazaosocial field works as a generic search field (searches across multiple fields)
+  // Map embarcacao and instalacao searches to cnpjRazaosocial for SOAP API
+  let searchTerm = filtro.cnpjRazaosocial;
+  if (!searchTerm && filtro.embarcacao) {
+    searchTerm = filtro.embarcacao;
+  } else if (!searchTerm && filtro.instalacao) {
+    searchTerm = filtro.instalacao;
+  }
+
   try {
     console.log('[API] consultarEmpresasAutorizadas SOAP', filtro);
     const parsed = await callSoapAction<any>('ConsultarEmpresasAutorizadas', {
-      cnpjRazaosocial: filtro.cnpjRazaosocial || undefined,
-      modalidade: filtro.modalidade || undefined,
-      embarcacao: filtro.embarcacao || undefined,
-      instalacao: filtro.instalacao || undefined,
+      cnpjRazaosocial: searchTerm,
+      modalidade: filtro.modalidade,
     });
     const itens = Array.isArray(parsed?.d) ? parsed.d : parsed?.Empresa ?? parsed;
     const list: any[] = Array.isArray(itens) ? itens : [itens].filter(Boolean);
